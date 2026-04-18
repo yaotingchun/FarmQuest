@@ -466,3 +466,103 @@
   transform: translateY(-3px);
   box-shadow: 0 0 50px var(--accent-glow), 0 12px 32px rgba(0, 0, 0, 0.4);
 }
+
+/* ── Climate Tile Grid ───────────────────────────────────────────────────────── */
+.climate-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 32px;
+  animation: pref-slide-in 0.4s ease both;
+}
+
+.climate-tile {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 18px 16px 14px;
+  transition: border-color 0.2s;
+}
+
+.climate-tile:hover {
+  border-color: rgba(52, 217, 95, 0.3);
+}
+
+.tile-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tile-emoji {
+  font-size: 1.2rem;
+}
+
+.tile-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.tile-value {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: var(--accent);
+  margin-bottom: 10px;
+  text-shadow: 0 0 16px var(--accent-glow);
+}
+
+.tile-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(52, 217, 95, 0.12);
+  border-radius: 50px;
+  outline: none;
+}
+
+.tile-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent-glow), 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s;
+}
+
+.tile-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.tile-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent-glow), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.tile-range {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-family: monospace;
+  margin-top: 6px;
+}
+
+@media (max-width: 520px) {
+  .climate-grid {
+    grid-template-columns: 1fr;
+  }
+}

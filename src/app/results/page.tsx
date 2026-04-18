@@ -125,6 +125,9 @@ function ResultsInner() {
             <span className="pref-chip">{PREF_LABELS[prefs.time_commitment] ?? prefs.time_commitment}</span>
             <span className="pref-chip">{PREF_LABELS[prefs.goal] ?? prefs.goal}</span>
             <span className="pref-chip">🌡️ {prefs.temperature}°C</span>
+            <span className="pref-chip">💧 {prefs.humidity}% humidity</span>
+            <span className="pref-chip">🌧️ {prefs.rainfall} mm rain</span>
+            <span className="pref-chip">☀️ {prefs.sunlight_hours} hrs sun</span>
           </div>
         )}
       </div>

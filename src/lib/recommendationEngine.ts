@@ -6,6 +6,9 @@ export interface UserPreference {
   time_commitment: 'low' | 'medium' | 'high';
   goal: string;
   temperature: number;
+  humidity: number;          // relative humidity %
+  rainfall: number;          // mm/day
+  sunlight_hours: number;    // hours of sunshine per day
 }
 
 export interface RecommendationResult {
@@ -13,7 +16,7 @@ export interface RecommendationResult {
   name: string;
   difficulty: string;
   estimated_growth_days: number;
-  match_score: number;
+  match_score: number;       // 0–100
 }
 
 // --- Hardcoded User Preferences ---
@@ -21,7 +24,10 @@ export const MOCK_USER_PREFERENCE: UserPreference = {
   sunlight: "full_sun",
   time_commitment: "low",
   goal: "food",
-  temperature: 30
+  temperature: 30,
+  humidity: 70,
+  rainfall: 3,
+  sunlight_hours: 8
 };
 
 // --- Helper Functions ---
@@ -31,32 +37,71 @@ function checkTimeCommitment(commitment: 'low' | 'medium' | 'high', plantMinutes
   return true; // 'high' can accommodate any time
 }
 
+/** Map daily rainfall (mm) to plant water-need level */
+function rainfallToWaterLevel(mm: number): string {
+  if (mm >= 5)  return 'high';
+  if (mm >= 1)  return 'medium';
+  return 'low';
+}
+
+/** Map daily sunshine hours to a sunlight category */
+function sunHoursToCategory(hours: number): string {
+  if (hours >= 6) return 'full_sun';
+  if (hours >= 3) return 'partial';
+  return 'low_light';
+}
+
 // --- Scoring Engine ---
+// Max possible score = 100
+//   Temperature fit   : 25
+//   Humidity fit       : 15
+//   Sunlight match    : 15
+//   Sunlight-hours    :  5  (bonus when live data confirms the user's pick)
+//   Goal match        : 15
+//   Rainfall/water    : 15
+//   Time commitment   : 10
 export function rankPlantsByPreferences(userPrefs: UserPreference): RecommendationResult[] {
   const plants = db.plants;
+
+  const derivedWater = rainfallToWaterLevel(userPrefs.rainfall);
+  const derivedSunlight = sunHoursToCategory(userPrefs.sunlight_hours);
 
   const scoredPlants = plants.map((plant) => {
     let score = 0;
 
-    // 1. Temperature Match (Crucial for survival, highest weight)
+    // 1. Temperature (25 pts) — core survival factor
     if (userPrefs.temperature >= plant.temp_min && userPrefs.temperature <= plant.temp_max) {
-      score += 30;
+      score += 25;
     }
 
-    // 2. Sunlight Match
-    if (userPrefs.sunlight === plant.sunlight) {
-      score += 20;
-    }
-
-    // 3. Goal Match
-    // Matches if the goal exists in the plant's goals array, or if it matches the 'type' directly
-    if (plant.goals.includes(userPrefs.goal) || plant.type === userPrefs.goal) {
-      score += 20;
-    }
-
-    // 4. Time Commitment Match
-    if (checkTimeCommitment(userPrefs.time_commitment, plant.weekly_time_minutes)) {
+    // 2. Humidity (15 pts) — within plant's ideal range
+    if (userPrefs.humidity >= plant.humidity_min && userPrefs.humidity <= plant.humidity_max) {
       score += 15;
+    }
+
+    // 3. Sunlight match (15 pts) — user-declared preference
+    if (userPrefs.sunlight === plant.sunlight) {
+      score += 15;
+    }
+
+    // 4. Sunlight-hours bonus (5 pts) — live data confirms the pick
+    if (derivedSunlight === plant.sunlight) {
+      score += 5;
+    }
+
+    // 5. Goal match (15 pts)
+    if (plant.goals.includes(userPrefs.goal) || plant.type === userPrefs.goal) {
+      score += 15;
+    }
+
+    // 6. Rainfall / Water alignment (15 pts)
+    if (derivedWater === plant.water) {
+      score += 15;
+    }
+
+    // 7. Time commitment (10 pts)
+    if (checkTimeCommitment(userPrefs.time_commitment, plant.weekly_time_minutes)) {
+      score += 10;
     }
 
     return {
@@ -64,7 +109,7 @@ export function rankPlantsByPreferences(userPrefs: UserPreference): Recommendati
       name: plant.name,
       difficulty: plant.difficulty,
       estimated_growth_days: plant.growth_days,
-      match_score: score
+      match_score: score,
     };
   });
 

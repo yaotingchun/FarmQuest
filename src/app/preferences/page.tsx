@@ -58,13 +58,16 @@ const OPTION_STEPS: OptionStep[] = [
   },
 ]
 
-const TOTAL_STEPS = 4 // 3 option steps + 1 temperature step
+const TOTAL_STEPS = 4 // 3 option steps + 1 climate step
 
 // ── GPS + Climate helpers ─────────────────────────────────────────────────────
 type GeoStatus = 'idle' | 'locating' | 'fetching' | 'done' | 'error'
 
 interface ClimateData {
   temperature: number
+  humidity: number
+  rainfall: number          // mm (today)
+  sunlight_hours: number    // hours (today)
   latitude: number
   longitude: number
   locationName?: string
@@ -87,17 +90,39 @@ async function reverseGeocode(lat: number, lon: number): Promise<string> {
 
 async function fetchClimate(lat: number, lon: number): Promise<ClimateData> {
   const res = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m,relative_humidity_2m` +
+    `&daily=precipitation_sum,sunshine_duration` +
+    `&timezone=auto&forecast_days=1`
   )
   if (!res.ok) throw new Error('Climate API failed')
   const data = await res.json()
+
+  const temperature = Math.round(data.current.temperature_2m)
+  const humidity = Math.round(data.current.relative_humidity_2m)
+  const rainfall = data.daily?.precipitation_sum?.[0] ?? 0       // mm today
+  const sunshineSec = data.daily?.sunshine_duration?.[0] ?? 0
+  const sunlight_hours = Math.round((sunshineSec / 3600) * 10) / 10  // hours, 1dp
+
   const locationName = await reverseGeocode(lat, lon)
+
   return {
-    temperature: Math.round(data.current.temperature_2m),
+    temperature,
+    humidity,
+    rainfall: Math.round(rainfall * 10) / 10,
+    sunlight_hours,
     latitude: lat,
     longitude: lon,
     locationName,
   }
+}
+
+// ── Defaults when GPS fails ───────────────────────────────────────────────────
+const DEFAULT_CLIMATE: Omit<ClimateData, 'latitude' | 'longitude' | 'locationName'> = {
+  temperature: 28,
+  humidity: 65,
+  rainfall: 2,
+  sunlight_hours: 6,
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -106,16 +131,21 @@ export default function PreferencesPage() {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Partial<UserPreference>>({})
 
-  // GPS / climate state — only used on step 3 (the 4th screen)
+  // GPS / climate state
   const [geoStatus, setGeoStatus] = useState<GeoStatus>('idle')
   const [geoError, setGeoError] = useState('')
   const [climate, setClimate] = useState<ClimateData | null>(null)
-  const [manualTemp, setManualTemp] = useState<number>(28) // fallback default
 
-  const isTemperatureStep = step === 3
+  // Overridable values (seeded from API or defaults)
+  const [manualTemp, setManualTemp] = useState(DEFAULT_CLIMATE.temperature)
+  const [manualHumidity, setManualHumidity] = useState(DEFAULT_CLIMATE.humidity)
+  const [manualRainfall, setManualRainfall] = useState(DEFAULT_CLIMATE.rainfall)
+  const [manualSunHours, setManualSunHours] = useState(DEFAULT_CLIMATE.sunlight_hours)
+
+  const isClimateStep = step === 3
   const progressPct = ((step + 1) / TOTAL_STEPS) * 100
 
-  // ── Auto-detect when temperature step is reached ────────────────────────────
+  // ── Auto-detect when climate step is reached ────────────────────────────────
   const detectLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setGeoStatus('error')
@@ -133,25 +163,28 @@ export default function PreferencesPage() {
           const data = await fetchClimate(pos.coords.latitude, pos.coords.longitude)
           setClimate(data)
           setManualTemp(data.temperature)
+          setManualHumidity(data.humidity)
+          setManualRainfall(data.rainfall)
+          setManualSunHours(data.sunlight_hours)
           setGeoStatus('done')
         } catch {
           setGeoStatus('error')
-          setGeoError('Could not fetch weather data. You can enter temperature manually.')
+          setGeoError('Could not fetch weather data. You can adjust values manually.')
         }
       },
       () => {
         setGeoStatus('error')
-        setGeoError('Location access denied. You can enter temperature manually below.')
+        setGeoError('Location access denied. You can adjust values manually below.')
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     )
   }, [])
 
   useEffect(() => {
-    if (isTemperatureStep && geoStatus === 'idle') {
+    if (isClimateStep && geoStatus === 'idle') {
       detectLocation()
     }
-  }, [isTemperatureStep, geoStatus, detectLocation])
+  }, [isClimateStep, geoStatus, detectLocation])
 
   // ── Option step selection ───────────────────────────────────────────────────
   function selectOption(value: string) {
@@ -163,13 +196,16 @@ export default function PreferencesPage() {
     }, 240)
   }
 
-  // ── Temperature confirm ─────────────────────────────────────────────────────
-  function confirmTemperature() {
+  // ── Climate confirm → run engine ────────────────────────────────────────────
+  function confirmClimate() {
     const prefs: UserPreference = {
       sunlight: answers.sunlight as string,
       time_commitment: answers.time_commitment as 'low' | 'medium' | 'high',
       goal: answers.goal as string,
       temperature: manualTemp,
+      humidity: manualHumidity,
+      rainfall: manualRainfall,
+      sunlight_hours: manualSunHours,
     }
     const results = rankPlantsByPreferences(prefs)
     const encoded = encodeURIComponent(JSON.stringify(results))
@@ -180,6 +216,8 @@ export default function PreferencesPage() {
   function goBack() {
     if (step > 0) setStep(s => s - 1)
   }
+
+  const climateReady = geoStatus === 'done' || geoStatus === 'error'
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -196,7 +234,7 @@ export default function PreferencesPage() {
       </div>
 
       {/* ── Option Steps (1-3) ── */}
-      {!isTemperatureStep && (
+      {!isClimateStep && (
         <div className="pref-card" key={step}>
           <div className="pref-icon">{OPTION_STEPS[step].icon}</div>
           <h1 className="pref-title">{OPTION_STEPS[step].title}</h1>
@@ -233,21 +271,21 @@ export default function PreferencesPage() {
         </div>
       )}
 
-      {/* ── Temperature Step (4) — GPS Auto-detect ── */}
-      {isTemperatureStep && (
-        <div className="pref-card" key="temp-step">
-          <div className="pref-icon">🌡️</div>
+      {/* ── Climate Step (4) — GPS Auto-detect ── */}
+      {isClimateStep && (
+        <div className="pref-card" key="climate-step">
+          <div className="pref-icon">🌍</div>
           <h1 className="pref-title">Detecting your local climate</h1>
           <p className="pref-subtitle">
-            We use your location to fetch real-time temperature so we can match plants
-            to your environment. You can always override it.
+            We fetch real-time temperature, humidity, rainfall, and sunlight from
+            your location to find the perfect plants. You can override any value.
           </p>
 
           {/* Status indicator */}
           {(geoStatus === 'locating' || geoStatus === 'fetching') && (
             <div className="geo-loading">
               <div className="geo-spinner" />
-              <span>{geoStatus === 'locating' ? 'Finding your location…' : 'Fetching weather data…'}</span>
+              <span>{geoStatus === 'locating' ? 'Finding your location…' : 'Fetching climate data…'}</span>
             </div>
           )}
 
@@ -261,7 +299,7 @@ export default function PreferencesPage() {
             </div>
           )}
 
-          {/* Detected result card */}
+          {/* Detected location header */}
           {geoStatus === 'done' && climate && (
             <div className="geo-result">
               <div className="geo-result-icon">📍</div>
@@ -272,33 +310,85 @@ export default function PreferencesPage() {
                 </span>
               </div>
               <div className="geo-detected-temp">
-                <span className="geo-temp-value">{climate.temperature}°C</span>
-                <span className="geo-temp-label">Live temperature</span>
+                <span className="geo-temp-value">LIVE</span>
+                <span className="geo-temp-label">real-time data</span>
               </div>
             </div>
           )}
 
-          {/* Temperature slider — always visible (once loading is done or on error) */}
-          {(geoStatus === 'done' || geoStatus === 'error') && (
-            <div className="temp-control">
-              <label className="temp-label">
-                {geoStatus === 'done' ? 'Adjust if needed' : 'Set your temperature'}
-              </label>
-              <div className="temp-slider-row">
-                <span className="temp-range-label">10°C</span>
+          {/* ── Climate data grid with sliders ── */}
+          {climateReady && (
+            <div className="climate-grid">
+              {/* Temperature */}
+              <div className="climate-tile">
+                <div className="tile-header">
+                  <span className="tile-emoji">🌡️</span>
+                  <span className="tile-label">Temperature</span>
+                </div>
+                <div className="tile-value">{manualTemp}°C</div>
                 <input
-                  type="range"
-                  min={10}
-                  max={45}
-                  step={1}
+                  type="range" min={5} max={45} step={1}
                   value={manualTemp}
                   onChange={e => setManualTemp(Number(e.target.value))}
-                  className="temp-slider"
+                  className="tile-slider"
                 />
-                <span className="temp-range-label">45°C</span>
+                <div className="tile-range">
+                  <span>5°C</span><span>45°C</span>
+                </div>
               </div>
-              <div className="temp-display">
-                <span className="temp-big">{manualTemp}°C</span>
+
+              {/* Humidity */}
+              <div className="climate-tile">
+                <div className="tile-header">
+                  <span className="tile-emoji">💧</span>
+                  <span className="tile-label">Humidity</span>
+                </div>
+                <div className="tile-value">{manualHumidity}%</div>
+                <input
+                  type="range" min={10} max={100} step={1}
+                  value={manualHumidity}
+                  onChange={e => setManualHumidity(Number(e.target.value))}
+                  className="tile-slider"
+                />
+                <div className="tile-range">
+                  <span>10%</span><span>100%</span>
+                </div>
+              </div>
+
+              {/* Rainfall */}
+              <div className="climate-tile">
+                <div className="tile-header">
+                  <span className="tile-emoji">🌧️</span>
+                  <span className="tile-label">Rainfall</span>
+                </div>
+                <div className="tile-value">{manualRainfall} mm</div>
+                <input
+                  type="range" min={0} max={30} step={0.5}
+                  value={manualRainfall}
+                  onChange={e => setManualRainfall(Number(e.target.value))}
+                  className="tile-slider"
+                />
+                <div className="tile-range">
+                  <span>0 mm</span><span>30 mm</span>
+                </div>
+              </div>
+
+              {/* Sunlight Hours */}
+              <div className="climate-tile">
+                <div className="tile-header">
+                  <span className="tile-emoji">☀️</span>
+                  <span className="tile-label">Sunlight</span>
+                </div>
+                <div className="tile-value">{manualSunHours} hrs</div>
+                <input
+                  type="range" min={0} max={14} step={0.5}
+                  value={manualSunHours}
+                  onChange={e => setManualSunHours(Number(e.target.value))}
+                  className="tile-slider"
+                />
+                <div className="tile-range">
+                  <span>0 hrs</span><span>14 hrs</span>
+                </div>
               </div>
             </div>
           )}
@@ -308,8 +398,8 @@ export default function PreferencesPage() {
             <button className="pref-back-btn" onClick={goBack}>
               ← Back
             </button>
-            {(geoStatus === 'done' || geoStatus === 'error') && (
-              <button className="temp-confirm-btn" onClick={confirmTemperature}>
+            {climateReady && (
+              <button className="temp-confirm-btn" onClick={confirmClimate}>
                 See My Plants →
               </button>
             )}
