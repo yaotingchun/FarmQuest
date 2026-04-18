@@ -14,7 +14,7 @@ export const Navbar = () => {
         <li><a href="#features">Features</a></li>
         <li><a href="#how-it-works">How It Works</a></li>
         <li><a href="#forum">Forum</a></li>
-        <li><a href="#" className="nav-cta">Start Growing →</a></li>
+        <li><a href="/recommendations" className="nav-cta">Start Growing →</a></li>
       </ul>
     </nav>
   )

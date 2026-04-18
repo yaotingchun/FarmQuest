@@ -1,0 +1,106 @@
+[
+  {
+    "plant_id": "chili",
+    "name": "Chili",
+    "difficulty": "Medium",
+    "growth_time_days": 60,
+    "emoji": "🌶️",
+    "description": "A rewarding and spicy addition to any urban garden. Chili plants love warmth and produce vibrant fruits over a long season.",
+    "pot": {
+      "material": ["plastic", "terracotta"],
+      "min_diameter_cm": 20,
+      "depth_cm": 25,
+      "drainage_required": true
+    },
+    "soil": {
+      "mix": [
+        { "component": "potting mix", "percentage": 60 },
+        { "component": "perlite", "percentage": 30 },
+        { "component": "compost", "percentage": 10 }
+      ],
+      "ph_range": "6.0–6.8",
+      "moisture": "well-drained"
+    },
+    "seed": {
+      "method": "seed",
+      "germination_days": "7–14",
+      "planting_depth_cm": 0.5
+    },
+    "nutrition": {
+      "stages": [
+        { "stage": "seedling", "npk": "10-10-10", "type": "liquid fertilizer", "frequency": "weekly" },
+        { "stage": "vegetative", "npk": "15-10-10", "type": "liquid fertilizer", "frequency": "weekly" },
+        { "stage": "fruiting", "npk": "5-10-10", "type": "granular fertilizer", "frequency": "biweekly" }
+      ]
+    }
+  },
+  {
+    "plant_id": "mint",
+    "name": "Mint",
+    "difficulty": "Easy",
+    "growth_time_days": 30,
+    "emoji": "🌿",
+    "description": "One of the easiest herbs to grow indoors. Mint spreads quickly and rewards you with fresh leaves perfect for teas and cooking.",
+    "pot": {
+      "material": ["plastic", "ceramic"],
+      "min_diameter_cm": 25,
+      "depth_cm": 20,
+      "drainage_required": true
+    },
+    "soil": {
+      "mix": [
+        { "component": "potting mix", "percentage": 70 },
+        { "component": "perlite", "percentage": 20 },
+        { "component": "compost", "percentage": 10 }
+      ],
+      "ph_range": "6.0–7.0",
+      "moisture": "consistently moist"
+    },
+    "seed": {
+      "method": "seedling",
+      "germination_days": "10–15",
+      "planting_depth_cm": 0.3
+    },
+    "nutrition": {
+      "stages": [
+        { "stage": "seedling", "npk": "10-10-10", "type": "liquid fertilizer", "frequency": "biweekly" },
+        { "stage": "vegetative", "npk": "12-6-6", "type": "liquid fertilizer", "frequency": "weekly" }
+      ]
+    }
+  },
+  {
+    "plant_id": "lettuce",
+    "name": "Lettuce",
+    "difficulty": "Easy",
+    "growth_time_days": 25,
+    "emoji": "🥬",
+    "description": "A fast-growing leafy green perfect for beginners. Harvest outer leaves continuously for salads all season long.",
+    "pot": {
+      "material": ["plastic", "fabric grow bag"],
+      "min_diameter_cm": 15,
+      "depth_cm": 15,
+      "drainage_required": true
+    },
+    "soil": {
+      "mix": [
+        { "component": "potting mix", "percentage": 65 },
+        { "component": "perlite", "percentage": 15 },
+        { "component": "vermiculite", "percentage": 10 },
+        { "component": "compost", "percentage": 10 }
+      ],
+      "ph_range": "6.0–7.0",
+      "moisture": "evenly moist"
+    },
+    "seed": {
+      "method": "seed",
+      "germination_days": "5–10",
+      "planting_depth_cm": 0.3
+    },
+    "nutrition": {
+      "stages": [
+        { "stage": "seedling", "npk": "5-5-5", "type": "liquid fertilizer", "frequency": "biweekly" },
+        { "stage": "vegetative", "npk": "10-5-5", "type": "liquid fertilizer", "frequency": "weekly" }
+      ]
+    }
+  }
+]
