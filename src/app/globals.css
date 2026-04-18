@@ -1993,12 +1993,10 @@ footer {
 
 /* ── Skeleton Loading ── */
 .skeleton-block {
-  background: linear-gradient(
-    90deg,
-    rgba(52, 217, 95, 0.06) 25%,
-    rgba(52, 217, 95, 0.12) 50%,
-    rgba(52, 217, 95, 0.06) 75%
-  );
+  background: linear-gradient(90deg,
+      rgba(52, 217, 95, 0.06) 25%,
+      rgba(52, 217, 95, 0.12) 50%,
+      rgba(52, 217, 95, 0.06) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
   border-radius: 8px;
@@ -2008,6 +2006,7 @@ footer {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -2486,6 +2485,13 @@ footer {
   color: var(--text-primary);
 }
 
+/* ─── Overview tab container ─── */
+.profile-overview-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 /* ─── Overview grid ─── */
 .profile-overview-grid {
   display: grid;
@@ -2699,8 +2705,8 @@ footer {
 }
 
 .impact-dashboard-main {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 32px;
 }
 
@@ -2783,7 +2789,9 @@ footer {
 }
 
 @keyframes progress-slide {
-  from { width: 0; }
+  from {
+    width: 0;
+  }
 }
 
 .progress-glow {
@@ -2883,6 +2891,165 @@ footer {
 
 .progress-insight strong {
   color: var(--accent);
+}
+
+/* ─── Distribution Graph ─── */
+.graph-container {
+  width: 100%;
+  height: 280px;
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.graph-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.graph-line {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.graph-line-main {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 12px var(--line-color));
+}
+
+.graph-line-ghost {
+  opacity: 0.15;
+}
+
+.graph-line-ghost:hover,
+.graph-line-ghost.active {
+  opacity: 0.8;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 8px var(--line-color));
+}
+
+.graph-grid-line {
+  stroke: var(--glass-border);
+  stroke-width: 1;
+  opacity: 0.1;
+}
+
+.graph-baseline {
+  stroke: var(--glass-border);
+  stroke-width: 1.5;
+  opacity: 0.4;
+}
+
+.graph-axis-label {
+  fill: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.graph-tooltip {
+  position: absolute;
+  background: rgba(4, 26, 11, 0.85);
+  border: 1px solid var(--accent);
+  padding: 10px 14px;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.graph-tooltip-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.graph-tooltip-val {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 1.25rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.graph-legend {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 24px;
+  padding: 0 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.legend-item:hover,
+.legend-item.active {
+  color: var(--text-primary);
+}
+
+.legend-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+@keyframes drawPath {
+  from {
+    stroke-dashoffset: 1000;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.graph-line-animate {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+.animate-step-1 {
+  animation: drawPath 2s ease-out forwards;
+}
+
+.animate-step-2 {
+  animation: drawPath 2s 0.2s ease-out forwards;
+}
+
+.animate-step-3 {
+  animation: drawPath 2s 0.4s ease-out forwards;
+}
+
+.animate-step-4 {
+  animation: drawPath 2s 0.6s ease-out forwards;
+}
+
+.animate-total {
+  animation: drawPath 2.5s 0.8s ease-out forwards;
 }
 
 /* ─── History tab ─── */
@@ -3102,7 +3269,8 @@ footer {
 }
 
 .nav-profile-name {
-  color: #c4b5fd; /* Soft vibrant lavender */
+  color: #c4b5fd;
+  /* Soft vibrant lavender */
   font-family: 'Cabinet Grotesk', sans-serif;
   font-weight: 800;
   font-size: 0.95rem;
@@ -3110,12 +3278,14 @@ footer {
 }
 
 .nav-profile-status {
-  color: #64748b; /* Solid slate grey for alignment */
+  color: #64748b;
+  /* Solid slate grey for alignment */
   font-weight: 800;
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-top: -2px; /* Pull it closer like the image */
+  margin-top: -2px;
+  /* Pull it closer like the image */
 }
 
 .nav-profile-avatar {
@@ -3123,7 +3293,8 @@ footer {
   height: 38px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--green-700), var(--green-600));
-  border: 1.5px solid rgba(192, 132, 252, 0.3); /* Match name color slightly */
+  border: 1.5px solid rgba(192, 132, 252, 0.3);
+  /* Match name color slightly */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3188,5 +3359,245 @@ footer {
 
   .profile-socials {
     justify-content: flex-start;
+  }
+}
+
+/* ─── FARMDEX COLLECTION ─── */
+.farmdex-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.farmdex-category-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.farmdex-category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.farmdex-category-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.farmdex-progress-wrap {
+  text-align: right;
+  min-width: 140px;
+}
+
+.farmdex-progress-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.farmdex-progress-bar {
+  background: rgba(52, 217, 95, 0.1);
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.farmdex-progress-fill {
+  background: linear-gradient(90deg, var(--green-500), var(--accent));
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.8s ease;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.farmdex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.farmdex-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.farmdex-card:hover {
+  background: rgba(52, 217, 95, 0.08);
+  border-color: rgba(52, 217, 95, 0.3);
+  transform: translateY(-4px);
+}
+
+.farmdex-card.locked {
+  background: rgba(0, 0, 0, 0.2);
+  border-style: dashed;
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+.farmdex-card.locked:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: not-allowed;
+}
+
+.farmdex-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.farmdex-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.farmdex-status-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.8));
+}
+
+/* FarmDex Modal */
+.farmdex-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 13, 6, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.farmdex-modal {
+  background: var(--bg-mid);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(94, 196, 130, 0.1);
+  animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.farmdex-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.farmdex-modal-close:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.farmdex-modal-icon {
+  font-size: 5rem;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.3));
+}
+
+.farmdex-modal-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.farmdex-modal-category {
+  display: inline-block;
+  background: rgba(94, 196, 130, 0.15);
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.farmdex-modal-desc {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.farmdex-modal-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
