@@ -1,0 +1,468 @@
+/* ── Shell ──────────────────────────────────────────────────────────────────── */
+.pref-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 60px;
+}
+
+.pref-header {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0 20px;
+}
+
+.pref-logo {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.pref-step-counter {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ── Progress ────────────────────────────────────────────────────────────────── */
+.pref-progress-wrap {
+  width: 100%;
+  max-width: 640px;
+  height: 4px;
+  background: rgba(52, 217, 95, 0.1);
+  border-radius: 50px;
+  margin-bottom: 40px;
+  overflow: hidden;
+}
+
+.pref-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-600), var(--accent));
+  border-radius: 50px;
+  box-shadow: 0 0 8px var(--accent-glow);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────────── */
+.pref-card {
+  width: 100%;
+  max-width: 640px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  padding: 48px 40px 40px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+  animation: pref-slide-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes pref-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pref-icon {
+  font-size: 2.8rem;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 16px rgba(52, 217, 95, 0.4));
+}
+
+.pref-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.pref-subtitle {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 36px;
+}
+
+/* ── Option Buttons ──────────────────────────────────────────────────────────── */
+.pref-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.pref-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.25s ease;
+  color: var(--text-primary);
+  font-family: inherit;
+  position: relative;
+}
+
+.pref-option:hover {
+  background: rgba(52, 217, 95, 0.07);
+  border-color: rgba(52, 217, 95, 0.3);
+  transform: translateX(4px);
+}
+
+.pref-option.selected {
+  background: rgba(52, 217, 95, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(52, 217, 95, 0.15);
+}
+
+.opt-emoji {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  width: 36px;
+  text-align: center;
+}
+
+.opt-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.opt-label {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.opt-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.opt-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--accent);
+  transition: all 0.2s;
+}
+
+.pref-option.selected .opt-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #020d06;
+}
+
+/* ── Back Button ─────────────────────────────────────────────────────────────── */
+.pref-back-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.2s;
+  letter-spacing: 0.02em;
+}
+
+.pref-back-btn:hover {
+  color: var(--text-secondary);
+}
+
+/* ── Step Dots ───────────────────────────────────────────────────────────────── */
+.pref-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+.pref-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(52, 217, 95, 0.2);
+  transition: all 0.3s;
+}
+
+.pref-dot.active {
+  width: 24px;
+  border-radius: 50px;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.pref-dot.done {
+  background: var(--green-600);
+}
+
+/* ── GPS Loading ─────────────────────────────────────────────────────────────── */
+.geo-loading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: rgba(52, 217, 95, 0.06);
+  border: 1px solid rgba(52, 217, 95, 0.15);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  animation: pref-slide-in 0.3s ease both;
+}
+
+.geo-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(52, 217, 95, 0.2);
+  border-top-color: var(--accent);
+  animation: geo-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes geo-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── GPS Error ───────────────────────────────────────────────────────────────── */
+.geo-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  flex-wrap: wrap;
+  animation: pref-slide-in 0.3s ease both;
+}
+
+.geo-error-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.geo-retry-btn {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  color: #fca5a5;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.geo-retry-btn:hover {
+  background: rgba(248, 113, 113, 0.25);
+}
+
+/* ── GPS Result Card ─────────────────────────────────────────────────────────── */
+.geo-result {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, rgba(52, 217, 95, 0.08), rgba(18, 122, 46, 0.06));
+  border: 1px solid rgba(52, 217, 95, 0.2);
+  border-radius: 18px;
+  margin-bottom: 28px;
+  animation: pref-slide-in 0.35s ease both;
+}
+
+.geo-result-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.geo-result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.geo-location-name {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.geo-coords {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.geo-detected-temp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.geo-temp-value {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 1.6rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.geo-temp-label {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ── Temperature Slider ──────────────────────────────────────────────────────── */
+.temp-control {
+  margin-bottom: 32px;
+  animation: pref-slide-in 0.4s 0.1s ease both;
+}
+
+.temp-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+.temp-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.temp-range-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: monospace;
+  flex-shrink: 0;
+  min-width: 32px;
+}
+
+.temp-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(52, 217, 95, 0.12);
+  border-radius: 50px;
+  outline: none;
+}
+
+.temp-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 16px var(--accent-glow), 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s;
+}
+
+.temp-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.temp-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 16px var(--accent-glow), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.temp-display {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.temp-big {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 2.6rem;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 30px var(--accent-glow);
+}
+
+/* ── Temperature Actions ─────────────────────────────────────────────────────── */
+.temp-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.temp-confirm-btn {
+  background: linear-gradient(135deg, var(--green-600), var(--accent));
+  color: #020d06;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 14px 32px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 30px var(--accent-glow), 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s;
+  letter-spacing: 0.01em;
+}
+
+.temp-confirm-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 50px var(--accent-glow), 0 12px 32px rgba(0, 0, 0, 0.4);
+}

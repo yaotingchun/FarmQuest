@@ -15,7 +15,7 @@ export const Navbar = () => {
         <li><a href="#how-it-works">How It Works</a></li>
         <li><a href="#forum">Forum</a></li>
         <li><a href="/explore">Explore Plants</a></li>
-        <li><a href="#" className="nav-cta">Start Growing →</a></li>
+        <li><a href="/preferences" className="nav-cta">Find My Plants →</a></li>
       </ul>
     </nav>
   )
