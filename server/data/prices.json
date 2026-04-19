@@ -1,0 +1,12 @@
+{
+  "plastic pot": { "min": 4, "max": 6 },
+  "terracotta pot": { "min": 12, "max": 18 },
+  "fabric pot": { "min": 10, "max": 14 },
+  "glazed ceramic pot": { "min": 25, "max": 40 },
+  "potting mix": { "min": 8, "max": 12 },
+  "perlite": { "min": 6, "max": 10 },
+  "compost": { "min": 5, "max": 8 },
+  "liquid fertilizer": { "min": 10, "max": 15 },
+  "granular fertilizer": { "min": 8, "max": 12 },
+  "seeds": { "min": 2, "max": 4 }
+}

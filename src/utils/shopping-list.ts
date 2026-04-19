@@ -8,15 +8,22 @@ export function generateShoppingList(plant: PlantSetup): ShoppingItem[] {
   const items: ShoppingItem[] = [];
 
   // Pot materials
-  plant.pot.material.forEach((mat, i) => {
+  // Pot material — Only one for choose to tick
+  if (plant.pot.material.length > 0) {
+    const primary = plant.pot.material[0];
+    const others = plant.pot.material.slice(1);
+    const othersText = others.length > 0
+      ? ` (or use: ${others.map(capitalize).join(", ")})`
+      : "";
+
     items.push({
-      id: `pot-${i}`,
+      id: `pot-0`,
       category: "pot",
-      name: `${capitalize(mat)} pot`,
-      detail: `Min. ${plant.pot.min_diameter_cm}cm Ø × ${plant.pot.depth_cm}cm deep${plant.pot.drainage_required ? ", with drainage holes" : ""}`,
+      name: `${capitalize(primary)} pot (Recommended)`,
+      detail: `Min. ${plant.pot.min_diameter_cm}cm Ø × ${plant.pot.depth_cm}cm deep${othersText}`,
       checked: false,
     });
-  });
+  }
 
   // Soil components
   plant.soil.mix.forEach((comp, i) => {
