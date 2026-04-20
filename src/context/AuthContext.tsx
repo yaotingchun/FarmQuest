@@ -68,24 +68,26 @@ const createDefaultProfile = (user: User): UserProfile => {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(() => {
-    // Initial sync check from localStorage to prevent flicker
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('farmquest_profile');
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch (e) {
-          return null;
-        }
-      }
-    }
-    return null;
-  });
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Initial sync check from localStorage on mount (prevents hydration error)
+    const cached = localStorage.getItem('farmquest_profile');
+    if (cached) {
+      try {
+        setProfile(JSON.parse(cached));
+      } catch (e) {
+        localStorage.removeItem('farmquest_profile');
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // If we see a user, we are definitely 'loading' until we get/confirm their profile
+      if (firebaseUser) {
+        setLoading(true);
+      }
+      
       setUser(firebaseUser);
       
       if (firebaseUser) {
