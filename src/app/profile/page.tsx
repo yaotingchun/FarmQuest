@@ -50,7 +50,7 @@ function calculateStats() {
   const mealsProvided = totalKg * 2
 
   let currentLevel = MILESTONES[0]
-  let nextLevel = MILESTONES[1]
+  let nextLevel: typeof MILESTONES[0] | null = MILESTONES[1]
 
   if (totalKg >= MILESTONES[2].threshold) {
     currentLevel = MILESTONES[2]

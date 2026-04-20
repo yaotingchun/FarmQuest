@@ -17,6 +17,7 @@ export const Navbar = () => {
         <li><a href="/explore">Explore Plants</a></li>
         <li><a href="/diagnosis">Health Detection</a></li>
         <li><a href="/preferences">Find My Plants</a></li>
+        <li><a href="/quest">Plant Quest</a></li>
         <li><a href="/recommendations" className="nav-cta">Start Growing →</a></li>
         <li>
           <a href="/profile" className="nav-profile-link">

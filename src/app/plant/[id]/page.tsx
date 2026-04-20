@@ -64,8 +64,9 @@ export default function PlantDetailPage({
   };
 
   const handleStartPlanting = () => {
-    // TODO: Navigate to planting tracker / journal
-    alert(`🌱 Let's start planting ${plant?.name}! This feature is coming soon.`);
+    if (plant) {
+      router.push(`/quest?plant=${id}`);
+    }
   };
 
   // ── Loading State ──
