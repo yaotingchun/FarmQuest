@@ -195,7 +195,6 @@ export default function PreferencesPage() {
       space: answers.space as string,
       sunlight: answers.sunlight as string,
       time_commitment: answers.time_commitment as 'low' | 'medium' | 'high',
-      goal: 'food',
       temperature: manualTemp,
       humidity: manualHumidity,
       rainfall: manualRainfall,

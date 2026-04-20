@@ -19,9 +19,6 @@
         "balcony",
         "garden"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Spicy peppers ideal for tropical climates. Thrives in hot and humid conditions.",
       "care_tips": "Water deeply but infrequently. Ensure well-draining soil.",
       "weekly_time_minutes": 30,
@@ -97,9 +94,6 @@
         "balcony",
         "windowsill",
         "indoor"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Fast-growing aromatic herb. Can grow invasively so container planting is recommended.",
       "care_tips": "Keep soil consistently moist. Pinch flowers to encourage leaf growth.",
@@ -177,9 +171,6 @@
         "windowsill",
         "indoor"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Cool-season leafy green. Ideal for indoor hydroponic or container setups.",
       "care_tips": "Avoid temperatures above 28°C or it will bolt. Harvest outer leaves regularly.",
       "weekly_time_minutes": 20,
@@ -256,9 +247,6 @@
         "windowsill",
         "garden"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Classic culinary herb with a sweet, peppery aroma. Perfect for cooking and companion planting.",
       "care_tips": "Pinch off flower buds to extend leaf production. Loves 6+ hours of sun.",
       "weekly_time_minutes": 20,
@@ -333,9 +321,6 @@
       "space": [
         "balcony",
         "garden"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Compact tomato variety ideal for containers. Produces abundantly over a long harvest period.",
       "care_tips": "Support with stakes. Feed weekly with fertiliser once flowering begins.",
@@ -418,9 +403,6 @@
         "balcony",
         "garden"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Fast-growing tropical leafy vegetable. A staple in Southeast Asian cuisine. Thrives in heat and moisture.",
       "care_tips": "Can be grown in a container with a tray of water. Harvest frequently to stimulate regrowth.",
       "weekly_time_minutes": 15,
@@ -453,7 +435,7 @@
       "seed": {
         "method": "seed or cutting",
         "germination_days": "3–7",
-        "planting_depth_cm": 1.0
+        "planting_depth_cm": 1
       },
       "nutrition": {
         "stages": [
@@ -494,9 +476,6 @@
       "space": [
         "balcony",
         "garden"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Fragrant tropical herb essential in Southeast Asian cooking. Used in rice, desserts, and drinks.",
       "care_tips": "Keep soil moist but not soggy. Thrives in humid, tropical climates like Malaysia.",
@@ -573,9 +552,6 @@
         "balcony",
         "garden"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Miniature citrus fruit widely used in Southeast Asian cooking and drinks. Great for container growing.",
       "care_tips": "Feed with citrus fertiliser monthly. Ensure good drainage. Prune after harvest season.",
       "weekly_time_minutes": 30,
@@ -609,7 +585,7 @@
       "seed": {
         "method": "seed or grafted seedling",
         "germination_days": "14–28",
-        "planting_depth_cm": 1.0
+        "planting_depth_cm": 1
       },
       "nutrition": {
         "stages": [
@@ -651,9 +627,6 @@
         "balcony",
         "windowsill",
         "garden"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Fragrant Mediterranean herb used for cooking and aromatherapy. Attracts pollinators.",
       "care_tips": "Needs excellent drainage and air circulation. Avoid overwatering — the main cause of death.",
@@ -730,9 +703,6 @@
         "balcony",
         "garden"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Vibrant blue flowers used to make natural food colouring and tea. Fast-growing tropical vine.",
       "care_tips": "Train along a trellis or fence. Harvest flowers regularly to encourage continuous blooming.",
       "weekly_time_minutes": 20,
@@ -766,7 +736,7 @@
       "seed": {
         "method": "seed",
         "germination_days": "5–10",
-        "planting_depth_cm": 1.0
+        "planting_depth_cm": 1
       },
       "nutrition": {
         "stages": [
@@ -808,9 +778,6 @@
         "garden",
         "balcony"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Heat-tolerant vegetable that thrives in tropical conditions. Produces abundantly through the year.",
       "care_tips": "Harvest pods at 7–10 cm length for best tenderness. Larger pods become tough and fibrous.",
       "weekly_time_minutes": 20,
@@ -844,7 +811,7 @@
       "seed": {
         "method": "seed",
         "germination_days": "5–10",
-        "planting_depth_cm": 2.0
+        "planting_depth_cm": 2
       },
       "nutrition": {
         "stages": [
@@ -886,9 +853,6 @@
         "garden",
         "balcony"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Aromatic herb widely used in South and Southeast Asian cooking. Leaves release fragrance when touched.",
       "care_tips": "Do not overwater. Apply iron-rich fertiliser if leaves yellow. Grows slowly initially.",
       "weekly_time_minutes": 20,
@@ -922,7 +886,7 @@
       "seed": {
         "method": "seed or stem cutting",
         "germination_days": "14–21",
-        "planting_depth_cm": 1.0
+        "planting_depth_cm": 1
       },
       "nutrition": {
         "stages": [
@@ -963,9 +927,6 @@
       "space": [
         "garden",
         "balcony"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Cheerful, uplifting flowers that attract bees and birds. Seeds are edible and nutritious.",
       "care_tips": "Plant facing south or southwest. Stake taller varieties. Seeds can be harvested when the back turns brown.",
@@ -1043,9 +1004,6 @@
         "balcony",
         "indoor"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "One of the easiest vegetables to regrow from kitchen scraps. A continuous harvest staple.",
       "care_tips": "Regrow from cut bases in a glass of water, then transplant to soil. Keep soil slightly moist.",
       "weekly_time_minutes": 10,
@@ -1079,7 +1037,7 @@
       "seed": {
         "method": "seed or regrow from base",
         "germination_days": "7–14",
-        "planting_depth_cm": 1.0
+        "planting_depth_cm": 1
       },
       "nutrition": {
         "stages": [
@@ -1120,9 +1078,6 @@
       "space": [
         "garden",
         "balcony"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Tropical grass with a citrus aroma, essential in many Asian dishes. Also a natural mosquito repellent.",
       "care_tips": "Harvest outer stalks when the clump is established. Divide clumps every 2 years.",
@@ -1199,9 +1154,6 @@
         "garden",
         "balcony"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Heat-loving vegetable with purple fruits. Widely used in Malaysian and Southeast Asian cooking.",
       "care_tips": "Stake the plant when fruits develop. Keep soil consistently moist to prevent bitter fruits.",
       "weekly_time_minutes": 35,
@@ -1276,9 +1228,6 @@
       "space": [
         "garden",
         "balcony"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Popular Malaysian salad herb eaten raw. Known for its antioxidant properties and rapid growth.",
       "care_tips": "A true tropical plant — thrives with minimal care in Malaysian conditions. Self-seeds readily.",
@@ -1355,9 +1304,6 @@
         "indoor",
         "windowsill"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Nutrient-dense seedlings harvested 7–14 days after germination. Ideal for windowsill growing year-round.",
       "care_tips": "Mist twice daily. Harvest with scissors just above the soil line when first true leaves appear.",
       "weekly_time_minutes": 15,
@@ -1426,9 +1372,6 @@
         "garden",
         "balcony"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Nutritious leafy vegetable widely eaten in Southeast Asia. Leaves and shoots are harvested young and stir-fried.",
       "care_tips": "Harvest young shoot tips regularly to keep the plant bushy and productive. Very drought-tolerant once established.",
       "weekly_time_minutes": 15,
@@ -1462,7 +1405,7 @@
       "seed": {
         "method": "stem cutting",
         "germination_days": "7–10",
-        "planting_depth_cm": 2.0
+        "planting_depth_cm": 2
       },
       "nutrition": {
         "stages": [
@@ -1505,9 +1448,6 @@
         "garden",
         "indoor"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Tropical rhizome used extensively in Malaysian and Asian cooking, teas, and traditional medicine. Thrives in warm, humid conditions.",
       "care_tips": "Plant rhizome just below the surface. Keep consistently moist and shaded from harsh afternoon sun.",
       "weekly_time_minutes": 15,
@@ -1541,7 +1481,7 @@
       "seed": {
         "method": "rhizome division",
         "germination_days": "14–21",
-        "planting_depth_cm": 2.0
+        "planting_depth_cm": 2
       },
       "nutrition": {
         "stages": [
@@ -1583,9 +1523,6 @@
         "garden",
         "balcony"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Golden rhizome with powerful anti-inflammatory properties. A staple spice in Malaysian and Indian cuisine.",
       "care_tips": "Plant rhizomes horizontally 5 cm deep. Mulch well to retain moisture. Harvest after leaves yellow and die back.",
       "weekly_time_minutes": 15,
@@ -1619,7 +1556,7 @@
       "seed": {
         "method": "rhizome division",
         "germination_days": "21–30",
-        "planting_depth_cm": 5.0
+        "planting_depth_cm": 5
       },
       "nutrition": {
         "stages": [
@@ -1661,9 +1598,6 @@
         "garden",
         "balcony"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Fast-producing tropical bean with pods up to 60 cm long. A popular vegetable in Malaysian home cooking.",
       "care_tips": "Provide a trellis or stakes for climbing. Harvest pods when young and tender before they become stringy.",
       "weekly_time_minutes": 20,
@@ -1697,7 +1631,7 @@
       "seed": {
         "method": "seed",
         "germination_days": "5–8",
-        "planting_depth_cm": 2.0
+        "planting_depth_cm": 2
       },
       "nutrition": {
         "stages": [
@@ -1744,9 +1678,6 @@
       "space": [
         "garden",
         "balcony"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Distinctive bitter-tasting vegetable prized in Malaysian and Chinese cuisine. Known for its blood sugar-regulating properties.",
       "care_tips": "Train on a trellis. Harvest fruits when still green and firm for best flavour. Regular harvesting increases yield.",
@@ -1821,9 +1752,6 @@
       "type": "food",
       "space": [
         "garden"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Iconic tropical fruit that grows vigorously in Malaysian conditions. Young flowers (jantung pisang) and leaves are also edible.",
       "care_tips": "Plant in a sunny spot with rich soil. Remove all but one or two suckers to focus energy on fruit production.",
@@ -1900,9 +1828,6 @@
         "garden",
         "balcony"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Tropical fruit grown from the crown of a store-bought pineapple. Drought-tolerant and surprisingly easy to grow.",
       "care_tips": "Root the crown in water before planting. Allow soil to dry between waterings. Fruit production begins after 18 months.",
       "weekly_time_minutes": 10,
@@ -1936,7 +1861,7 @@
       "seed": {
         "method": "crown cutting",
         "germination_days": "21–28",
-        "planting_depth_cm": 3.0
+        "planting_depth_cm": 3
       },
       "nutrition": {
         "stages": [
@@ -1977,9 +1902,6 @@
       "space": [
         "garden"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Fast-growing tropical fruit tree that can produce fruit within 9 months. Young green papaya is also used in cooking.",
       "care_tips": "Grows quickly from seed. Ensure excellent drainage — standing water kills the roots. Protect from strong winds.",
       "weekly_time_minutes": 20,
@@ -2013,7 +1935,7 @@
       "seed": {
         "method": "seed",
         "germination_days": "14–21",
-        "planting_depth_cm": 1.0
+        "planting_depth_cm": 1
       },
       "nutrition": {
         "stages": [
@@ -2054,9 +1976,6 @@
       "space": [
         "garden"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Striking ornamental ginger with edible flower buds used in Malaysian cuisine, especially in laksa and rojak.",
       "care_tips": "Loves moisture and partial shade. Harvest flower buds before they fully open for best flavour.",
       "weekly_time_minutes": 20,
@@ -2090,7 +2009,7 @@
       "seed": {
         "method": "rhizome division",
         "germination_days": "21–30",
-        "planting_depth_cm": 5.0
+        "planting_depth_cm": 5
       },
       "nutrition": {
         "stages": [
@@ -2131,9 +2050,6 @@
       "space": [
         "garden"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Nutrient-dense superfood tree with edible leaves, pods, flowers, and seeds. Grows rapidly in tropical climates.",
       "care_tips": "Extremely drought-tolerant once established. Prune regularly to keep it bushy and within reach for harvesting.",
       "weekly_time_minutes": 15,
@@ -2167,7 +2083,7 @@
       "seed": {
         "method": "seed or stem cutting",
         "germination_days": "5–12",
-        "planting_depth_cm": 2.0
+        "planting_depth_cm": 2
       },
       "nutrition": {
         "stages": [
@@ -2209,9 +2125,6 @@
         "garden",
         "balcony",
         "indoor"
-      ],
-      "goals": [
-        "food"
       ],
       "description": "Creeping medicinal herb eaten raw as ulam in Malaysia. Rich in antioxidants and widely used in traditional herbal drinks.",
       "care_tips": "Loves damp conditions — ideal near water features or in a tray of water. Harvest outer leaves regularly.",
@@ -2288,9 +2201,6 @@
         "garden",
         "balcony"
       ],
-      "goals": [
-        "food"
-      ],
       "description": "Citrus tree prized for its aromatic double leaves and zesty rind, both essential in Malaysian and Thai cooking.",
       "care_tips": "Feed monthly with citrus fertiliser. Watch for leaf miners. Harvest leaves as needed — they regrow readily.",
       "weekly_time_minutes": 25,
@@ -2324,7 +2234,7 @@
       "seed": {
         "method": "seed or grafted seedling",
         "germination_days": "14–28",
-        "planting_depth_cm": 1.0
+        "planting_depth_cm": 1
       },
       "nutrition": {
         "stages": [

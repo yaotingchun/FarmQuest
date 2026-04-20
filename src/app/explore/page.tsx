@@ -37,7 +37,7 @@ export default function ExplorePage() {
   }, [plants, search, typeFilter, diffFilter, spaceFilter, sunFilter])
 
   // Stats
-  const totalEdible = filteredPlants.filter(p => p.goals.includes('food') || p.type === 'food' || p.type === 'herb').length
+  const totalEdible = filteredPlants.filter(p => p.type === 'food' || p.type === 'herb' || p.type === 'fruit' || p.type === 'vegetable').length
   const totalEasy = filteredPlants.filter(p => p.difficulty === 'easy').length
   const avgDays = filteredPlants.length > 0 
     ? Math.round(filteredPlants.reduce((acc, p) => acc + p.growth_days, 0) / filteredPlants.length) 
