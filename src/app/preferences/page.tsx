@@ -67,7 +67,6 @@ interface ClimateData {
   temperature: number
   humidity: number
   rainfall: number          // mm (today)
-  sunlight_hours: number    // hours (today)
   latitude: number
   longitude: number
   locationName?: string
@@ -92,7 +91,7 @@ async function fetchClimate(lat: number, lon: number): Promise<ClimateData> {
   const res = await fetch(
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
     `&current=temperature_2m,relative_humidity_2m` +
-    `&daily=precipitation_sum,sunshine_duration` +
+    `&daily=precipitation_sum` +
     `&timezone=auto&forecast_days=1`
   )
   if (!res.ok) throw new Error('Climate API failed')
@@ -101,8 +100,6 @@ async function fetchClimate(lat: number, lon: number): Promise<ClimateData> {
   const temperature = Math.round(data.current.temperature_2m)
   const humidity = Math.round(data.current.relative_humidity_2m)
   const rainfall = data.daily?.precipitation_sum?.[0] ?? 0       // mm today
-  const sunshineSec = data.daily?.sunshine_duration?.[0] ?? 0
-  const sunlight_hours = Math.round((sunshineSec / 3600) * 10) / 10  // hours, 1dp
 
   const locationName = await reverseGeocode(lat, lon)
 
@@ -110,7 +107,6 @@ async function fetchClimate(lat: number, lon: number): Promise<ClimateData> {
     temperature,
     humidity,
     rainfall: Math.round(rainfall * 10) / 10,
-    sunlight_hours,
     latitude: lat,
     longitude: lon,
     locationName,
@@ -122,7 +118,6 @@ const DEFAULT_CLIMATE: Omit<ClimateData, 'latitude' | 'longitude' | 'locationNam
   temperature: 28,
   humidity: 65,
   rainfall: 2,
-  sunlight_hours: 6,
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -140,7 +135,6 @@ export default function PreferencesPage() {
   const [manualTemp, setManualTemp] = useState(DEFAULT_CLIMATE.temperature)
   const [manualHumidity, setManualHumidity] = useState(DEFAULT_CLIMATE.humidity)
   const [manualRainfall, setManualRainfall] = useState(DEFAULT_CLIMATE.rainfall)
-  const [manualSunHours, setManualSunHours] = useState(DEFAULT_CLIMATE.sunlight_hours)
 
   const isClimateStep = step === 3
   const progressPct = ((step + 1) / TOTAL_STEPS) * 100
@@ -165,7 +159,6 @@ export default function PreferencesPage() {
           setManualTemp(data.temperature)
           setManualHumidity(data.humidity)
           setManualRainfall(data.rainfall)
-          setManualSunHours(data.sunlight_hours)
           setGeoStatus('done')
         } catch {
           setGeoStatus('error')
@@ -206,7 +199,6 @@ export default function PreferencesPage() {
       temperature: manualTemp,
       humidity: manualHumidity,
       rainfall: manualRainfall,
-      sunlight_hours: manualSunHours,
     }
     const results = rankPlantsByPreferences(prefs)
     const encoded = encodeURIComponent(JSON.stringify(results))
@@ -371,24 +363,6 @@ export default function PreferencesPage() {
                 />
                 <div className="tile-range">
                   <span>0 mm</span><span>30 mm</span>
-                </div>
-              </div>
-
-              {/* Sunlight Hours */}
-              <div className="climate-tile">
-                <div className="tile-header">
-                  <span className="tile-emoji">☀️</span>
-                  <span className="tile-label">Sunlight</span>
-                </div>
-                <div className="tile-value">{manualSunHours} hrs</div>
-                <input
-                  type="range" min={0} max={14} step={0.5}
-                  value={manualSunHours}
-                  onChange={e => setManualSunHours(Number(e.target.value))}
-                  className="tile-slider"
-                />
-                <div className="tile-range">
-                  <span>0 hrs</span><span>14 hrs</span>
                 </div>
               </div>
             </div>
