@@ -2,6 +2,7 @@ import db from '@/data/plants.json';
 
 // --- Types ---
 export interface UserPreference {
+  space: string;
   sunlight: string;
   time_commitment: 'low' | 'medium' | 'high';
   goal: string;
@@ -21,6 +22,7 @@ export interface RecommendationResult {
 
 // --- Hardcoded User Preferences ---
 export const MOCK_USER_PREFERENCE: UserPreference = {
+  space: "balcony",
   sunlight: "full_sun",
   time_commitment: "low",
   goal: "food",
@@ -91,6 +93,11 @@ export function rankPlantsByPreferences(userPrefs: UserPreference): Recommendati
 
     // 5. Goal match (15 pts)
     if (plant.goals.includes(userPrefs.goal) || plant.type === userPrefs.goal) {
+      score += 15;
+    }
+
+    // Space match (15 pts) - Does the plant fit the user's space?
+    if (plant.space && plant.space.includes(userPrefs.space)) {
       score += 15;
     }
 

@@ -19,6 +19,19 @@ type OptionStep = {
 const OPTION_STEPS: OptionStep[] = [
   {
     id: 1,
+    field: 'space',
+    kind: 'options',
+    title: 'Where would you like to plant?',
+    subtitle: 'This helps us match plants to your available space.',
+    icon: '🏡',
+    options: [
+      { value: 'balcony', label: 'Balcony', emoji: '🏢', sub: 'Apartment balconies or small patios' },
+      { value: 'garden', label: 'Garden', emoji: '🏡', sub: 'Backyard or open ground' },
+      { value: 'indoor', label: 'Indoor', emoji: '🪴', sub: 'Inside the house' },
+    ],
+  },
+  {
+    id: 2,
     field: 'sunlight',
     kind: 'options',
     title: 'How much sunlight does your space get?',
@@ -31,7 +44,7 @@ const OPTION_STEPS: OptionStep[] = [
     ],
   },
   {
-    id: 2,
+    id: 3,
     field: 'time_commitment',
     kind: 'options',
     title: 'How much time can you commit per week?',
@@ -41,19 +54,6 @@ const OPTION_STEPS: OptionStep[] = [
       { value: 'low',    label: 'Low',    emoji: '🙂', sub: 'Under 15 min / week' },
       { value: 'medium', label: 'Medium', emoji: '🌿', sub: '15–30 min / week' },
       { value: 'high',   label: 'High',   emoji: '💪', sub: '30+ min / week' },
-    ],
-  },
-  {
-    id: 3,
-    field: 'goal',
-    kind: 'options',
-    title: 'What is your main growing goal?',
-    subtitle: 'Tell us what you want to get out of your garden.',
-    icon: '🎯',
-    options: [
-      { value: 'food',        label: 'Grow Food',     emoji: '🥦', sub: 'Vegetables, herbs & fruits' },
-      { value: 'aesthetics',  label: 'Beautify Space', emoji: '🌸', sub: 'Flowers & decorative plants' },
-      { value: 'air_quality', label: 'Cleaner Air',    emoji: '🌬️', sub: 'Air-purifying indoor plants' },
     ],
   },
 ]
@@ -199,9 +199,10 @@ export default function PreferencesPage() {
   // ── Climate confirm → run engine ────────────────────────────────────────────
   function confirmClimate() {
     const prefs: UserPreference = {
+      space: answers.space as string,
       sunlight: answers.sunlight as string,
       time_commitment: answers.time_commitment as 'low' | 'medium' | 'high',
-      goal: answers.goal as string,
+      goal: 'food',
       temperature: manualTemp,
       humidity: manualHumidity,
       rainfall: manualRainfall,
