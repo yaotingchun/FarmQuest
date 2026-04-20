@@ -1,0 +1,277 @@
+/* Plan Navigation Tabs */
+.plan-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 4px;
+}
+
+.plan-tabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.plan-tab {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.plan-tab:hover:not(.plan-tab-active) {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.plan-tab-active {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Specific colors for active states */
+.plan-tab-budget.plan-tab-active {
+  background: rgba(52, 217, 95, 0.15);
+  border: 1px solid rgba(52, 217, 95, 0.3);
+  color: #6ee88f;
+  box-shadow: 0 4px 15px rgba(52, 217, 95, 0.1);
+}
+
+.plan-tab-balanced.plan-tab-active {
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  color: #facc15;
+  box-shadow: 0 4px 15px rgba(234, 179, 8, 0.1);
+}
+
+.plan-tab-premium.plan-tab-active {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.1);
+}
+
+@media (max-width: 768px) {
+  .plan-label {
+    display: block;
+    margin-bottom: 8px;
+    width: 100%;
+  }
+  .plan-tabs {
+    width: 100%;
+    gap: 4px;
+  }
+  .plan-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    font-size: 0.7rem;
+  }
+}
+
+/* ── AI Modal Styles ── */
+.ai-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fade-in 0.3s ease;
+}
+
+.ai-modal-content {
+  background: rgba(2, 13, 6, 0.98);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 500px;
+  height: 520px; /* Rigid height to prevent jumps */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7),
+              0 0 40px rgba(52, 211, 153, 0.15);
+  overflow: hidden;
+  animation: scale-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ai-modal-header {
+  padding: 24px 24px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ai-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-sparkle-circle {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #10b981, #3b82f6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.ai-modal-title h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ai-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.ai-modal-close:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+.ai-modal-body {
+  padding: 24px;
+  min-height: 200px;
+}
+
+.ai-plan-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 20px;
+  color: #34d399;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.ai-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.ai-modal-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── DNA Loading Animation ── */
+.ai-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.ai-loading-dna {
+  display: flex;
+  gap: 8px;
+}
+
+.dna-dot {
+  width: 10px;
+  height: 10px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: dna-bounce 1.4s infinite ease-in-out both;
+}
+
+.dna-dot:nth-child(1) { animation-delay: -0.32s; }
+.dna-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes dna-bounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; box-shadow: 0 0 15px #10b981; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-up {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 480px) {
+  .ai-modal-content {
+    border-radius: 0;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+.ai-modal-body {
+  padding: 24px;
+  flex: 1; /* Fills remaining height of the fixed content area */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52, 211, 153, 0.2) transparent;
+}
+
+.ai-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+/* ── Transitions ── */
+.plan-transition-enter {
+  animation: fade-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

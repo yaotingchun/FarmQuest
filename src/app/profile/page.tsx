@@ -53,8 +53,9 @@ function calculateStats() {
   const totalHarvests = HARVEST_HISTORY.length
   const mealsProvided = totalKg * 2
 
-  let currentLevel = MILESTONES[0]
-  let nextLevel = MILESTONES[1]
+  type Milestone = typeof MILESTONES[number]
+  let currentLevel: Milestone = MILESTONES[0]
+  let nextLevel: Milestone | null = MILESTONES[1]
 
   if (totalKg >= MILESTONES[2].threshold) {
     currentLevel = MILESTONES[2]

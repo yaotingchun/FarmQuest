@@ -12,7 +12,10 @@ export function PotCard({ pot }: { pot: PlantSetup["pot"] }) {
         <div className="setup-card-icon">
           <Box size={20} />
         </div>
-        <h3 className="setup-card-title">Pot Selection</h3>
+        <h3 className="setup-card-title">
+          Pot Selection
+          <span className="setup-card-subtitle"> (Choose one)</span>
+        </h3>
       </div>
 
       <div className="setup-chips">

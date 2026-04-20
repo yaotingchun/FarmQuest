@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { Upload, Leaf, RefreshCcw, AlertCircle, ShieldCheck, Activity } from 'lucide-react'
 import { diagnosePlant } from '@/app/actions/diagnose'
 import { DiagnosisResult } from '@/types/diagnosis'
@@ -145,7 +146,9 @@ export default function DiagnosisPage() {
                 <h2 style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '-0.04em', margin: '4px 0' }}>
                   {result.plantName}
                 </h2>
-                <p style={{ fontSize: '1.1rem', lineHeight: 1.6, opacity: 0.8 }}>{result.diagnosis}</p>
+                <div className="markdown-content" style={{ fontSize: '1.1rem', lineHeight: 1.6, opacity: 0.8 }}>
+                  <ReactMarkdown>{result.diagnosis}</ReactMarkdown>
+                </div>
               </div>
 
               <div className="protocol-timeline">
@@ -159,7 +162,9 @@ export default function DiagnosisPage() {
                       <div className="marker-dot"></div>
                       {i < result.solutionSteps.length - 1 && <div className="marker-line"></div>}
                     </div>
-                    <p style={{ fontSize: '0.95rem', opacity: 0.9, paddingBottom: '10px' }}>{step}</p>
+                    <div className="markdown-content" style={{ fontSize: '0.95rem', opacity: 0.9, paddingBottom: '10px' }}>
+                      <ReactMarkdown>{step}</ReactMarkdown>
+                    </div>
                   </div>
                 ))}
               </div>

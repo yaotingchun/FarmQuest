@@ -277,3 +277,38 @@
   from { opacity: 0.6; text-shadow: 0 0 10px transparent; }
   to { opacity: 1; text-shadow: 0 0 20px var(--farm-green); }
 }
+
+/* Markdown Content Styles */
+.markdown-content p {
+  margin-bottom: 0.8rem;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Specific overrides for timeline items to keep them compact */
+.timeline-item .markdown-content p {
+  margin-bottom: 0;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content strong {
+  color: var(--farm-green);
+  font-weight: 700;
+}
+
+.markdown-content code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+}

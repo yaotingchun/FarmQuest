@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ShoppingCart, Copy, CheckCheck, Trash2 } from "lucide-react";
+import { ShoppingCart, Copy, CheckCheck, Trash2, Download } from "lucide-react";
 import type { PlantSetup, ShoppingItem } from "@/types/plant";
 import { generateShoppingList, formatShoppingListText } from "@/utils/shopping-list";
 
@@ -46,11 +46,24 @@ export function ShoppingList({ plant }: ShoppingListProps) {
     }
   }, [items, plant.name]);
 
+  const handleExport = useCallback(() => {
+    const text = formatShoppingListText(plant.name, items);
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${plant.name.toLowerCase().replace(/\s+/g, "-")}-shopping-list.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [items, plant.name]);
+
   const completedCount = items.filter((i) => i.checked).length;
   const progress = items.length > 0 ? (completedCount / items.length) * 100 : 0;
 
   const categoryLabels: Record<string, { label: string; emoji: string }> = {
-    pot: { label: "Pot", emoji: "🪴" },
+    pot: { label: "Pot (Choose one)", emoji: "🪴" },
     soil: { label: "Soil", emoji: "🌍" },
     seed: { label: "Seed", emoji: "🌱" },
     fertilizer: { label: "Fertilizer", emoji: "🧪" },
@@ -123,7 +136,14 @@ export function ShoppingList({ plant }: ShoppingListProps) {
           onClick={handleCopy}
         >
           {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
-          <span>{copied ? "Copied!" : "Copy List"}</span>
+          <span>{copied ? "Copy List" : "Copy List"}</span>
+        </button>
+        <button
+          className="shopping-btn shopping-btn-export"
+          onClick={handleExport}
+        >
+          <Download size={16} />
+          <span>Export List</span>
         </button>
         <button
           className="shopping-btn shopping-btn-secondary"
