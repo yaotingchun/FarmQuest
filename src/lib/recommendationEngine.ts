@@ -5,7 +5,6 @@ export interface UserPreference {
   space: string;
   sunlight: string;
   time_commitment: 'low' | 'medium' | 'high';
-  goal: string;
   temperature: number;
   humidity: number;          // relative humidity %
   rainfall: number;          // mm/day
@@ -24,7 +23,6 @@ export const MOCK_USER_PREFERENCE: UserPreference = {
   space: "balcony",
   sunlight: "full_sun",
   time_commitment: "low",
-  goal: "food",
   temperature: 30,
   humidity: 70,
   rainfall: 3
@@ -46,12 +44,11 @@ function rainfallToWaterLevel(mm: number): string {
 
 // --- Scoring Engine ---
 // Max possible score = 100
-//   Temperature fit   : 20
-//   Humidity fit       : 10
-//   Sunlight match    : 15
-//   Space match       : 15
-//   Goal match        : 15
+//   Temperature fit   : 25 (+5)
+//   Sunlight match    : 20 (+5)
+//   Space match       : 20 (+5)
 //   Rainfall/water    : 15
+//   Humidity fit       : 10
 //   Time commitment   : 10
 export function rankPlantsByPreferences(userPrefs: UserPreference): RecommendationResult[] {
   const plants = db.plants;
@@ -61,9 +58,9 @@ export function rankPlantsByPreferences(userPrefs: UserPreference): Recommendati
   const scoredPlants = plants.map((plant) => {
     let score = 0;
 
-    // 1. Temperature (20 pts) — core survival factor
+    // 1. Temperature (25 pts) — core survival factor
     if (userPrefs.temperature >= plant.temp_min && userPrefs.temperature <= plant.temp_max) {
-      score += 20;
+      score += 25;
     }
 
     // 2. Humidity (10 pts) — within plant's ideal range
@@ -71,27 +68,22 @@ export function rankPlantsByPreferences(userPrefs: UserPreference): Recommendati
       score += 10;
     }
 
-    // 3. Sunlight match (15 pts) — user-declared preference
+    // 3. Sunlight match (20 pts) — user-declared preference
     if (userPrefs.sunlight === plant.sunlight) {
-      score += 15;
+      score += 20;
     }
 
-    // 5. Goal match (15 pts)
-    if (plant.goals.includes(userPrefs.goal) || plant.type === userPrefs.goal) {
-      score += 15;
-    }
-
-    // Space match (15 pts) - Does the plant fit the user's space?
+    // 4. Space match (20 pts) - Does the plant fit the user's space?
     if (plant.space && plant.space.includes(userPrefs.space)) {
-      score += 15;
+      score += 20;
     }
 
-    // 6. Rainfall / Water alignment (15 pts)
+    // 5. Rainfall / Water alignment (15 pts)
     if (derivedWater === plant.water) {
       score += 15;
     }
 
-    // 7. Time commitment (10 pts)
+    // 6. Time commitment (10 pts)
     if (checkTimeCommitment(userPrefs.time_commitment, plant.weekly_time_minutes)) {
       score += 10;
     }
