@@ -36,6 +36,11 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+.plan-tab:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .plan-tab-active {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transform: translateY(-1px);
@@ -180,6 +185,13 @@
   font-size: 1rem;
   line-height: 1.7;
   color: #cbd5e1;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ai-text-paragraph {
   margin: 0;
   white-space: pre-wrap;
 }

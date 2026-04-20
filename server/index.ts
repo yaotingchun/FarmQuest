@@ -21,6 +21,7 @@ import cors from "cors";
 import plantsData from "./data/plants.json" with { type: "json" };
 import { generatePlantingPlans, generateSetupExplanation, type AIPlan } from "./ai.js";
 import { calculateCost } from "./cost.js";
+import { ragManager } from "./rag.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -32,34 +33,63 @@ app.use(express.json());
 const plansCache = new Map<string, AIPlan[]>();
 const explanationsCache = new Map<string, string>(); // Key: plantId-planType
 
+const isCompleteExplanation = (text: string): boolean => {
+  if (!text || text.length < 420) return false;
+  const sentenceCount = (text.match(/[.!?](?=\s|$)/g) || []).length;
+  const hasPot = /^\s*Pot:\s+/im.test(text);
+  const hasSoil = /^\s*Soil:\s+/im.test(text);
+  const hasSeed = /^\s*Seed:\s+/im.test(text);
+  const hasNutrition = /^\s*Nutrition:\s+/im.test(text);
+  const paragraphCount = text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean).length;
+  return (
+    sentenceCount >= 7 &&
+    /[.!?]$/.test(text.trim()) &&
+    hasPot &&
+    hasSoil &&
+    hasSeed &&
+    hasNutrition &&
+    paragraphCount >= 4
+  );
+};
+
 // ── Helpers ──
 const finalizePlansWithCosts = (plans: AIPlan[]): AIPlan[] => {
-  // 1. Calculate base deterministic costs
+  // Calculate deterministic costs from prices.json
   for (const plan of plans) {
     plan.cost = calculateCost(plan, plan.plan_type);
     plan.currency = "RM";
   }
 
-  // 2. Minimal Safety Check: Ensure Budget < Balanced < Premium
+  // Guardrail: keep Budget exact, but prevent AI tiers from pricing below it.
   const budget = plans.find((p) => p.plan_type === "Budget");
   const balanced = plans.find((p) => p.plan_type === "Balanced");
   const premium = plans.find((p) => p.plan_type === "Premium");
 
-  if (budget && balanced && premium) {
-    budget.cost = Math.max(20, budget.cost!);
-    if (balanced.cost! <= budget.cost!) balanced.cost = budget.cost! + 2;
-    if (premium.cost! <= balanced.cost!) premium.cost = balanced.cost! + 3;
+  if (budget && balanced && typeof budget.cost === "number" && typeof balanced.cost === "number") {
+    if (balanced.cost <= budget.cost) {
+      balanced.cost = budget.cost + 2;
+    }
   }
+
+  if (balanced && premium && typeof balanced.cost === "number" && typeof premium.cost === "number") {
+    if (premium.cost <= balanced.cost) {
+      premium.cost = balanced.cost + 3;
+    }
+  }
+
   return plans;
 };
 
 // GET /api/plants — return all plants (summary only)
 app.get("/api/plants", (_req, res) => {
-  const summaries = plantsData.map((p) => ({
+  const summaries = (plantsData as any).plants.map((p: any) => ({
     plant_id: p.plant_id,
     name: p.name,
     difficulty: p.difficulty,
-    growth_time_days: p.growth_time_days,
+    growth_days: p.growth_days,
     emoji: p.emoji,
     description: p.description,
   }));
@@ -68,7 +98,7 @@ app.get("/api/plants", (_req, res) => {
 
 // GET /api/plants/:plantId — return full plant setup data
 app.get("/api/plants/:plantId", (req, res) => {
-  const plant = plantsData.find((p) => p.plant_id === req.params.plantId);
+  const plant = (plantsData as any).plants.find((p: any) => p.plant_id === req.params.plantId);
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
     return;
@@ -76,11 +106,11 @@ app.get("/api/plants/:plantId", (req, res) => {
   res.json(plant);
 });
 
-// GET /api/plants/:plantId/ai-plans — return 3 AI-generated plans with costs
+// GET /api/plants/:plantId/ai-plans — return 1 DB budget + 2 AI plans with costs
 app.get("/api/plants/:plantId/ai-plans", async (req, res) => {
   const plantId = req.params.plantId;
   const refresh = req.query.refresh === "true";
-  const plant = plantsData.find((p) => p.plant_id === plantId);
+  const plant = (plantsData as any).plants.find((p: any) => p.plant_id === plantId);
 
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
@@ -101,38 +131,29 @@ app.get("/api/plants/:plantId/ai-plans", async (req, res) => {
     console.log(`[AI] Generating plans for ${plantId} (refresh=${refresh})...`);
     const { plans: rawPlans, isFallback } = await generatePlantingPlans(plant as any);
 
+    if (isFallback) {
+      console.warn(`[AI] SERVER FALLBACK: AI generation failed for ${plantId}. Check your Vertex AI credentials and API enablement.`);
+    }
+
     const plans = finalizePlansWithCosts(rawPlans);
 
     // Cache the result ONLY if it's NOT a fallback
     if (!isFallback) {
       plansCache.set(plantId, plans);
-      console.log(`[AI] Plans generated and cached for ${plantId}`);
+      console.log(`[AI] SUCCESS: Plans generated and cached for ${plantId}`);
     } else {
-      console.log(`[AI] Plans generated but NOT cached (fallback) for ${plantId}`);
+      console.log(`[AI] DEGRADED: Returning smart fallback plans for ${plantId}`);
     }
 
     res.json(plans);
   } catch (err) {
     console.error(`[AI] Error generating plans for ${plantId}:`, err);
 
-    // Fallback: return base plant as 3 plans, but smartly tiered
+    // Fallback: return base plant as 3 deterministic plans
     const fallbackPlans: AIPlan[] = (["Budget", "Balanced", "Premium"] as const).map(
       (type) => {
         const plan: AIPlan = JSON.parse(JSON.stringify(plant)); // Deep clone
         plan.plan_type = type;
-
-        // Smart Tiering for Fallbacks
-        if (type === "Budget") {
-          if (plan.pot.material.length > 1) plan.pot.material = [plan.pot.material[0]];
-          if (plan.soil.mix.length > 1) {
-            plan.soil.mix = [{ component: plan.soil.mix[0].component, percentage: 100 }];
-          }
-        } else if (type === "Premium") {
-          // Add a premium material if possible
-          if (!plan.pot.material.includes("terracotta") && !plan.pot.material.includes("fabric")) {
-            plan.pot.material.push("terracotta");
-          }
-        }
 
         return plan;
       }
@@ -159,12 +180,17 @@ app.post("/api/plants/:plantId/explain", async (req, res) => {
 
   const cacheKey = `${plantId}-${plan.plan_type}`;
   if (explanationsCache.has(cacheKey)) {
-    console.log(`[Cache] Returning cached explanation for ${cacheKey}`);
-    res.json({ explanation: explanationsCache.get(cacheKey) });
-    return;
+    const cached = explanationsCache.get(cacheKey) || "";
+    // Return only high-quality complete explanations from cache.
+    if (isCompleteExplanation(cached)) {
+      console.log(`[Cache] Returning cached explanation for ${cacheKey}`);
+      res.json({ explanation: cached });
+      return;
+    }
+    explanationsCache.delete(cacheKey);
   }
 
-  const plant = plantsData.find((p) => p.plant_id === plantId);
+  const plant = (plantsData as any).plants.find((p: any) => p.plant_id === plantId);
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
     return;
@@ -180,13 +206,21 @@ app.post("/api/plants/:plantId/explain", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🌱 FarmQuest API running on http://localhost:${PORT}`);
   
+  // Initialize RAG Knowledge Base
+  try {
+    await ragManager.initialize();
+  } catch (err) {
+    console.error("[RAG] Initialization failed:", err);
+  }
+
+/* 
   // Pre-warm the cache in the background
   console.log("[Cache] Starting background pre-warming of AI plans...");
   (async () => {
-    for (const plant of plantsData) {
+    for (const plant of (plantsData as any).plants) {
       if (!plansCache.has(plant.plant_id)) {
         try {
           console.log(`[Cache Pre-warm] Generating plans for ${plant.plant_id}...`);
@@ -205,4 +239,5 @@ app.listen(PORT, () => {
     }
     console.log("[Cache] Pre-warming complete!");
   })();
+*/
 });

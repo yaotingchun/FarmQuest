@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, useCallback, useRef } from "react";
+import { useEffect, useState, use, useCallback, useRef, useMemo } from "react";
 import { ArrowLeft, Sparkles, Rocket, AlertTriangle, Clock, ChevronLeft, ChevronRight, X, BrainCircuit, RefreshCcw } from "lucide-react";
 
 import { useRouter } from "next/navigation";
@@ -13,36 +13,91 @@ import styles from "./carousel.module.css";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-const difficultyColors: Record<Difficulty, string> = {
+const difficultyColors: Record<string, string> = {
+  easy: "badge-easy",
+  medium: "badge-medium",
+  hard: "badge-hard",
   Easy: "badge-easy",
   Medium: "badge-medium",
   Hard: "badge-hard",
 };
 
+const formatDifficulty = (d: string) => d.charAt(0).toUpperCase() + d.slice(1).toLowerCase();
+
+function normalizeExplanationText(text: string): string {
+  return text
+    .replace(/\bpt\b\s*:/gi, "Pot:")
+    .replace(/\bpt\b/gi, "Pot")
+    .replace(/\bpotting\s*:/gi, "Pot:")
+    .replace(/\bsoil\s*:/gi, "Soil:")
+    .replace(/\bseed\s*:/gi, "Seed:")
+    .replace(/\bnutrition\s*:/gi, "Nutrition:")
+    .replace(/\bnutri\w*\s*:/gi, "Nutrition:");
+}
+
 // ── Typing Effect Component ──
 function TypingEffect({ text, speed = 10, onUpdate }: { text: string; speed?: number; onUpdate?: () => void }) {
   const [displayedText, setDisplayedText] = useState("");
+  const normalizedText = normalizeExplanationText(text);
 
   useEffect(() => {
     setDisplayedText("");
     let index = 0;
     const interval = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText((prev) => prev + text.charAt(index));
+      if (index < normalizedText.length) {
+        setDisplayedText((prev) => prev + normalizedText.charAt(index));
         index++;
       } else {
         clearInterval(interval);
       }
     }, speed);
     return () => clearInterval(interval);
-  }, [text, speed]);
+  }, [normalizedText, speed]);
 
   // Notify parent when text updates (for auto-scroll)
   useEffect(() => {
     if (onUpdate) onUpdate();
   }, [displayedText, onUpdate]);
 
-  return <p className={styles['ai-text']}>{displayedText}</p>;
+  const paragraphs = displayedText
+    .split(/\n\s*\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  return (
+    <div className={styles['ai-text']}>
+      {paragraphs.length > 0 ? (
+        paragraphs.map((paragraph, index) => (
+          <p key={index} className={styles['ai-text-paragraph']}>
+            {paragraph}
+          </p>
+        ))
+      ) : (
+        <p className={styles['ai-text-paragraph']}>{displayedText}</p>
+      )}
+    </div>
+  );
+}
+
+function ExplanationText({ text }: { text: string }) {
+  const paragraphs = text
+    .split(/\n\s*\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  return (
+    <div className={styles['ai-text']}>
+      {paragraphs.length > 0 ? (
+        paragraphs.map((paragraph, index) => (
+          <p key={index} className={styles['ai-text-paragraph']}>
+            {paragraph}
+          </p>
+        ))
+      ) : (
+        <p className={styles['ai-text-paragraph']}>{text}</p>
+      )}
+    </div>
+  );
 }
 
 
@@ -68,8 +123,10 @@ export default function PlantDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplaining, setIsExplaining] = useState(false);
+  const [skipTypingEffect, setSkipTypingEffect] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const modalBodyRef = useRef<HTMLDivElement>(null);
+  const explanationCacheRef = useRef<Map<string, string>>(new Map());
 
   const handleAutoScroll = useCallback(() => {
     if (modalBodyRef.current) {
@@ -103,8 +160,8 @@ export default function PlantDetailPage({
         }
         const data: PlantSetup = await res.json();
 
-        // Immediately render with base plant (as "Balanced" plan)
-        setPlans([{ ...data, plan_type: "Balanced" }]);
+        // Immediately render with base plant as Budget (available before AI finishes)
+        setPlans([{ ...data, plan_type: "Budget" }]);
         setLoading(false);
 
         // Now fetch AI plans in background
@@ -143,10 +200,29 @@ export default function PlantDetailPage({
   }, [plans.length]);
 
   const currentPlan = plans[currentIndex] || null;
+  const planIndexByType = useMemo(() => {
+    const map = new Map<AIPlan["plan_type"], number>();
+    plans.forEach((plan, index) => map.set(plan.plan_type, index));
+    return map;
+  }, [plans]);
+  const isAiPlansReady = PLAN_TYPES.every((type) => planIndexByType.has(type));
+  const activePlanType: AIPlan["plan_type"] = currentPlan?.plan_type || "Budget";
 
   const handleAIExplain = async () => {
     if (!currentPlan) return;
 
+    const cacheKey = `${id}-${currentPlan.plan_type}`;
+    const cachedExplanation = explanationCacheRef.current.get(cacheKey);
+
+    if (cachedExplanation) {
+      setSkipTypingEffect(true);
+      setExplanation(cachedExplanation);
+      setShowModal(true);
+      setIsExplaining(false);
+      return;
+    }
+
+    setSkipTypingEffect(false);
     setExplanation(""); // Reset
     setIsExplaining(true);
     setShowModal(true);
@@ -160,7 +236,9 @@ export default function PlantDetailPage({
 
       if (res.ok) {
         const data = await res.json();
-        setExplanation(data.explanation);
+        const normalized = normalizeExplanationText(data.explanation || "");
+        explanationCacheRef.current.set(cacheKey, normalized);
+        setExplanation(normalized);
       } else {
         setExplanation("I encountered an issue while analyzing the setup. Please try again.");
       }
@@ -218,28 +296,32 @@ export default function PlantDetailPage({
     vegetative: "🌿",
     fruiting: "🌶️",
     flowering: "🌸",
+    harvest: "✅",
+    establishment: "🏗️",
+    sprouting: "🌱",
+    young: "🌿",
+    mature: "🌳",
+    growing: "📈",
   };
 
   const stages = currentPlan.nutrition.stages.map((s) => s.stage);
   const totalMarkers = stages.length + 1; // +1 for harvest
   const markers = stages.map((stage, i) => ({
-    emoji: stageEmojis[stage] || "🌱",
+    emoji: stageEmojis[stage.toLowerCase()] || "🌱",
     label: stage,
     position: (i / (totalMarkers - 1)) * 100,
   }));
   // Add harvest marker at the end
   markers.push({ emoji: "✅", label: "harvest", position: 100 });
 
-  const showCarousel = plans.length > 1;
-
   // ── Render ──
   return (
     <>
       <div className="setup-page">
         {/* Back Navigation */}
-        <button className="setup-back" onClick={() => router.push("/recommendations")}>
+        <button className="setup-back" onClick={() => router.back()}>
           <ArrowLeft size={18} />
-          <span>Recommendations</span>
+          <span>Go Back</span>
         </button>
 
 
@@ -249,8 +331,8 @@ export default function PlantDetailPage({
             <div className="setup-hero-emoji">{currentPlan.emoji}</div>
             <div className="setup-hero-name-wrap">
               <h1 className="setup-hero-name">{currentPlan.name}</h1>
-              <span className={`reco-badge ${difficultyColors[currentPlan.difficulty]}`}>
-                {currentPlan.difficulty}
+              <span className={`reco-badge ${difficultyColors[currentPlan.difficulty] || "badge-medium"}`}>
+                {formatDifficulty(currentPlan.difficulty)}
               </span>
             </div>
           </div>
@@ -259,7 +341,7 @@ export default function PlantDetailPage({
             <p className="setup-hero-desc">{currentPlan.description}</p>
             <div className="setup-hero-meta">
               <Clock size={14} />
-              <span>{currentPlan.growth_time_days} days to harvest</span>
+              <span>{currentPlan.growth_days} days to harvest</span>
             </div>
           </div>
         </div>
@@ -268,14 +350,14 @@ export default function PlantDetailPage({
         <div className="setup-growth-bar">
           <div className="setup-growth-label">
             <span>Growth Timeline</span>
-            <span>{currentPlan.growth_time_days} days</span>
+            <span>{currentPlan.growth_days} days</span>
           </div>
           <div className="setup-growth-track">
             <div className="setup-growth-fill" style={{ width: "0%" }} />
             <div className="setup-growth-markers">
-              {markers.map((m) => (
+              {markers.map((m, i) => (
                 <span
-                  key={m.label}
+                  key={`${m.label}-${i}`}
                   className="setup-growth-marker"
                   style={{ left: `${m.position}%` }}
                   title={m.label}
@@ -288,43 +370,48 @@ export default function PlantDetailPage({
         </div>
 
         {/* Plan Type Header + Cost */}
-        {showCarousel && (
-          <div className="plan-info-bar">
-            <div className="plan-info-left">
-              <span className={styles['plan-label']}>Select Plan:</span>
-              <div className={styles['plan-tabs']}>
-                {plans.map((p, i) => (
+        <div className="plan-info-bar">
+          <div className="plan-info-left">
+            <span className={styles['plan-label']}>Select Plan:</span>
+            <div className={styles['plan-tabs']}>
+              {PLAN_TYPES.map((type) => {
+                const isDisabled = type !== "Budget" && !isAiPlansReady;
+                return (
                   <button
-                    key={p.plan_type}
-                    className={`${styles['plan-tab']} ${i === currentIndex ? styles['plan-tab-active'] : ''} ${styles[`plan-tab-${p.plan_type.toLowerCase()}`]}`}
-                    onClick={() => setCurrentIndex(i)}
+                    key={type}
+                    className={`${styles['plan-tab']} ${type === activePlanType ? styles['plan-tab-active'] : ''} ${styles[`plan-tab-${type.toLowerCase()}`]}`}
+                    onClick={() => {
+                      if (isDisabled) return;
+                      const index = planIndexByType.get(type);
+                      if (index !== undefined) setCurrentIndex(index);
+                    }}
+                    disabled={isDisabled}
                   >
-                    {p.plan_type}
+                    {type}
                   </button>
-                ))}
-              </div>
-              {aiLoading && <span className="plan-loading-dot">Generating plans…</span>}
-            </div>
-            <div className="plan-cost-display">
-              {currentPlan.cost !== undefined && (
-                <>
-                  <div className="plan-cost-amount">
-                    <span className="plan-cost-label">Estimated Cost:</span>
-                    <strong className="plan-cost-value">
-                      {currentPlan.currency || "RM"} {currentPlan.cost}
-                    </strong>
-                  </div>
-                  <span className="plan-cost-disclaimer">Based on average market prices</span>
-                </>
-              )}
+                );
+              })}
             </div>
           </div>
-        )}
+          <div className="plan-cost-display">
+            {currentPlan.cost !== undefined && (
+              <>
+                <div className="plan-cost-amount">
+                  <span className="plan-cost-label">Estimated Cost:</span>
+                  <strong className="plan-cost-value">
+                    {currentPlan.currency || "RM"} {currentPlan.cost}
+                  </strong>
+                </div>
+                <span className="plan-cost-disclaimer">Based on average market prices</span>
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Setup Guide Cards — Static container allows internal content (like bars) to animate */}
         <div className="setup-grid">
-          <PotCard pot={currentPlan.pot} />
-          <SoilCard soil={currentPlan.soil} />
+          <PotCard pot={currentPlan.pot} reason={currentPlan.ai_details?.pot_reason} />
+          <SoilCard soil={currentPlan.soil} reason={currentPlan.ai_details?.soil_reason} />
           <SeedCard seed={currentPlan.seed} plantName={currentPlan.name} />
           <NutritionCard stages={currentPlan.nutrition.stages} />
         </div>
@@ -379,7 +466,11 @@ export default function PlantDetailPage({
                   <div className={styles['ai-plan-badge']}>
                     {currentIndex === 0 ? "Budget Friendly" : currentIndex === 1 ? "Balanced Choice" : "Premium Setup"}
                   </div>
-                  <TypingEffect text={explanation || ""} onUpdate={handleAutoScroll} />
+                  {skipTypingEffect ? (
+                    <ExplanationText text={explanation || ""} />
+                  ) : (
+                    <TypingEffect text={explanation || ""} onUpdate={handleAutoScroll} />
+                  )}
                 </div>
               )}
             </div>

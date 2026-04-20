@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 20px 60px;
+  padding: 80px 20px 24px;
 }
 
 .pref-header {
@@ -58,7 +58,7 @@
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: 28px;
-  padding: 48px 40px 40px;
+  padding: 36px 32px 28px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);

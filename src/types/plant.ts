@@ -1,6 +1,6 @@
 // ── Plant Data Types ──
 
-export type Difficulty = "Easy" | "Medium" | "Hard";
+export type Difficulty = "easy" | "medium" | "hard" | "Easy" | "Medium" | "Hard";
 
 export interface SoilComponent {
   component: string;
@@ -14,13 +14,34 @@ export interface NutritionStage {
   frequency: string;
 }
 
+export interface AIPlan extends PlantSetup {
+  plan_type: "Budget" | "Balanced" | "Premium";
+  cost?: number;
+  currency?: string;
+  explanation?: string;
+  ai_details?: {
+    pot_reason?: string;
+    soil_reason?: string;
+  };
+}
+
 export interface PlantSetup {
   plant_id: string;
   name: string;
+  scientific_name: string;
+  sunlight: string;
+  water: string;
+  temp_min: number;
+  temp_max: number;
+  humidity_min: number;
+  humidity_max: number;
   difficulty: Difficulty;
-  growth_time_days: number;
-  emoji: string;
+  growth_days: number;
+  type: string;
+  space: string[];
   description: string;
+  care_tips: string;
+  weekly_time_minutes: number;
   pot: {
     material: string[];
     min_diameter_cm: number;
@@ -40,13 +61,20 @@ export interface PlantSetup {
   nutrition: {
     stages: NutritionStage[];
   };
+  emoji?: string;
+  // added for RAG results
+  explanation?: string;
+  ai_details?: {
+    pot_reason?: string;
+    soil_reason?: string;
+  };
 }
 
 export interface PlantSummary {
   plant_id: string;
   name: string;
   difficulty: Difficulty;
-  growth_time_days: number;
+  growth_days: number;
   emoji: string;
   description: string;
 }

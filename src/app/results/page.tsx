@@ -20,20 +20,29 @@ function scoreColour(score: number) {
 }
 
 // ── Plant card ────────────────────────────────────────────────────────────────
-function PlantCard({ plant, rank }: { plant: RecommendationResult; rank: number }) {
+function PlantCard({ plant, rank, onClick }: { plant: RecommendationResult; rank: number; onClick: () => void }) {
   const diff = DIFF_META[plant.difficulty] ?? DIFF_META.medium
   const colour = scoreColour(plant.match_score)
 
   return (
-    <div className="result-card" style={{ animationDelay: `${rank * 0.1}s` }}>
+    <div 
+      className="result-card clickable-card" 
+      style={{ animationDelay: `${rank * 0.1}s` }}
+      onClick={onClick}
+    >
       {/* Rank ribbon */}
       <div className="rank-ribbon">#{rank}</div>
 
-      {/* Score meter */}
-      <div className="score-ring" style={{ background: `conic-gradient(${colour} ${plant.match_score}%, rgba(255,255,255,0.06) 0%)` }}>
-        <div className="score-ring-inner">
-          <span className="score-num">{plant.match_score}</span>
-          <span className="score-label">score</span>
+      {/* Header with Score and Emoji */}
+      <div className="card-top">
+        <div className="score-ring" style={{ background: `conic-gradient(${colour} ${plant.match_score}%, rgba(255,255,255,0.06) 0%)` }}>
+          <div className="score-ring-inner">
+            <span className="score-num">{plant.match_score}</span>
+            <span className="score-label">score</span>
+          </div>
+        </div>
+        <div className="plant-emoji-pill">
+          {plant.emoji}
         </div>
       </div>
 
@@ -141,7 +150,12 @@ function ResultsInner() {
       {/* Cards */}
       <div className="results-grid">
         {top5.map((plant, i) => (
-          <PlantCard key={plant.plant_id} plant={plant} rank={i + 1} />
+          <PlantCard 
+            key={plant.plant_id} 
+            plant={plant} 
+            rank={i + 1} 
+            onClick={() => router.push(`/plant/${plant.plant_id}`)}
+          />
         ))}
       </div>
 

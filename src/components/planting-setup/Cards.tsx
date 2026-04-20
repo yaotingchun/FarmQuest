@@ -5,7 +5,7 @@ import type { PlantSetup, NutritionStage } from "@/types/plant";
 import { useState } from "react";
 
 // ── Pot Card ──
-export function PotCard({ pot }: { pot: PlantSetup["pot"] }) {
+export function PotCard({ pot, reason }: { pot: PlantSetup["pot"]; reason?: string }) {
   return (
     <div className="setup-card">
       <div className="setup-card-header">
@@ -40,12 +40,14 @@ export function PotCard({ pot }: { pot: PlantSetup["pot"] }) {
         <span>Drainage {pot.drainage_required ? "Required" : "Optional"}</span>
         {pot.drainage_required && <Check size={14} className="setup-indicator-check" />}
       </div>
+
+
     </div>
   );
 }
 
 // ── Soil Card ──
-export function SoilCard({ soil }: { soil: PlantSetup["soil"] }) {
+export function SoilCard({ soil, reason }: { soil: PlantSetup["soil"]; reason?: string }) {
   return (
     <div className="setup-card">
       <div className="setup-card-header">
@@ -82,6 +84,8 @@ export function SoilCard({ soil }: { soil: PlantSetup["soil"] }) {
           <span className="setup-meta-value">{soil.moisture}</span>
         </div>
       </div>
+
+
     </div>
   );
 }
@@ -122,7 +126,21 @@ export function SeedCard({ seed, plantName }: { seed: PlantSetup["seed"]; plantN
 // ── Nutrition Card ──
 export function NutritionCard({ stages }: { stages: NutritionStage[] }) {
   const [activeStage, setActiveStage] = useState(0);
-  const current = stages[activeStage];
+
+  // Safety Check: If stages are missing or empty, show a gentle loading/fallback state
+  if (!stages || stages.length === 0) {
+    return (
+      <div className="setup-card">
+        <div className="setup-card-header">
+          <div className="setup-card-icon"><FlaskConical size={20} /></div>
+          <h3 className="setup-card-title">Nutrition Plan</h3>
+        </div>
+        <div className="nutrition-loading">Nutrition data loading...</div>
+      </div>
+    );
+  }
+
+  const current = stages[activeStage] || stages[0];
 
   return (
     <div className="setup-card">
@@ -136,7 +154,7 @@ export function NutritionCard({ stages }: { stages: NutritionStage[] }) {
       <div className="nutrition-tabs">
         {stages.map((s, i) => (
           <button
-            key={s.stage}
+            key={s.stage || i}
             className={`nutrition-tab ${i === activeStage ? "nutrition-tab-active" : ""}`}
             onClick={() => setActiveStage(i)}
           >
@@ -148,16 +166,16 @@ export function NutritionCard({ stages }: { stages: NutritionStage[] }) {
       <div className="nutrition-detail">
         <div className="nutrition-npk">
           <span className="nutrition-npk-label">NPK</span>
-          <span className="nutrition-npk-value">{current.npk}</span>
+          <span className="nutrition-npk-value">{current?.npk || "N/A"}</span>
         </div>
         <div className="setup-meta-row">
           <div className="setup-meta">
             <span className="setup-meta-label">Type</span>
-            <span className="setup-meta-value">{current.type}</span>
+            <span className="setup-meta-value">{current?.type || "Standard"}</span>
           </div>
           <div className="setup-meta">
             <span className="setup-meta-label">Frequency</span>
-            <span className="setup-meta-value">{current.frequency}</span>
+            <span className="setup-meta-value">{current?.frequency || "As needed"}</span>
           </div>
         </div>
       </div>

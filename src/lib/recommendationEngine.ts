@@ -13,6 +13,7 @@ export interface UserPreference {
 export interface RecommendationResult {
   plant_id: string;
   name: string;
+  emoji: string;
   difficulty: string;
   estimated_growth_days: number;
   match_score: number;       // 0–100
@@ -91,6 +92,7 @@ export function rankPlantsByPreferences(userPrefs: UserPreference): Recommendati
     return {
       plant_id: plant.plant_id,
       name: plant.name,
+      emoji: plant.emoji,
       difficulty: plant.difficulty,
       estimated_growth_days: plant.growth_days,
       match_score: score,

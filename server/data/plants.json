@@ -75,7 +75,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🌶️"
     },
     {
       "plant_id": "P002",
@@ -151,7 +152,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🌿"
     },
     {
       "plant_id": "P003",
@@ -227,7 +229,8 @@
             "frequency": "weekly"
           }
         ]
-      }
+      },
+      "emoji": "🥬"
     },
     {
       "plant_id": "P004",
@@ -303,7 +306,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🍃"
     },
     {
       "plant_id": "P005",
@@ -384,7 +388,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🍅"
     },
     {
       "plant_id": "P006",
@@ -458,7 +463,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🥗"
     },
     {
       "plant_id": "P007",
@@ -533,7 +539,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🍃"
     },
     {
       "plant_id": "P008",
@@ -608,7 +615,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🍋"
     },
     {
       "plant_id": "P009",
@@ -684,7 +692,8 @@
             "frequency": "every 2 months"
           }
         ]
-      }
+      },
+      "emoji": "🌿"
     },
     {
       "plant_id": "P010",
@@ -759,7 +768,8 @@
             "frequency": "weekly"
           }
         ]
-      }
+      },
+      "emoji": "🌸"
     },
     {
       "plant_id": "P011",
@@ -834,7 +844,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🥒"
     },
     {
       "plant_id": "P012",
@@ -909,7 +920,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🍃"
     },
     {
       "plant_id": "P013",
@@ -984,7 +996,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🌻"
     },
     {
       "plant_id": "P014",
@@ -1060,7 +1073,8 @@
             "frequency": "weekly"
           }
         ]
-      }
+      },
+      "emoji": "🧅"
     },
     {
       "plant_id": "P015",
@@ -1135,7 +1149,8 @@
             "frequency": "every 2 months"
           }
         ]
-      }
+      },
+      "emoji": "🌾"
     },
     {
       "plant_id": "P016",
@@ -1210,7 +1225,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🍆"
     },
     {
       "plant_id": "P017",
@@ -1285,7 +1301,8 @@
             "frequency": "weekly"
           }
         ]
-      }
+      },
+      "emoji": "🥗"
     },
     {
       "plant_id": "P018",
@@ -1353,7 +1370,8 @@
             "frequency": "once at day 5"
           }
         ]
-      }
+      },
+      "emoji": "🌱"
     },
     {
       "plant_id": "P019",
@@ -1428,7 +1446,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🍃"
     },
     {
       "plant_id": "P020",
@@ -1504,7 +1523,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🫚"
     },
     {
       "plant_id": "P021",
@@ -1579,7 +1599,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🫚"
     },
     {
       "plant_id": "P022",
@@ -1660,7 +1681,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🫛"
     },
     {
       "plant_id": "P023",
@@ -1735,7 +1757,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🥒"
     },
     {
       "plant_id": "P024",
@@ -1809,7 +1832,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🍌"
     },
     {
       "plant_id": "P025",
@@ -1884,7 +1908,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🍍"
     },
     {
       "plant_id": "P026",
@@ -1958,7 +1983,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🍈"
     },
     {
       "plant_id": "P027",
@@ -2032,7 +2058,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🌺"
     },
     {
       "plant_id": "P028",
@@ -2106,7 +2133,8 @@
             "frequency": "every 2 months"
           }
         ]
-      }
+      },
+      "emoji": "🌳"
     },
     {
       "plant_id": "P029",
@@ -2182,7 +2210,8 @@
             "frequency": "biweekly"
           }
         ]
-      }
+      },
+      "emoji": "🍃"
     },
     {
       "plant_id": "P030",
@@ -2257,7 +2286,8 @@
             "frequency": "monthly"
           }
         ]
-      }
+      },
+      "emoji": "🍋"
     }
   ]
 }

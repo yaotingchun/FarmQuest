@@ -1,25 +1,4 @@
-import {
-  VertexAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} from "@google-cloud/vertexai";
-import dotenv from "dotenv";
-import path from "path";
-
-// Load .env from project root
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
-
-// Fix GOOGLE_APPLICATION_CREDENTIALS to absolute path (relative to project root)
-if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-  const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (!path.isAbsolute(credPath)) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(
-      __dirname,
-      "..",
-      credPath
-    );
-  }
-}
+import { ragManager } from "./rag.js";
 
 // ── Types ──
 interface SoilComponent {
@@ -38,7 +17,7 @@ interface PlantSetup {
   plant_id: string;
   name: string;
   difficulty: string;
-  growth_time_days: number;
+  growth_days: number;
   emoji: string;
   description: string;
   pot: {
@@ -66,186 +45,431 @@ export interface AIPlan extends PlantSetup {
   plan_type: "Budget" | "Balanced" | "Premium";
   cost?: number;
   currency?: string;
+  explanation?: string;
+  ai_details?: {
+    pot_reason?: string;
+    soil_reason?: string;
+  };
+}
+
+type PlanType = "Budget" | "Balanced" | "Premium";
+
+function clonePlantAsPlan(plantData: PlantSetup, planType: PlanType): AIPlan {
+  return {
+    ...JSON.parse(JSON.stringify(plantData)),
+    plan_type: planType,
+  } as AIPlan;
+}
+
+/**
+ * Budget plan must be a strict database mirror.
+ * No AI mutation, no derived replacements.
+ */
+function buildBudgetPlanFromDatabase(plantData: PlantSetup): AIPlan {
+  const budget = clonePlantAsPlan(plantData, "Budget");
+  budget.explanation = undefined;
+  budget.ai_details = undefined;
+  return budget;
 }
 
 // ── Vertex AI Client ──
-const PROJECT_ID = process.env.GOOGLE_VERTEX_PROJECT;
-const LOCATION = process.env.GOOGLE_VERTEX_LOCATION || "us-central1";
+import { VertexAI } from "@google-cloud/vertexai";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const getProjectConfig = () => ({
+  projectId: process.env.GOOGLE_VERTEX_PROJECT,
+  location: process.env.GOOGLE_VERTEX_LOCATION || "us-central1"
+});
+
+// Normalize credentials path if relative
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !path.isAbsolute(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, "..", process.env.GOOGLE_APPLICATION_CREDENTIALS);
+}
 
 let vertexAI: VertexAI | null = null;
 
 function getVertexAI(): VertexAI {
   if (!vertexAI) {
+    const config = getProjectConfig();
     vertexAI = new VertexAI({
-      project: PROJECT_ID!,
-      location: LOCATION,
+      project: config.projectId!,
+      location: config.location,
     });
   }
   return vertexAI;
 }
 
+function extractAllText(result: any): string {
+  const parts = result?.response?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return "";
+  return parts
+    .map((p: any) => (typeof p?.text === "string" ? p.text : ""))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isCompleteEnglishExplanation(text: string): boolean {
+  if (!text || text.length < 420) return false;
+  const sentenceCount = (text.match(/[.!?](?=\s|$)/g) || []).length;
+  if (sentenceCount < 7) return false;
+  if (!/[.!?]$/.test(text)) return false;
+
+  const hasPot = /^\s*Pot:\s+/im.test(text);
+  const hasSoil = /^\s*Soil:\s+/im.test(text);
+  const hasSeed = /^\s*Seed:\s+/im.test(text);
+  const hasNutrition = /^\s*Nutrition:\s+/im.test(text);
+  const paragraphCount = text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean).length;
+
+  return hasPot && hasSoil && hasSeed && hasNutrition && paragraphCount >= 4;
+}
+
+function normalizeSectionLabels(text: string): string {
+  return text
+    .replace(/^\s*pt\s*:/gim, "Pot:")
+    .replace(/^\s*potting\s*:/gim, "Pot:")
+    .replace(/^\s*soil\s*:/gim, "Soil:")
+    .replace(/^\s*sd\s*:/gim, "Seed:")
+    .replace(/^\s*seedling\s*:/gim, "Seed:")
+    .replace(/^\s*seed\s*:/gim, "Seed:")
+    .replace(/^\s*nutri\w*\s*:/gim, "Nutrition:")
+    .replace(/^\s*fertili[sz]er\s*:/gim, "Nutrition:")
+    .replace(/^\s*nutrition\s*:/gim, "Nutrition:");
+}
+
+function buildDeterministicLongExplanation(plantData: PlantSetup, plan: AIPlan): string {
+  const tier = plan.plan_type;
+  const primaryPot = plan.pot.material[0] || "container";
+  const soilMix = plan.soil.mix
+    .map((c) => `${c.component} (${c.percentage}%)`)
+    .join(", ");
+  const nutritionSummary = plan.nutrition.stages
+    .map((s) => `${s.stage}: ${s.npk} (${s.type}, ${s.frequency})`)
+    .join("; ");
+
+  const tierTradeoff =
+    tier === "Budget"
+      ? "This tier prioritizes affordability while still covering the essential conditions for healthy growth."
+      : tier === "Balanced"
+      ? "This tier balances cost and performance, giving you better consistency without pushing costs to the highest range."
+      : "This tier prioritizes performance and stability, with choices that reduce stress risk and improve consistency over the full growth cycle.";
+
+  const potParagraph = [
+    `Pot: This ${tier.toLowerCase()} plan for ${plantData.name} uses ${primaryPot} with at least ${plan.pot.min_diameter_cm} cm diameter and ${plan.pot.depth_cm} cm depth to support stable root expansion over the ${plan.growth_days}-day cycle.`,
+    plan.pot.drainage_required
+      ? "Drainage is required in this setup, which helps keep oxygen available around the roots and lowers the risk of root stress caused by excess water."
+      : "Drainage is optional in this setup, so you should monitor moisture carefully to avoid stagnant water around the root zone.",
+    tierTradeoff,
+  ].join(" ");
+
+  const soilParagraph = [
+    `Soil: The mix is ${soilMix}, targeted for a pH range of ${plan.soil.ph_range} with ${plan.soil.moisture} moisture behavior.`,
+    "This structure helps balance water retention and aeration so roots can access moisture consistently without staying waterlogged.",
+    "Stable pH and airflow in the medium also improve nutrient availability and reduce growth interruptions during active development.",
+  ].join(" ");
+
+  const seedParagraph = [
+    `Seed: The recommended establishment method is ${plan.seed.method}, with planting depth at ${plan.seed.planting_depth_cm} cm and expected germination in ${plan.seed.germination_days}.`,
+    "This depth supports reliable emergence while protecting early roots from rapid drying at the surface.",
+    "For best consistency, keep moisture even during germination and avoid overwatering until seedlings are clearly established.",
+  ].join(" ");
+
+  const nutritionParagraph = [
+    `Nutrition: Feeding is staged as follows: ${nutritionSummary}.`,
+    "This sequence aligns nutrient intensity with changing plant demand, supporting steady foliage growth first and stronger structure and yield later.",
+    "Success tip: track leaf color and moisture weekly, then correct watering before increasing fertilizer, because stable water management usually delivers the fastest improvement.",
+  ].join(" ");
+
+  return [potParagraph, soilParagraph, seedParagraph, nutritionParagraph].join("\n\n");
+}
+
+
+interface PotResult { material: string; reason: string; }
+interface SoilResult { components: SoilComponent[]; reason: string; }
+interface NutriResult { stages: NutritionStage[] }
+interface SeedResult { method: string; depth: number; germination: string; }
+interface RagContext {
+  targetPlant: string;
+  similarPlants: string;
+  prices: string;
+}
 
 // ── Normalization (MANDATORY — AI output drifts) ──
 function normalizePlan(
-  raw: Partial<PlantSetup>,
+  segments: { pot: PotResult, soil: SoilResult, nutrition: NutriResult, seed: SeedResult },
   fallback: PlantSetup,
   planType: "Budget" | "Balanced" | "Premium"
 ): AIPlan {
+  // STRICTLY preserve identity from fallback
   return {
-    plant_id: fallback.plant_id,
-    name: fallback.name,
-    difficulty: fallback.difficulty,
-    growth_time_days: fallback.growth_time_days,
-    emoji: fallback.emoji,
-    description: fallback.description,
-    pot: raw.pot &&
-      raw.pot.material &&
-      Array.isArray(raw.pot.material) &&
-      typeof raw.pot.min_diameter_cm === "number" &&
-      typeof raw.pot.depth_cm === "number"
-      ? {
-        material: raw.pot.material,
-        min_diameter_cm: raw.pot.min_diameter_cm,
-        depth_cm: raw.pot.depth_cm,
-        drainage_required: raw.pot.drainage_required ?? fallback.pot.drainage_required,
-      }
-      : fallback.pot,
-    soil: raw.soil &&
-      raw.soil.mix &&
-      Array.isArray(raw.soil.mix) &&
-      raw.soil.mix.length > 0
-      ? {
-        mix: raw.soil.mix.map((m: SoilComponent) => ({
-          component: m.component || "potting mix",
-          percentage: typeof m.percentage === "number" ? m.percentage : 50,
-        })),
-        ph_range: raw.soil.ph_range || fallback.soil.ph_range,
-        moisture: raw.soil.moisture || fallback.soil.moisture,
-      }
-      : fallback.soil,
-    seed: raw.seed &&
-      raw.seed.method &&
-      raw.seed.germination_days
-      ? {
-        method: raw.seed.method,
-        germination_days: raw.seed.germination_days,
-        planting_depth_cm:
-          typeof raw.seed.planting_depth_cm === "number"
-            ? raw.seed.planting_depth_cm
-            : fallback.seed.planting_depth_cm,
-      }
-      : fallback.seed,
-    nutrition: raw.nutrition &&
-      raw.nutrition.stages &&
-      Array.isArray(raw.nutrition.stages) &&
-      raw.nutrition.stages.length > 0
-      ? {
-        stages: raw.nutrition.stages.map((s: NutritionStage) => ({
-          stage: s.stage || "vegetative",
-          npk: s.npk || "10-10-10",
-          type: s.type || "liquid fertilizer",
-          frequency: s.frequency || "weekly",
-        })),
-      }
-      : fallback.nutrition,
+    ...fallback,
     plan_type: planType,
+    growth_days: fallback.growth_days, // Locked
+    emoji: fallback.emoji, // Locked
+    difficulty: fallback.difficulty, // Locked
+    pot: {
+      material: [segments.pot.material || "Plastic Pot"],
+      min_diameter_cm: fallback.pot.min_diameter_cm,
+      depth_cm: fallback.pot.depth_cm,
+      drainage_required: fallback.pot.drainage_required,
+    },
+    soil: {
+      mix: segments.soil.components.length > 0 ? segments.soil.components : fallback.soil.mix,
+      ph_range: fallback.soil.ph_range, 
+      moisture: fallback.soil.moisture, 
+    },
+    seed: {
+      method: segments.seed.method || fallback.seed.method,
+      planting_depth_cm: segments.seed.depth || fallback.seed.planting_depth_cm,
+      germination_days: segments.seed.germination || fallback.seed.germination_days
+    },
+    nutrition: {
+      stages: (segments.nutrition?.stages?.length ?? 0) > 0 
+        ? segments.nutrition!.stages 
+        : (fallback.nutrition?.stages || [])
+    },
+    ai_details: {
+      pot_reason: segments.pot.reason || "Selected for optimal root health.",
+      soil_reason: segments.soil.reason || "Balanced for specific plant requirements.",
+    }
   };
 }
 
-// ── AI Plan Generation ──
+/** ── AI Segment Generation ── **/
+
+async function getModel() {
+  const config = getProjectConfig();
+  const ai = new VertexAI({ project: config.projectId!, location: config.location });
+  return ai.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: { temperature: 0.7, maxOutputTokens: 128 }
+  });
+}
+
+async function genPot(tier: string, plantName: string, rag: RagContext): Promise<PotResult> {
+  const model = await getModel();
+  const prompt = `Task: Pick a specific pot for a ${tier} ${plantName} setup.
+Use ONLY this grounded context when deciding:
+TARGET PLANT:
+${rag.targetPlant}
+
+SIMILAR PLANTS:
+${rag.similarPlants}
+
+PRICE REFERENCE:
+${rag.prices}
+
+Exclude formatting. Return exactly: MATERIAL | REASON (one line, max 80 chars).
+Example: Plastic Pot | Lightweight and retains moisture for thirsty plants.`;
+  const result = await model.generateContent(prompt);
+  const text = (result.response.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
+  const [material, reason] = text.split("|").map(s => s.trim());
+  return { material: material || "Plastic Pot", reason: reason || "Standard choice." };
+}
+
+async function genSoil(tier: string, plantName: string, rag: RagContext): Promise<SoilResult> {
+  const model = await getModel();
+  const prompt = `Task: Create a custom soil composition for a ${tier} ${plantName}.
+Use ONLY this grounded context when deciding:
+TARGET PLANT:
+${rag.targetPlant}
+
+SIMILAR PLANTS:
+${rag.similarPlants}
+
+PRICE REFERENCE:
+${rag.prices}
+
+Format: COMPONENT(%),COMPONENT(%) | REASON (one line, max 80 chars).
+Example: Potting Mix(70),Perlite(30) | Improved aeration for sensitive roots.`;
+  const result = await model.generateContent(prompt);
+  const text = (result.response.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
+  const [mixPart, reason] = text.split("|").map(s => s.trim());
+  
+  const components: SoilComponent[] = (mixPart || "").split(",").map(part => {
+    const m = part.match(/([^(]+)\((\d+)\)?/);
+    return m ? { component: m[1].trim(), percentage: parseInt(m[2]) } : null;
+  }).filter((c): c is SoilComponent => c !== null);
+
+  return { components, reason: reason || "Balanced for specific plant needs." };
+}
+
+async function genNutrition(tier: string, plantName: string, fallbackStages: NutritionStage[], rag: RagContext): Promise<NutriResult> {
+  const model = await getModel();
+  const count = fallbackStages.length;
+  const prompt = `OUTPUT ONLY RAW DATA. NO TEXT. NO INTRO. NO EXPLANATION. 
+Task: ${count} NPK values for ${plantName} (${tier}).
+Use ONLY this grounded context when deciding:
+TARGET PLANT:
+${rag.targetPlant}
+
+SIMILAR PLANTS:
+${rag.similarPlants}
+
+PRICE REFERENCE:
+${rag.prices}
+
+Format: X-Y-Z,X-Y-Z,X-Y-Z
+Example: 10-10-10,15-5-5,5-5-5`;
+  
+  const result = await model.generateContent(prompt);
+  const text = (result.response.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
+  
+  // SNIPER: Ignore labels like "Seedling:" or "Sure!" and only find patterns like 10-10-10
+  const npks = text.match(/\d+-\d+-\d+/g) || [];
+  
+  const stages: NutritionStage[] = fallbackStages.map((s, i) => {
+    const aiNpk = npks[i] || "";
+    // Regex already ensures \d+-\d+-\d+ format, so we just check it exists
+    const isValid = aiNpk.length > 0;
+    
+    return {
+      stage: s.stage,
+      npk: isValid ? aiNpk : s.npk, // Use original if AI is broken or truncated
+      type: tier === "Budget" ? "Synthetic Granular" : tier === "Balanced" ? "Liquid Organic" : "Slow-Release Organic",
+      frequency: tier === "Premium" ? "Weekly" : "Bi-weekly"
+    };
+  });
+
+  return { stages };
+}
+
+async function genSeed(tier: string, plantName: string, rag: RagContext): Promise<SeedResult> {
+  const model = await getModel();
+  const prompt = `Task: Provide seed guide for ${tier} ${plantName}.
+Use ONLY this grounded context when deciding:
+TARGET PLANT:
+${rag.targetPlant}
+
+SIMILAR PLANTS:
+${rag.similarPlants}
+
+PRICE REFERENCE:
+${rag.prices}
+
+Return exactly: METHOD | DEPTH_CM | GERMINATION_DAYS (one line).
+Example: direct sow | 0.5 | 7-10`;
+  const result = await model.generateContent(prompt);
+  const text = (result.response.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
+  const [method, depth, germ] = text.split("|").map(s => s.trim());
+  return { 
+    method: method || "direct sow", 
+    depth: parseFloat(depth) || 0.5, 
+    germination: germ || "7-14 days" 
+  };
+}
+
+/** ── AI Setup Analysis Segments (Multi-Burst) ── **/
+
+async function expPot(tier: string, plantName: string, material: string): Promise<string> {
+  const model = await getModel();
+  const prompt = `Task: Provide 2-3 descriptive keywords explaining why ${material} is good for ${tier} ${plantName}.
+Example result: moisture retention, breathable, lightweight.
+Keywords only.`;
+  const result = await model.generateContent(prompt);
+  return (result.response.candidates?.[0]?.content?.parts?.[0]?.text || "aeration and durability").trim().toLowerCase().replace(/\.$/, "");
+}
+
+async function expSoil(tier: string, plantName: string, mix: string): Promise<string> {
+  const model = await getModel();
+  const prompt = `Task: Provide 2-3 descriptive keywords explaining the soil benefit (mix: ${mix}) for ${tier} ${plantName}.
+Example result: root health, nutrient density, drainage.
+Keywords only.`;
+  const result = await model.generateContent(prompt);
+  return (result.response.candidates?.[0]?.content?.parts?.[0]?.text || "optimal growth conditions").trim().toLowerCase().replace(/\.$/, "");
+}
+
+async function expNutri(tier: string, plantName: string): Promise<string> {
+  const model = await getModel();
+  const prompt = `Task: Provide 2-3 descriptive keywords explaining the nutrition benefit for ${tier} ${plantName}.
+Example result: steady growth, yield quality, leaf color.
+Keywords only.`;
+  const result = await model.generateContent(prompt);
+  return (result.response.candidates?.[0]?.content?.parts?.[0]?.text || "consistent nourishment").trim().toLowerCase().replace(/\.$/, "");
+}
+
+// ── AI Plan Generation (Total Data-Lock Restoration) ──
 export async function generatePlantingPlans(
   plantData: PlantSetup
 ): Promise<{ plans: AIPlan[]; isFallback: boolean }> {
   try {
-    const ai = getVertexAI();
-    const model = ai.getGenerativeModel({
-      model: "gemini-2.5-flash",
+    const fallbackStages = plantData.nutrition?.stages || [];
+    console.log(`[AI] Generating plans for ${plantData.name} (Budget=DB mirror, Balanced/Premium=AI)...`);
 
-      safetySettings: [
-        {
-          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-          threshold: HarmBlockThreshold.BLOCK_NONE,
-        },
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-        responseMimeType: "application/json",
-      },
-    });
+    // 1. Budget Plan: strict mirror from plants.json (no AI logic)
+    const bPlan = buildBudgetPlanFromDatabase(plantData);
 
-    const prompt = `You are an expert urban farming advisor. Create 3 planting plans for the plant below. 
+    // RAG grounding for AI-generated tiers only
+    let rag: RagContext = {
+      targetPlant: JSON.stringify(plantData, null, 2),
+      similarPlants: "No similar plant data available.",
+      prices: "No price context available.",
+    };
 
-PLANT: ${plantData.name}
-DATA: ${JSON.stringify(plantData, null, 2)}
-
-PLAN TIERS:
-1. "Budget" - Cheapest (plastic, standard soil).
-2. "Balanced" - Moderate (mix of quality/price).
-3. "Premium" - High-end (terracotta/fabric, organic blends).
-
-JSON FORMAT (Strictly exactly 3 objects in an array):
-{
-  "pot": { "material": ["string"], "min_diameter_cm": number, "depth_cm": number, "drainage_required": boolean },
-  "soil": { "mix": [{"component": "string", "percentage": number}], "ph_range": "string", "moisture": "string" },
-  "seed": { "method": "string", "germination_days": "string", "planting_depth_cm": number },
-  "nutrition": { "stages": [{"stage": "string", "npk": "string", "type": "string", "frequency": "string"}] }
-}
-
-RULES:
-- Respond ONLY with the JSON array.
-- No commentary or price fields.
-- Use materials consistent with the tier.`;
-
-    console.log("[AI] Sending prompt to Vertex AI...");
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text =
-      response.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-
-    console.log("[AI] Raw response length:", text.length);
-
-    let parsed: Partial<PlantSetup>[];
     try {
-      parsed = JSON.parse(text);
-    } catch {
-      console.error("[AI] Failed to parse AI response JSON");
-      return { plans: buildFallbackPlans(plantData), isFallback: true };
+      await ragManager.initialize();
+      rag = {
+        targetPlant: ragManager.getTargetPlantContext(plantData.plant_id),
+        similarPlants: await ragManager.getSimilarPlantsContext(plantData.plant_id, 2),
+        prices: ragManager.getPriceContext(),
+      };
+    } catch (ragErr) {
+      console.warn("[RAG] Grounding unavailable, using local fallback context:", ragErr);
     }
 
-    if (!Array.isArray(parsed) || parsed.length !== 3) {
-      console.error("[AI] AI returned invalid plan count:", parsed?.length);
-      return { plans: buildFallbackPlans(plantData), isFallback: true };
-    }
+    // 2. Balanced Plan: AI Suggested Optimization
+    const [lPot, lSoil, lNutri, lSeed] = await Promise.all([
+      genPot("Balanced", plantData.name, rag), 
+      genSoil("Balanced", plantData.name, rag), 
+      genNutrition("Balanced", plantData.name, fallbackStages, rag), 
+      genSeed("Balanced", plantData.name, rag)
+    ]);
+    const lPlan = normalizePlan({ pot: lPot, soil: lSoil, nutrition: lNutri, seed: lSeed }, plantData, "Balanced");
 
-    const planTypes: Array<"Budget" | "Balanced" | "Premium"> = [
-      "Budget",
-      "Balanced",
-      "Premium",
-    ];
+    // 3. Premium Plan: AI Suggested Optimization
+    const [pPot, pSoil, pNutri, pSeed] = await Promise.all([
+      genPot("Premium", plantData.name, rag), 
+      genSoil("Premium", plantData.name, rag), 
+      genNutrition("Premium", plantData.name, fallbackStages, rag), 
+      genSeed("Premium", plantData.name, rag)
+    ]);
+    const pPlan = normalizePlan({ pot: pPot, soil: pSoil, nutrition: pNutri, seed: pSeed }, plantData, "Premium");
 
-    console.log("[AI] Successfully parsed 3 plans. Normalizing...");
-    const plans = parsed.map((raw, i) => normalizePlan(raw, plantData, planTypes[i]));
-    return { plans, isFallback: false };
+    return { plans: [bPlan, lPlan, pPlan], isFallback: false };
   } catch (err) {
-    console.error("[AI] Vertex AI generation failed:", err);
+    console.error("[AI] Generation failed, using fallback:", err);
     return { plans: buildFallbackPlans(plantData), isFallback: true };
   }
 }
 
-// ── Fallback: repeat base plant as 3 plans ──
+// ── Fallback: Budget remains strict DB mirror; non-budget tiers are deterministic defaults ──
 function buildFallbackPlans(plantData: PlantSetup): AIPlan[] {
-  const planTypes: Array<"Budget" | "Balanced" | "Premium"> = [
-    "Budget",
-    "Balanced",
-    "Premium",
-  ];
-  return planTypes.map((type) => ({
-    ...JSON.parse(JSON.stringify(plantData)), // Deep clone
-    plan_type: type,
-  }));
+  const budget = buildBudgetPlanFromDatabase(plantData);
+
+  const balanced = clonePlantAsPlan(plantData, "Balanced");
+  balanced.explanation = `Balanced fallback setup for ${plantData.name} generated without AI.`;
+  balanced.ai_details = {
+    pot_reason: "Uses database-compatible materials for stable performance.",
+    soil_reason: "Uses plant-specific baseline composition from the database.",
+  };
+
+  const premium = clonePlantAsPlan(plantData, "Premium");
+  premium.explanation = `Premium fallback setup for ${plantData.name} generated without AI.`;
+  premium.ai_details = {
+    pot_reason: "Prioritizes durability and root environment stability.",
+    soil_reason: "Keeps a high-quality balanced mix for healthy growth.",
+  };
+
+  return [budget, balanced, premium];
 }
-// ── AI Setup Explanation ──
+// ── AI Setup Explanation (Meaningful Restored) ──
 export async function generateSetupExplanation(
   plantData: PlantSetup,
   plan: AIPlan
@@ -254,36 +478,38 @@ export async function generateSetupExplanation(
     const ai = getVertexAI();
     const model = ai.getGenerativeModel({
       model: "gemini-2.5-flash",
-
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 900,
       },
     });
 
-    const prompt = `You are an expert urban farming advisor. A user is looking at a "${plan.plan_type}" planting setup for their "${plantData.name}".
+    const prompt = `You are a professional urban farming consultant.
+Write a clear, natural English explanation for this ${plan.plan_type} setup for ${plantData.name}.
 
-PLANT DATA:
-${JSON.stringify(plantData, null, 2)}
+Format requirements:
+- Exactly 4 paragraphs.
+- Use these labels in order: Pot:, Soil:, Seed:, Nutrition:
+- Put one blank line between paragraphs.
+- Write 2-3 complete sentences per paragraph.
+- Explain the practical reason for each part of the setup.
+- Mention root health, moisture, establishment, and nutrition progression.
+- Use proper English and full sentences.
+- Output plain text only.`;
 
-SELECTED PLAN (${plan.plan_type}):
-${JSON.stringify(plan, null, 2)}
-
-TASK:
-Explain in 3-4 concise paragraphs why this specific combination of pot material, soil mix, and nutrition plan was chosen. 
-- Explain how the pot choice affects moisture/roots for this specific plant.
-- Explain how the soil mix ph and components support its growth.
-- Explain why the nutrition frequency is correct for its growth cycle.
-- Frame the explanation based on the "${plan.plan_type}" context (e.g., if Budget, explain how we achieve success with low-cost items; if Premium, explain the superior performance of the high-end choices).
-
-Keep the tone encouragement and professional. Avoid lists; use natural paragraphs. Max 150 words.`;
-
-    console.log(`[AI] Generating explanation for ${plantData.name} (${plan.plan_type})...`);
     const result = await model.generateContent(prompt);
-    const response = result.response;
-    return response.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't generate an explanation at this time.";
+    let text = extractAllText(result);
+
+    text = text.replace(/^\s*Tis\b/i, "This").trim();
+    text = normalizeSectionLabels(text);
+
+    if (!isCompleteEnglishExplanation(text)) {
+      text = buildDeterministicLongExplanation(plantData, plan);
+    }
+
+    return text;
   } catch (err) {
     console.error("[AI] Explanation generation failed:", err);
-    return "The AI is currently unavailable to explain this setup, but these recommendations are based on standard horticultural best practices for urban farming.";
+    return buildDeterministicLongExplanation(plantData, plan);
   }
 }
