@@ -68,7 +68,20 @@ const createDefaultProfile = (user: User): UserProfile => {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    // Initial sync check from localStorage to prevent flicker
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('farmquest_profile');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {
+          return null;
+        }
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,18 +95,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            setProfile(userDoc.data() as UserProfile);
+            const profileData = userDoc.data() as UserProfile;
+            setProfile(profileData);
+            localStorage.setItem('farmquest_profile', JSON.stringify(profileData));
           } else {
             // Document doesn't exist, this is a new user
             const newProfile = createDefaultProfile(firebaseUser);
             await setDoc(userDocRef, newProfile);
             setProfile(newProfile);
+            localStorage.setItem('farmquest_profile', JSON.stringify(newProfile));
           }
         } catch (error) {
           console.error("Error fetching or creating user profile:", error);
         }
       } else {
         setProfile(null);
+        localStorage.removeItem('farmquest_profile');
       }
       
       setLoading(false);

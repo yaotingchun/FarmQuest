@@ -27,7 +27,11 @@ export default function DiagnosisPage() {
   }, [loading, profile, router])
 
   if (loading || !profile) {
-    return <div className="p-8 text-center" style={{ color: 'var(--text-muted)', paddingTop: '20vh' }}>Loading analysis engine...</div>
+    return (
+      <div style={{ padding: '100px 5%', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="skeleton" style={{ width: '100%', height: '400px', borderRadius: '28px' }}></div>
+      </div>
+    )
   }
 
   const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
