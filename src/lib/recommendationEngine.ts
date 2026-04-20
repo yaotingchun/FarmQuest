@@ -2,13 +2,13 @@ import db from '@/data/plants.json';
 
 // --- Types ---
 export interface UserPreference {
+  space: string;
   sunlight: string;
   time_commitment: 'low' | 'medium' | 'high';
   goal: string;
   temperature: number;
   humidity: number;          // relative humidity %
   rainfall: number;          // mm/day
-  sunlight_hours: number;    // hours of sunshine per day
 }
 
 export interface RecommendationResult {
@@ -21,13 +21,13 @@ export interface RecommendationResult {
 
 // --- Hardcoded User Preferences ---
 export const MOCK_USER_PREFERENCE: UserPreference = {
+  space: "balcony",
   sunlight: "full_sun",
   time_commitment: "low",
   goal: "food",
   temperature: 30,
   humidity: 70,
-  rainfall: 3,
-  sunlight_hours: 8
+  rainfall: 3
 };
 
 // --- Helper Functions ---
@@ -44,19 +44,12 @@ function rainfallToWaterLevel(mm: number): string {
   return 'low';
 }
 
-/** Map daily sunshine hours to a sunlight category */
-function sunHoursToCategory(hours: number): string {
-  if (hours >= 6) return 'full_sun';
-  if (hours >= 3) return 'partial';
-  return 'low_light';
-}
-
 // --- Scoring Engine ---
 // Max possible score = 100
-//   Temperature fit   : 25
-//   Humidity fit       : 15
+//   Temperature fit   : 20
+//   Humidity fit       : 10
 //   Sunlight match    : 15
-//   Sunlight-hours    :  5  (bonus when live data confirms the user's pick)
+//   Space match       : 15
 //   Goal match        : 15
 //   Rainfall/water    : 15
 //   Time commitment   : 10
@@ -64,19 +57,18 @@ export function rankPlantsByPreferences(userPrefs: UserPreference): Recommendati
   const plants = db.plants;
 
   const derivedWater = rainfallToWaterLevel(userPrefs.rainfall);
-  const derivedSunlight = sunHoursToCategory(userPrefs.sunlight_hours);
 
   const scoredPlants = plants.map((plant) => {
     let score = 0;
 
-    // 1. Temperature (25 pts) — core survival factor
+    // 1. Temperature (20 pts) — core survival factor
     if (userPrefs.temperature >= plant.temp_min && userPrefs.temperature <= plant.temp_max) {
-      score += 25;
+      score += 20;
     }
 
-    // 2. Humidity (15 pts) — within plant's ideal range
+    // 2. Humidity (10 pts) — within plant's ideal range
     if (userPrefs.humidity >= plant.humidity_min && userPrefs.humidity <= plant.humidity_max) {
-      score += 15;
+      score += 10;
     }
 
     // 3. Sunlight match (15 pts) — user-declared preference
@@ -84,13 +76,13 @@ export function rankPlantsByPreferences(userPrefs: UserPreference): Recommendati
       score += 15;
     }
 
-    // 4. Sunlight-hours bonus (5 pts) — live data confirms the pick
-    if (derivedSunlight === plant.sunlight) {
-      score += 5;
-    }
-
     // 5. Goal match (15 pts)
     if (plant.goals.includes(userPrefs.goal) || plant.type === userPrefs.goal) {
+      score += 15;
+    }
+
+    // Space match (15 pts) - Does the plant fit the user's space?
+    if (plant.space && plant.space.includes(userPrefs.space)) {
       score += 15;
     }
 
