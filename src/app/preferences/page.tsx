@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { rankPlantsByPreferences, type UserPreference } from '@/lib/recommendationEngine'
+import { useAuth } from '@/context/AuthContext'
 import './preferences.css'
 
 // ── Step configuration (steps 1–3 stay as option-based) ───────────────────────
@@ -122,9 +123,20 @@ const DEFAULT_CLIMATE: Omit<ClimateData, 'latitude' | 'longitude' | 'locationNam
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function PreferencesPage() {
+  const { profile, loading } = useAuth()
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Partial<UserPreference>>({})
+
+  useEffect(() => {
+    if (!loading && !profile) {
+      router.push('/login')
+    }
+  }, [loading, profile, router])
+
+  if (loading || !profile) {
+    return <div className="p-8 text-center" style={{ color: 'var(--text-muted)', paddingTop: '20vh' }}>Loading preferences...</div>
+  }
 
   // GPS / climate state
   const [geoStatus, setGeoStatus] = useState<GeoStatus>('idle')

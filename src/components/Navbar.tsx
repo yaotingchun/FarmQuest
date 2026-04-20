@@ -22,8 +22,12 @@ export const Navbar = () => {
         <li><a href="/#how-it-works">How It Works</a></li>
         <li><a href="/#forum">Forum</a></li>
         <li><a href="/explore">Explore Plants</a></li>
-        <li><a href="/diagnosis">Health Detection</a></li>
-        <li><a href="/preferences">Find My Plants</a></li>
+        {profile && (
+          <>
+            <li><a href="/diagnosis">Health Detection</a></li>
+            <li><a href="/preferences">Find My Plants</a></li>
+          </>
+        )}
         {profile ? (
           <li>
             <a href="/profile" className="nav-profile-link">
