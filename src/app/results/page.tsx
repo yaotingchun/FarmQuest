@@ -67,12 +67,19 @@ function PlantCard({ plant, rank }: { plant: RecommendationResult; rank: number 
 
 // ── Summary of what the user chose ───────────────────────────────────────────
 const PREF_LABELS: Record<string, string> = {
+  // Space
+  balcony: 'Balcony 🏢',
+  indoor: 'Indoor 🪴',
+  garden: 'Garden 🏡',
+  // Sunlight
   full_sun: 'Full Sun ☀️',
   partial: 'Partial Shade 🌤️',
   low_light: 'Low Light 🌥️',
+  // Time
   low: 'Low time ⏱️',
   medium: 'Medium time ⏱️',
   high: 'High time ⏱️',
+  // Goal
   food: 'Grow Food 🥦',
   aesthetics: 'Beautify Space 🌸',
   air_quality: 'Cleaner Air 🌬️',
@@ -121,13 +128,12 @@ function ResultsInner() {
         {/* Pref chips */}
         {prefs && (
           <div className="pref-chips">
+            <span className="pref-chip">{PREF_LABELS[prefs.space] ?? prefs.space}</span>
             <span className="pref-chip">{PREF_LABELS[prefs.sunlight] ?? prefs.sunlight}</span>
             <span className="pref-chip">{PREF_LABELS[prefs.time_commitment] ?? prefs.time_commitment}</span>
-            <span className="pref-chip">{PREF_LABELS[prefs.goal] ?? prefs.goal}</span>
             <span className="pref-chip">🌡️ {prefs.temperature}°C</span>
             <span className="pref-chip">💧 {prefs.humidity}% humidity</span>
             <span className="pref-chip">🌧️ {prefs.rainfall} mm rain</span>
-            <span className="pref-chip">☀️ {prefs.sunlight_hours} hrs sun</span>
           </div>
         )}
       </div>
