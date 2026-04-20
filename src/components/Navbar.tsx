@@ -1,6 +1,13 @@
-import { Sprout } from 'lucide-react'
+'use client';
+
+import { auth } from '@/lib/firebase'
+import { signOut } from 'firebase/auth'
+import { useAuth } from '@/context/AuthContext'
+import { Sprout, LogOut } from 'lucide-react'
 
 export const Navbar = () => {
+  const { profile, loading } = useAuth();
+  
   return (
     <nav className="navbar">
       <a href="/" className="nav-logo">
@@ -17,16 +24,19 @@ export const Navbar = () => {
         <li><a href="/explore">Explore Plants</a></li>
         <li><a href="/diagnosis">Health Detection</a></li>
         <li><a href="/preferences">Find My Plants</a></li>
-        <li><a href="/recommendations" className="nav-cta">Start Growing →</a></li>
-        <li>
-          <a href="/profile" className="nav-profile-link">
-            <div className="nav-profile-info">
-              <span className="nav-profile-name">yaoting_25</span>
-              <span className="nav-profile-status">ELITE GROWER</span>
-            </div>
-            <div className="nav-profile-avatar">🧑‍🌾</div>
-          </a>
-        </li>
+        {profile ? (
+          <li>
+            <a href="/profile" className="nav-profile-link">
+              <div className="nav-profile-info">
+                <span className="nav-profile-name">{profile.username}</span>
+                <span className="nav-profile-status">{profile.archetype || 'GROWER'}</span>
+              </div>
+              <div className="nav-profile-avatar">{profile.avatar}</div>
+            </a>
+          </li>
+        ) : (
+          !loading && <li><a href="/login" className="nav-cta">Log In</a></li>
+        )}
       </ul>
     </nav>
   )

@@ -1,15 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
+import { auth } from '@/lib/firebase'
+import { signOut } from 'firebase/auth'
 import {
   Sprout, Flame, Trophy, Star, Leaf, Zap,
-  Users, Camera, Shield,
+  Users, Camera, Shield, LogOut,
   TrendingUp, Calendar, Award, Flower2, TreeDeciduous,
   Wheat, Cherry, Carrot, Salad, BookOpen, Heart, X, Lock
 } from 'lucide-react'
 
 /* ─── Default account data ─── */
-const USER = {
+const DEFAULT_USER = {
   username: 'FarmQuester_01',
   handle: '@farmquester_01',
   email: 'grower@farmquest.app',
@@ -97,6 +101,8 @@ const unlockedCount = ACHIEVEMENTS.filter(a => a.unlocked).length
 
 /* ─── Inline XP bar (inside hero card) ─── */
 function HeroXpBar() {
+  const { profile } = useAuth();
+  const USER = profile || DEFAULT_USER;
   const xpPct = Math.round((USER.xp / USER.xpNext) * 100)
   return (
     <div className="hero-xp-bar">
@@ -122,6 +128,8 @@ function HeroXpBar() {
 
 /* ─── Overview tab ─── */
 function OverviewTab() {
+  const { profile } = useAuth();
+  const USER = profile || DEFAULT_USER;
   return (
     <div className="profile-overview-tab">
       <div className="profile-overview-grid">
@@ -504,6 +512,29 @@ function FarmDexTab() {
 ═══════════════════════════════════════ */
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<Tab>('Overview')
+  const { profile, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !profile) {
+      router.push('/login')
+    }
+  }, [loading, profile, router])
+
+  if (loading || !profile) {
+    return <div className="p-8 text-center" style={{ color: 'var(--text-muted)', paddingTop: '20vh' }}>Loading profile...</div>
+  }
+
+  const USER = profile || DEFAULT_USER;
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   return (
     <div className="profile-page">
@@ -515,6 +546,10 @@ export default function ProfilePage() {
           <p className="profile-page-sub">Your journey, achievements, and community.</p>
         </div>
         <div className="profile-header-actions">
+          <button className="profile-action-btn" onClick={handleLogout}>
+            <LogOut size={14} />
+            Log Out
+          </button>
           <button className="profile-action-btn">
             <Users size={14} />
             Find Friends
@@ -542,7 +577,7 @@ export default function ProfilePage() {
             <div className="profile-info">
               <div className="profile-hero-main-top">
                 <h2 className="profile-username">{USER.username}</h2>
-                <div className="archetype-tag">ELITE GROWER</div>
+                <div className="archetype-tag">{USER.archetype || 'GROWER'}</div>
               </div>
               <div className="profile-handles">
                 <span className="profile-handle">{USER.handle}</span>
