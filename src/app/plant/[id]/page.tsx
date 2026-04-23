@@ -251,7 +251,9 @@ export default function PlantDetailPage({
 
 
   const handleStartPlanting = () => {
-    alert(`🌱 Let's start planting ${currentPlan?.name}! This feature is coming soon.`);
+    if (plant) {
+      router.push(`/quest?plant=${id}`);
+    }
   };
 
   // ── Loading State ──

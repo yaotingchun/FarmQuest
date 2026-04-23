@@ -35,6 +35,7 @@ export const Navbar = () => {
       { label: 'Explore Plants', href: '/explore' },
       { label: 'Pick a Plant', href: '/recommendations', requiresAuth: true },
       { label: 'Health Detection', href: '/diagnosis', requiresAuth: true },
+      { label: 'Plant Quest', href: '/quest', requiresAuth: true },
       { label: 'Find My Plants', href: '/preferences', requiresAuth: true },
     ],
     []
