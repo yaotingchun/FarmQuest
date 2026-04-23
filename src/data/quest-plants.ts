@@ -7,7 +7,7 @@ import plantsJson from './plants.json'
 function waterToDays(w: string): number {
   if (w === 'high') return 1
   if (w === 'medium') return 3
-  return 7 // low
+  return 14 // low
 }
 
 /**
@@ -69,7 +69,7 @@ const TYPE_EMOJI: Record<string, string> = {
 export const QUEST_PLANTS: QuestPlantData[] = plantsJson.plants.map((p) => ({
   plant_id: p.plant_id,
   name: p.name,
-  emoji: TYPE_EMOJI[p.type] || '🌱',
+  emoji: p.emoji || TYPE_EMOJI[p.type] || '🌱',
   water_frequency_days: waterToDays(p.water),
   sunlight_type: p.sunlight,
   fertilize_interval_days: p.growth_days <= 30 ? 14 : 10,
@@ -79,6 +79,7 @@ export const QUEST_PLANTS: QuestPlantData[] = plantsJson.plants.map((p) => ({
   pot_size: derivePotSize(p),
   seed_depth_cm: p.type === 'herb' ? 0.5 : p.type === 'food' ? 2 : 1,
   soil_type: p.water === 'low' ? 'Well-draining sandy mix' : p.water === 'high' ? 'Rich moisture-retaining mix' : 'Balanced potting mix',
+  startMethod: p.seed?.method || 'seed',
 }))
 
 /**

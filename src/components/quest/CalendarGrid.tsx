@@ -3,20 +3,14 @@
 import { useState, useEffect } from 'react'
 import type { CalendarEntry, DayStatus } from '@/types/quest'
 
-const STATUS_COLORS: Record<DayStatus, string> = {
+const STATUS_COLORS: Record<string, string> = {
   completed: '#4ade80',
-  pending: '#facc15',
-  missed: '#f87171',
-  critical: '#dc2626',
-  milestone: '#a78bfa',
+  pending: '#fbbf24',
 }
 
-const STATUS_LABELS: Record<DayStatus, string> = {
+const STATUS_LABELS: Record<string, string> = {
   completed: 'Completed',
   pending: 'Pending',
-  missed: 'Missed',
-  critical: 'Critical',
-  milestone: 'Milestone',
 }
 
 const MONTH_NAMES = [
@@ -36,7 +30,15 @@ interface CalendarGridProps {
 export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGridProps) {
   const [selectedDay, setSelectedDay] = useState<CalendarEntry | null>(null)
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const groupedTasks = selectedDay?.tasks.reduce<Record<string, typeof selectedDay.tasks>>((acc, task) => {
+    const group = task.plant_name || 'General'
+    if (!acc[group]) acc[group] = []
+    acc[group].push(task)
+    return acc
+  }, {}) || {}
+
+  const now = new Date()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   // Build grid
   const firstDay = new Date(year, month, 1).getDay()
@@ -55,7 +57,24 @@ export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGr
   const goToday = () => {
     const d = new Date()
     onMonthChange(d.getFullYear(), d.getMonth())
+    
+    // Auto-select today if it exists in current entries
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const todayEntry = entries.find(e => e.date === todayStr)
+    if (todayEntry) {
+      setSelectedDay(todayEntry)
+    }
   }
+
+  // Effect to auto-select today on first load if we are in today's month
+  useEffect(() => {
+    if (!selectedDay) {
+      const d = new Date()
+      const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const entry = entries.find(e => e.date === todayStr)
+      if (entry) setSelectedDay(entry)
+    }
+  }, [entries, selectedDay])
 
   return (
     <div className="quest-calendar">
@@ -64,7 +83,9 @@ export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGr
         <button className="quest-cal-nav" onClick={prevMonth}>←</button>
         <div className="quest-cal-month-info">
           <h3 className="quest-cal-month">{MONTH_NAMES[month]} {year}</h3>
-          <button className="quest-cal-today-btn" onClick={goToday}>Today</button>
+          <button className="quest-cal-today-btn" onClick={goToday}>
+            Today
+          </button>
         </div>
         <button className="quest-cal-nav" onClick={nextMonth}>→</button>
       </div>
@@ -98,25 +119,30 @@ export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGr
           const day = i + 1
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const entry = entries.find(e => e.date === dateStr)
-          const status = entry?.day_status
+          const statuses = entry?.statuses || []
           const isToday = dateStr === todayStr
           const hasTasks = entry && entry.tasks.length > 0
-          const isMilestone = status === 'milestone'
 
           return (
             <div
               key={day}
-              className={`quest-cal-cell ${isToday ? 'today' : ''} ${status || ''} ${hasTasks ? 'has-tasks' : ''}`}
+              className={`quest-cal-cell ${isToday ? 'today' : ''} ${hasTasks ? 'has-tasks' : ''}`}
               onClick={() => entry && setSelectedDay(entry)}
             >
               <span className="quest-cal-day-num">{day}</span>
-              {hasTasks && status && (
-                <div
-                  className="quest-cal-dot"
-                  style={{ background: STATUS_COLORS[status] }}
-                />
+              {hasTasks && statuses.length > 0 && (
+                <div className="quest-cal-dots">
+                  {statuses
+                    .filter(s => s !== 'milestone')
+                    .map(s => (
+                    <div
+                      key={s}
+                      className="quest-cal-dot"
+                      style={{ background: STATUS_COLORS[s] }}
+                    />
+                  ))}
+                </div>
               )}
-              {isMilestone && <span className="quest-cal-milestone-icon">⭐</span>}
             </div>
           )
         })}
@@ -132,30 +158,65 @@ export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGr
             <button className="quest-cal-detail-close" onClick={() => setSelectedDay(null)}>✕</button>
           </div>
 
-          {selectedDay.milestone_label && (
-            <div className="quest-cal-milestone-banner">
-              🎉 {selectedDay.milestone_label}
-            </div>
-          )}
-
           <div className="quest-cal-detail-status">
-            <div
-              className="quest-cal-legend-dot"
-              style={{ background: STATUS_COLORS[selectedDay.day_status] }}
-            />
-            <span>{STATUS_LABELS[selectedDay.day_status]}</span>
+            {selectedDay.statuses
+              .filter(s => s !== 'milestone')
+              .map(s => (
+              <div key={s} className="quest-cal-detail-status-pill">
+                <div
+                  className="quest-cal-legend-dot"
+                  style={{ background: STATUS_COLORS[s] }}
+                />
+                <span>{STATUS_LABELS[s]}</span>
+              </div>
+            ))}
           </div>
 
           {selectedDay.tasks.length > 0 ? (
             <div className="quest-cal-detail-tasks">
-              {selectedDay.tasks.map(task => (
-                <div key={task.id} className={`quest-cal-detail-task ${task.completed ? 'done' : ''}`}>
-                  <span className={`quest-cal-task-check ${task.completed ? 'checked' : ''}`}>
-                    {task.completed ? '✓' : '○'}
-                  </span>
-                  <span>{task.label}</span>
+              {/* 1. Pending Section */}
+              {selectedDay.tasks.some(t => !t.completed) && (
+                <div className="quest-cal-status-group">
+                  <h5 className="quest-cal-group-status-title">Pending Tasks</h5>
+                  {Object.entries(groupedTasks).map(([plantName, plantTasks]) => {
+                    const pending = plantTasks.filter(t => !t.completed)
+                    if (pending.length === 0) return null
+                    return (
+                      <div key={plantName} className="quest-cal-plant-subgroup">
+                        <span className="quest-cal-plant-tag">{plantName}</span>
+                        {pending.map(task => (
+                          <div key={task.id} className="quest-cal-detail-task">
+                            <span className="quest-cal-task-check">○</span>
+                            <span>{task.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })}
                 </div>
-              ))}
+              )}
+
+              {/* 2. Completed Section */}
+              {selectedDay.tasks.some(t => t.completed) && (
+                <div className="quest-cal-status-group completed">
+                  <h5 className="quest-cal-group-status-title">Completed Tasks</h5>
+                  {Object.entries(groupedTasks).map(([plantName, plantTasks]) => {
+                    const completed = plantTasks.filter(t => t.completed)
+                    if (completed.length === 0) return null
+                    return (
+                      <div key={plantName} className="quest-cal-plant-subgroup">
+                        <span className="quest-cal-plant-tag">{plantName}</span>
+                        {completed.map(task => (
+                          <div key={task.id} className="quest-cal-detail-task done">
+                            <span className="quest-cal-task-check checked">✓</span>
+                            <span>{task.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           ) : (
             <p className="quest-cal-no-tasks">No tasks scheduled for this day.</p>

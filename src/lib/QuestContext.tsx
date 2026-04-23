@@ -1,43 +1,31 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
-import type { PlantState, QuestTask, CalendarEntry, Badge, Quest, QuestPlantData, GrowthStage } from '@/types/quest'
-import { calculateLevel, xpForNextLevel, XP_VALUES } from '@/types/quest'
-import {
-  createInitialPlantState, getTasksDueToday, calculateGrowthStage,
-  shouldTriggerRecovery, generateCalendarMonth, checkBadges,
-  calculateStreak, updateHealth, updateHydration, awardXP
-} from './ruleEngine'
-import { getMainQuestContent } from './orchestrator'
+import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, serverTimestamp, Timestamp } from 'firebase/firestore'
+import { v4 as uuidv4 } from 'uuid'
+import { db } from './firebase'
+import { useAuth } from '@/context/AuthContext'
+import type { UserPlant, QuestPlantData, QuestTask, CalendarEntry, DayStatus } from '@/types/quest'
+import { XP_VALUES } from '@/types/quest'
+import { derivePlantStatus, getTasksDueToday, getGrowthStage } from './ruleEngine'
 import { getQuestPlant, QUEST_PLANTS } from '@/data/quest-plants'
 
-const STORAGE_KEY = 'fq_plant_state'
-const TASKS_KEY = 'fq_today_tasks'
-
 interface QuestContextValue {
-  // State
-  plantState: PlantState | null
-  plantData: QuestPlantData | null
-  todayTasks: QuestTask[]
-  calendarData: CalendarEntry[]
-  badges: Badge[]
-  mainQuests: Quest[]
-  hasActivePlant: boolean
-
-  // Actions
-  selectPlant: (plantId: string) => void
-  completeTask: (taskId: string) => void
-  completeMainQuestStep: (stepIndex: number) => void
-  completeAllDailyTasks: () => void
-  refreshCalendar: (year: number, month: number) => void
-  resetQuest: () => void
-
-  // Derived
-  xpInfo: { current: number; needed: number; progress: number }
-  currentStage: GrowthStage
-  streakCount: number
-  isRecoveryNeeded: boolean
+  userPlants: UserPlant[]
+  activePlantId: string | null
+  loading: boolean
+  isGeneratingTasks: boolean
   availablePlants: QuestPlantData[]
+
+  setActivePlant: (plantId: string | null) => void
+  addPlant: (staticPlantId: string, planType?: "Budget" | "Balanced" | "Premium") => Promise<string | undefined>
+  deletePlant: (instanceId: string) => Promise<void>
+  completeTask: (instanceId: string, taskType: string) => Promise<void>
+  
+  // Calendar (Placeholder for now)
+  calendarData: any[]
+  refreshCalendar: (year: number, month: number) => void
+  hasActivePlant: boolean
 }
 
 const QuestContext = createContext<QuestContextValue | null>(null)
@@ -48,275 +36,453 @@ export function useQuest() {
   return ctx
 }
 
-function loadState(): PlantState | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch { return null }
-}
-
-function saveState(state: PlantState) {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-}
-
-function loadTasks(): QuestTask[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = localStorage.getItem(TASKS_KEY)
-    if (!raw) return []
-    const data = JSON.parse(raw)
-    const todayStr = new Date().toISOString().split('T')[0]
-    if (data.date !== todayStr) return [] // stale tasks
-    return data.tasks
-  } catch { return [] }
-}
-
-function saveTasks(tasks: QuestTask[]) {
-  if (typeof window === 'undefined') return
-  const todayStr = new Date().toISOString().split('T')[0]
-  localStorage.setItem(TASKS_KEY, JSON.stringify({ date: todayStr, tasks }))
-}
-
 export function QuestProvider({ children }: { children: ReactNode }) {
-  const [plantState, setPlantState] = useState<PlantState | null>(null)
-  const [todayTasks, setTodayTasks] = useState<QuestTask[]>([])
+  const { user, loading: authLoading } = useAuth()
+  const [userPlants, setUserPlants] = useState<UserPlant[]>([])
+  const [activePlantId, setActivePlantId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false)
   const [calendarData, setCalendarData] = useState<CalendarEntry[]>([])
-  const [mounted, setMounted] = useState(false)
+  const pendingActivePlantIdRef = React.useRef<string | null>(null)
 
-  const plantData = plantState ? getQuestPlant(plantState.plant_id) ?? null : null
+  const getDailyTasksForPlant = useCallback((plant: UserPlant): QuestTask[] => {
+    const plantData = getQuestPlant(plant.plant_id)
+    if (!plantData || plant.status === 'dead') return []
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = loadState()
-    if (saved) {
-      setPlantState(saved)
-      const savedTasks = loadTasks()
-      if (savedTasks.length > 0) {
-        setTodayTasks(savedTasks)
-      } else if (saved.daily_unlocked) {
-        const plant = getQuestPlant(saved.plant_id)
-        if (plant) {
-          const tasks = getTasksDueToday(saved, plant)
-          setTodayTasks(tasks)
-          saveTasks(tasks)
-        }
-      }
-    }
-    setMounted(true)
-  }, [])
+    const aiMainCount = plant.ai_tasks?.main?.length || 0
+    const aiSetupDone = aiMainCount > 0 && Array.from({ length: aiMainCount }).every((_, i) => !!plant.task_state?.[`main-${i}`])
+    const fallbackSetupDone = !!plant.task_state?.intro && !!plant.task_state?.['intro-2'] && !!plant.task_state?.['intro-3']
+    const isDailyUnlocked = aiMainCount > 0 ? aiSetupDone : fallbackSetupDone
 
-  // Auto-save state changes
-  useEffect(() => {
-    if (mounted && plantState) {
-      saveState(plantState)
-    }
-  }, [plantState, mounted])
-
-  // ── Select a new plant and start quest ──
-  const selectPlant = useCallback((plantId: string) => {
-    const plant = getQuestPlant(plantId)
-    if (!plant) return
-    const state = createInitialPlantState(plantId, plant.name)
-    setPlantState(state)
-    setTodayTasks([])
-    setCalendarData([])
-    saveState(state)
-  }, [])
-
-  // ── Complete a daily task ──
-  const completeTask = useCallback((taskId: string) => {
-    setTodayTasks(prev => {
-      const updated = prev.map(t => t.id === taskId ? { ...t, completed: true } : t)
-      saveTasks(updated)
-
-      // Award XP
-      const task = prev.find(t => t.id === taskId)
-      if (task && !task.completed && plantState) {
-        setPlantState(ps => {
-          if (!ps) return ps
-          let newXP = ps.total_xp + task.xp_reward
-          let newState = { ...ps, total_xp: newXP, current_level: calculateLevel(newXP) }
-
-          // Update water/fertilize/prune tracking
-          if (taskId.startsWith('water-')) {
-            newState.last_watered = new Date().toISOString().split('T')[0]
-            newState.hydration = Math.min(100, ps.hydration + 30)
-          }
-          if (taskId.startsWith('fertilize-')) {
-            newState.last_fertilized = new Date().toISOString().split('T')[0]
-          }
-          if (taskId.startsWith('prune-')) {
-            newState.last_pruned = new Date().toISOString().split('T')[0]
-          }
-
-          // Check if all tasks done
-          const allDone = updated.every(t => t.completed)
-          if (allDone) {
-            const todayStr = new Date().toISOString().split('T')[0]
-            if (!newState.completed_dates.includes(todayStr)) {
-              newState.completed_dates = [...newState.completed_dates, todayStr]
-              newState.total_xp += XP_VALUES.ALL_DAILY_COMPLETE
-              newState.current_level = calculateLevel(newState.total_xp)
-            }
-            const streak = calculateStreak(newState.completed_dates)
-            newState.streak_count = streak
-            if (streak > newState.longest_streak) {
-              newState.longest_streak = streak
-              if (streak === 7) {
-                newState.total_xp += XP_VALUES.STREAK_7
-                newState.current_level = calculateLevel(newState.total_xp)
-              }
-            }
-            newState.health = updateHealth(newState, true)
-            if (newState.recovery_active) {
-              newState.recovery_active = false
-              newState.total_xp += XP_VALUES.RECOVERY_COMPLETE
-              newState.current_level = calculateLevel(newState.total_xp)
-            }
-          }
-
-          // Check growth stage transition
-          if (plantData) {
-            const newStage = calculateGrowthStage(newState, plantData)
-            if (newStage !== newState.current_stage) {
-              newState.current_stage = newStage
-              newState.stage_transitions = [
-                ...newState.stage_transitions,
-                { stage: newStage, date: new Date().toISOString().split('T')[0] }
-              ]
-              newState.total_xp += XP_VALUES.GROWTH_MILESTONE
-              newState.current_level = calculateLevel(newState.total_xp)
-            }
-            newState.hydration = updateHydration(newState, plantData)
-          }
-
-          // Update health log
-          const todayStr = new Date().toISOString().split('T')[0]
-          const existing = newState.daily_health_log.find(d => d.date === todayStr)
-          if (!existing) {
-            newState.daily_health_log = [
-              ...newState.daily_health_log,
-              { date: todayStr, health: newState.health }
-            ]
-          }
-
-          return newState
-        })
-      }
-
-      return updated
-    })
-  }, [plantState, plantData])
-
-  // ── Complete a Main Quest step ──
-  const completeMainQuestStep = useCallback((stepIndex: number) => {
-    setPlantState(ps => {
-      if (!ps) return ps
-      if (stepIndex !== ps.main_quest_step) return ps // must complete in order
-
-      const newStep = stepIndex + 1
-      let newXP = ps.total_xp + XP_VALUES.MAIN_QUEST_STEP
-      const newState: PlantState = {
-        ...ps,
-        main_quest_step: newStep,
-        total_xp: newXP,
-        current_level: calculateLevel(newXP),
-      }
-
-      // After step 3 (index 2), unlock daily quests
-      if (newStep >= 3) {
-        newState.daily_unlocked = true
-        // Generate initial daily tasks
-        if (plantData) {
-          const tasks = getTasksDueToday(newState, plantData)
-          setTodayTasks(tasks)
-          saveTasks(tasks)
-        }
-      }
-
-      return newState
-    })
-  }, [plantData])
-
-  // ── Complete all daily tasks at once ──
-  const completeAllDailyTasks = useCallback(() => {
-    todayTasks.forEach(t => {
-      if (!t.completed) completeTask(t.id)
-    })
-  }, [todayTasks, completeTask])
-
-  // ── Refresh calendar for a month ──
-  const refreshCalendar = useCallback((year: number, month: number) => {
-    if (!plantState || !plantData) return
-    const entries = generateCalendarMonth(plantState, plantData, year, month)
-    setCalendarData(entries)
-  }, [plantState, plantData])
-
-  // ── Reset quest ──
-  const resetQuest = useCallback(() => {
-    setPlantState(null)
-    setTodayTasks([])
-    setCalendarData([])
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY)
-      localStorage.removeItem(TASKS_KEY)
-    }
-  }, [])
-
-  // ── Derived values ──
-  const currentStage: GrowthStage = plantState && plantData
-    ? calculateGrowthStage(plantState, plantData)
-    : 'seed'
-
-  const badges = plantState ? checkBadges(plantState) : []
-  const xpInfo = plantState ? xpForNextLevel(plantState.total_xp) : { current: 0, needed: 100, progress: 0 }
-  const streakCount = plantState ? plantState.streak_count : 0
-  const isRecoveryNeeded = plantState ? shouldTriggerRecovery(plantState) : false
-
-  // Build main quests from current state
-  const mainQuests: Quest[] = plantState ? (() => {
-    const templates = getMainQuestContent(plantState.plant_name)
-    return templates.map((t, i) => ({
-      id: `main-${i}`,
-      type: 'main' as const,
-      title: t.title,
-      description: t.description,
-      tasks: t.tasks.map((label, j) => ({
-        id: `main-${i}-task-${j}`,
+    if (isDailyUnlocked && (plant.ai_tasks?.daily?.length || 0) > 0) {
+      return plant.ai_tasks!.daily.map((label: string, i: number) => ({
+        id: `daily-${i}`,
         label,
-        completed: plantState.main_quest_step > i,
-        due_date: plantState.quest_started_at,
-        category: 'care' as const,
+        completed: !!plant.task_state?.[`daily-${i}`],
+        category: 'care',
         xp_reward: 10,
-      })),
-      xp_reward: XP_VALUES.MAIN_QUEST_STEP,
-      status: (plantState.main_quest_step > i ? 'completed' :
-        plantState.main_quest_step === i ? 'active' : 'locked') as 'completed' | 'active' | 'locked',
-    }))
-  })() : []
+      }))
+    }
+
+    return getTasksDueToday(plant, plantData)
+  }, [])
+
+  const resolveTaskLabel = useCallback((plant: UserPlant, taskId: string): string => {
+    const liveTask = getDailyTasksForPlant(plant).find((t) => t.id === taskId)
+    if (liveTask) return liveTask.label
+
+    if (taskId === 'intro') return 'Prepared area'
+    if (taskId === 'intro-2') return 'Mixed soil'
+    if (taskId === 'intro-3') return 'Sown seeds'
+
+    if (taskId.startsWith('main-')) {
+      const idx = parseInt(taskId.split('-')[1] || '0', 10)
+      return plant.ai_tasks?.main?.[idx]?.title || `Main quest ${idx + 1}`
+    }
+
+    if (taskId.startsWith('daily-')) {
+      const idx = parseInt(taskId.split('-')[1] || '0', 10)
+      return plant.ai_tasks?.daily?.[idx] || `Daily task ${idx + 1}`
+    }
+
+    return taskId
+  }, [getDailyTasksForPlant])
+
+  const refreshCalendar = useCallback((year: number, month: number) => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const now = new Date()
+    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+    const entries: CalendarEntry[] = []
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const isToday = dateKey === todayKey
+
+      const tasks: QuestTask[] = []
+
+      // 1. Add completed tasks from log for ALL days
+      for (const plant of userPlants) {
+        const completionLog = (plant.task_state?.completion_log || {}) as Record<string, Array<{ id: string; label?: string }>>
+        const dayLog = completionLog[dateKey] || []
+        for (const item of dayLog) {
+          tasks.push({
+            id: `${plant.id}-${item.id}`,
+            label: item.label || resolveTaskLabel(plant, item.id),
+            completed: true,
+            category: 'care',
+            xp_reward: 0,
+            plant_id: plant.plant_id,
+            plant_name: plant.plant_name,
+          })
+        }
+      }
+
+      // 3. Determine all applicable statuses for the day
+      const statuses: DayStatus[] = []
+      let milestoneLabel = ''
+
+      // Milestone check
+      const milestoneTask = tasks.find(t => t.id.includes('t_seed') || t.id.includes('t_sprout') || t.id.includes('t_mature'))
+      if (milestoneTask) {
+        statuses.push('milestone')
+        milestoneLabel = milestoneTask.label
+      }
+
+      // Completion status check (for past days, tasks only contains completed ones)
+      if (tasks.length > 0) {
+        statuses.push('completed')
+      }
+
+      if (isToday) {
+        const todayTasks: QuestTask[] = userPlants.flatMap((plant) =>
+          getDailyTasksForPlant(plant).map((task) => ({
+            ...task,
+            plant_id: plant.plant_id,
+            plant_name: plant.plant_name,
+          }))
+        )
+
+        const todayStatuses: DayStatus[] = []
+        const anyMilestone = todayTasks.some(t => t.id.includes('t_seed') || t.id.includes('t_sprout') || t.id.includes('t_mature'))
+        const anyCompleted = todayTasks.some(t => t.completed)
+        const anyPending = todayTasks.some(t => !t.completed)
+
+        if (anyMilestone) todayStatuses.push('milestone')
+        if (anyCompleted) todayStatuses.push('completed')
+        if (anyPending) todayStatuses.push('pending')
+        
+        entries.push({
+          date: dateKey,
+          tasks: todayTasks,
+          statuses: todayStatuses,
+          milestone_label: milestoneLabel || (anyMilestone ? todayTasks.find(t => t.id.includes('t_'))?.label : undefined)
+        })
+        continue
+      }
+
+      entries.push({
+        date: dateKey,
+        tasks: tasks,
+        statuses,
+        milestone_label: milestoneLabel || undefined
+      })
+    }
+
+    setCalendarData(entries)
+  }, [userPlants, getDailyTasksForPlant, resolveTaskLabel])
+
+  // ── Firestore Real-time Sync & Initialization ──
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) {
+      setUserPlants([])
+      setLoading(false)
+      setActivePlantId(null)
+      return
+    }
+
+    const plantsRef = collection(db, 'users', user.uid, 'user_plants')
+    const unsubscribe = onSnapshot(plantsRef, (snapshot) => {
+      const plants: UserPlant[] = []
+      let requiresDecaySave = false
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data() as Omit<UserPlant, 'created_at' | 'updated_at' | 'last_checked_at'> & {
+          created_at: any
+          updated_at: any
+          last_checked_at: any
+        }
+
+        // Parse plant doc
+        const plant: UserPlant = {
+          ...data,
+          // Handle cases where serverTimestamp might be pending
+          created_at: data.created_at?.toDate ? data.created_at : Timestamp.now(),
+          updated_at: data.updated_at?.toDate ? data.updated_at : Timestamp.now(),
+          last_checked_at: data.last_checked_at?.toDate ? data.last_checked_at : Timestamp.now(),
+        }
+
+        const staticData = getQuestPlant(plant.plant_id)
+        if (staticData) {
+          // Perform deterministic decay check immediately
+          const decayResult = derivePlantStatus(plant, staticData)
+          if (decayResult.hasUpdates && decayResult.updatedState) {
+            plant.state = decayResult.updatedState
+            plant.status = decayResult.status || plant.status
+            if (decayResult.newCheckedAt) {
+               plant.last_checked_at = decayResult.newCheckedAt
+            }
+            requiresDecaySave = true
+            // Save decay asynchronously, we still apply local derived state instantly
+            updateDoc(docSnap.ref, {
+               state: plant.state,
+               status: plant.status,
+               last_checked_at: plant.last_checked_at,
+               updated_at: serverTimestamp(),
+            }).catch(e => console.error("Decay sync error:", e))
+          }
+          plants.push(plant)
+        }
+      })
+
+      setUserPlants(plants)
+      
+      setActivePlantId((prev) => {
+        if (plants.length === 0) return null
+        const pendingId = pendingActivePlantIdRef.current
+
+        if (pendingId) {
+          const pendingExists = plants.some((p) => p.id === pendingId)
+          if (pendingExists) {
+            pendingActivePlantIdRef.current = null
+            return pendingId
+          }
+          return pendingId
+        }
+
+        if (!prev) return plants[0].id
+        
+        // Ensure the active plant actually still exists in the list (e.g. not deleted)
+        const activeExists = plants.some(p => p.id === prev)
+        return activeExists ? prev : plants[0].id
+      })
+      
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching quest plants:", error)
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [user, authLoading]) // activePlantId intentionally omitted
+
+  // ── Methods ──
+
+  const addPlant = useCallback(async (staticPlantId: string, planType: "Budget" | "Balanced" | "Premium" = "Budget"): Promise<string | undefined> => {
+    if (!user) return undefined
+    const staticData = getQuestPlant(staticPlantId)
+    if (!staticData) return undefined
+
+    setIsGeneratingTasks(true)
+    const instanceId = uuidv4()
+    const newPlant: UserPlant = {
+      id: instanceId,
+      plant_id: staticData.plant_id,
+      plant_name: staticData.name,
+      status: 'healthy',
+      created_at: Timestamp.now(),
+      updated_at: Timestamp.now(),
+      last_checked_at: Timestamp.now(),
+      selected_plan_type: planType,
+      state: {
+        growthStage: 0,
+        health: 100,
+        hydration: 70,
+        xp: 0
+      },
+      task_state: {}
+    }
+
+    const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
+    pendingActivePlantIdRef.current = instanceId
+    await setDoc(docRef, {
+      ...newPlant,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+      last_checked_at: serverTimestamp(),
+    })
+
+    // Optimistic local state so UI can open selected plant immediately.
+    setUserPlants((prev) => {
+      const exists = prev.some((p) => p.id === instanceId)
+      return exists ? prev : [newPlant, ...prev]
+    })
+    setActivePlantId(instanceId)
+
+    // Generate AI quests in background (non-blocking for navigation).
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    ;(async () => {
+      try {
+        // 1. Get Plan Detail
+        const planRes = await fetch(`${API_URL}/api/plants/${staticPlantId}/ai-plans`)
+        if (planRes.ok) {
+          const plans = await planRes.json()
+          const plan = plans.find((p: any) => p.plan_type === planType) || plans[0]
+
+          // 2. Get AI Explanation
+          const expRes = await fetch(`${API_URL}/api/plants/${staticPlantId}/explain`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan })
+          })
+          if (expRes.ok) {
+            const { explanation } = await expRes.json()
+
+            // 3. Generate Tasks
+            const taskRes = await fetch(`${API_URL}/api/generate-ai-tasks`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                plantId: staticPlantId,
+                plantName: staticData.name,
+                planType: planType,
+                explanation: explanation
+              })
+            })
+            
+            if (taskRes.ok) {
+              const aiTasks = await taskRes.json()
+              await updateDoc(docRef, {
+                ai_tasks: aiTasks,
+                updated_at: serverTimestamp()
+              })
+              console.log(`[QuestContext] AI tasks ready for ${instanceId}`)
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to generate AI tasks during creation:", err)
+      } finally {
+        setIsGeneratingTasks(false)
+      }
+    })()
+
+    pendingActivePlantIdRef.current = null
+    return instanceId
+  }, [user])
+
+  const deletePlant = useCallback(async (instanceId: string) => {
+    if (!user) return
+    const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
+    await deleteDoc(docRef)
+    if (activePlantId === instanceId) {
+       setActivePlantId(null)
+    }
+  }, [user, activePlantId])
+
+  const completeTask = useCallback(async (instanceId: string, taskId: string) => {
+    if (!user) return
+    const plant = userPlants.find(p => p.id === instanceId)
+    if (!plant || plant.status === 'dead') return
+
+    // Handle both prefix-based tasks (water-123), exact milestones, and dynamic AI main quests (main-0).
+    const taskPrefix = taskId.split('-')[0]
+    const taskType =
+      taskId === 'intro' ||
+      taskId === 'intro-2' ||
+      taskId === 'intro-3' ||
+      taskPrefix === 'main'
+        ? taskId
+        : taskPrefix
+    
+    // We update fields deterministically
+    let { ...newState } = plant.state
+    let { ...newTaskState } = plant.task_state
+
+    const now = new Date()
+    const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+    const nowTimestamp = Timestamp.now()
+    
+    if (taskType.startsWith('main-')) {
+      const mainIndex = parseInt(taskType.split('-')[1] || '0', 10)
+      const mainQuest = plant.ai_tasks?.main?.[mainIndex]
+      newState.xp += typeof mainQuest?.xp_reward === 'number' ? mainQuest.xp_reward : XP_VALUES.MAIN_QUEST_STEP
+      newTaskState[taskId] = true
+    } else switch (taskType) {
+      case 'water':
+        newTaskState.lastWateredAt = nowTimestamp
+        newState.hydration = Math.min(100, newState.hydration + 30) // +30 hydration
+        newState.health = Math.min(100, newState.health + 5) // small health bump
+        newState.xp += XP_VALUES.WATER
+        break
+      case 'fertilize':
+        newTaskState.lastFertilizedAt = nowTimestamp
+        newState.health = Math.min(100, newState.health + 10)
+        newState.xp += XP_VALUES.FERTILIZE
+        break
+      case 'observe':
+        // No timestamp needed, just XP
+        newState.xp += XP_VALUES.OBSERVE
+        break
+      case 'prune':
+        // Assuming prune gives XP and bump health loosely
+        newState.health = Math.min(100, newState.health + 5)
+        newState.xp += XP_VALUES.PRUNE
+        break
+      case 'intro':
+        newState.health = 100
+        newState.hydration = 100
+        newState.xp += XP_VALUES.MAIN_QUEST_STEP // +30
+        newTaskState.intro = true
+        break
+      case 'intro-2':
+        // Reach exactly 80 (30 + 50) to unlock Quest 3
+        newState.xp += 50
+        newTaskState['intro-2'] = true
+        break
+      case 'intro-3':
+        // Reach exactly 100 (80 + 20) to stay in Sprout stage
+        newState.xp += 20
+        newTaskState['intro-3'] = true
+        break
+      case 't_seed':
+        newState.xp += 100 // Seed Phase completion
+        break
+      case 't_sprout':
+        newState.xp += 200 // Sprout Phase completion
+        break
+      case 't_mature':
+        newState.xp += 300 // Mature Phase completion
+        break
+      case 'daily':
+        newTaskState[taskId] = true
+        newState.xp += 10
+        break
+      default:
+        console.warn(`Unknown task type: ${taskType}`)
+    }
+
+    // Persist completion log for calendar history.
+    const completionLog = { ...(newTaskState.completion_log || {}) } as Record<string, Array<{ id: string; label?: string }>>
+    const dayLog = [...(completionLog[dateKey] || [])]
+    if (!dayLog.some((item) => item.id === taskId)) {
+      dayLog.push({ id: taskId, label: resolveTaskLabel(plant, taskId) })
+    }
+    completionLog[dateKey] = dayLog
+    newTaskState.completion_log = completionLog
+
+    // Apply deterministic growth stage recalculation
+    newState.growthStage = getGrowthStage(newState.xp)
+    
+    const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
+    
+    try {
+        await updateDoc(docRef, {
+            state: newState,
+            task_state: newTaskState,
+            updated_at: serverTimestamp(),
+        })
+    } catch (e) {
+        console.error("Failed to complete task:", e)
+    }
+  }, [user, userPlants])
 
   return (
     <QuestContext.Provider value={{
-      plantState,
-      plantData,
-      todayTasks,
-      calendarData,
-      badges,
-      mainQuests,
-      hasActivePlant: !!plantState,
-      selectPlant,
-      completeTask,
-      completeMainQuestStep,
-      completeAllDailyTasks,
-      refreshCalendar,
-      resetQuest,
-      xpInfo,
-      currentStage,
-      streakCount,
-      isRecoveryNeeded,
+      userPlants,
+      activePlantId,
+      loading: loading || authLoading,
+      isGeneratingTasks,
       availablePlants: QUEST_PLANTS,
+      setActivePlant: setActivePlantId,
+      addPlant,
+      deletePlant,
+      completeTask,
+      calendarData,
+      refreshCalendar,
+      hasActivePlant: userPlants.length > 0,
     }}>
       {children}
     </QuestContext.Provider>

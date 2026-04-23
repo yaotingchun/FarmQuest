@@ -1,5 +1,5 @@
 // ── Growth Stages ──
-export type GrowthStage = 'seed' | 'sprout' | 'mature' | 'harvest'
+export type GrowthStage = 0 | 1 | 2 | 3 // 0=Seed, 1=Sprout, 2=Mature, 3=Harvest
 
 // ── Task Categories ──
 export type TaskCategory = 'care' | 'growth' | 'observation'
@@ -9,16 +9,17 @@ export type QuestType = 'main' | 'daily'
 export type QuestStatus = 'locked' | 'active' | 'completed'
 
 // ── Calendar Day Status ──
-export type DayStatus = 'completed' | 'pending' | 'missed' | 'critical' | 'milestone'
+export type DayStatus = 'completed' | 'pending' | 'milestone'
 
 // ── Task ──
 export interface QuestTask {
   id: string
   label: string
   completed: boolean
-  due_date: string          // ISO date string
   category: TaskCategory
   xp_reward: number
+  plant_id?: string
+  plant_name?: string
 }
 
 // ── Quest ──
@@ -30,37 +31,50 @@ export interface Quest {
   tasks: QuestTask[]
   xp_reward: number         // bonus XP for completing entire quest
   status: QuestStatus
+  isActionable?: boolean
 }
 
-// ── Plant State ──
-export interface PlantState {
+import { Timestamp } from 'firebase/firestore';
+
+export interface UserPlantState {
+  growthStage: GrowthStage
+  health: number             // 0-100
+  hydration: number          // 0-100
+  xp: number
+}
+
+export interface TaskState {
+  lastWateredAt?: Timestamp
+  lastFertilizedAt?: Timestamp
+  [key: string]: any // Support for dynamic AI task completion tracking
+}
+
+export interface UserPlant {
+  id: string
   plant_id: string
   plant_name: string
-  current_stage: GrowthStage
-  hydration: number          // 0-100
-  health: number             // 0-100
-  last_watered: string       // ISO date
-  streak_count: number
-  longest_streak: number
-  total_xp: number
-  current_level: number
-  quest_started_at: string   // ISO date — when Main Quest began
-  daily_unlocked: boolean    // true after Main Quest complete
-  main_quest_step: number    // 0, 1, 2, or 3 (completed)
-  completed_dates: string[]  // ISO dates where all tasks were completed
-  missed_dates: string[]     // ISO dates where tasks were missed
-  last_fertilized: string    // ISO date
-  last_pruned: string        // ISO date
-  stage_transitions: { stage: GrowthStage; date: string }[]
-  recovery_active: boolean
-  daily_health_log: { date: string; health: number }[]
+
+  created_at: Timestamp        // when plant was added
+  updated_at: Timestamp        // last mutation
+  last_checked_at: Timestamp   // last time system evaluated decay
+  status: "healthy" | "dead"
+
+  state: UserPlantState
+  task_state: TaskState
+
+  selected_plan_type?: "Budget" | "Balanced" | "Premium"
+  ai_tasks?: {
+    main: Quest[]
+    daily: string[]
+  }
 }
+
 
 // ── Calendar Entry ──
 export interface CalendarEntry {
   date: string               // ISO date  YYYY-MM-DD
   tasks: QuestTask[]
-  day_status: DayStatus
+  statuses: DayStatus[]
   milestone_label?: string   // e.g. "First Sprout!", "Harvest Day!"
 }
 
@@ -94,6 +108,7 @@ export interface QuestPlantData {
   pot_size: string
   seed_depth_cm: number
   soil_type: string
+  startMethod: string
 }
 
 // ── XP Config ──
@@ -108,31 +123,6 @@ export const XP_VALUES = {
   MAIN_QUEST_STEP: 30,
   RECOVERY_COMPLETE: 40,
 } as const
-
-// ── Level Thresholds ──
-export function calculateLevel(totalXP: number): number {
-  // Each level requires more XP: level N needs N*100 XP total
-  // Level 1: 0, Level 2: 100, Level 3: 300, Level 4: 600...
-  let level = 1
-  let threshold = 0
-  while (threshold + level * 100 <= totalXP) {
-    threshold += level * 100
-    level++
-  }
-  return level
-}
-
-export function xpForNextLevel(totalXP: number): { current: number; needed: number; progress: number } {
-  let level = 1
-  let threshold = 0
-  while (threshold + level * 100 <= totalXP) {
-    threshold += level * 100
-    level++
-  }
-  const current = totalXP - threshold
-  const needed = level * 100
-  return { current, needed, progress: Math.round((current / needed) * 100) }
-}
 
 // ── LLM Quest Content (output format) ──
 export interface LLMQuestContent {
