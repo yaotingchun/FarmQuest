@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -19,9 +19,15 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Initialize Firestore (Specify databaseId if necessary, though client SDK usually defaults to (default) 
-// and currently doesn't natively support querying named databases directly in the simplest way without specifying it in the project. 
-// For now, we connect to the project's default client database, or we can use the backend for user creation).
-const db = getFirestore(app, 'farmquest');
+// Initialize Firestore
+// We use initializeFirestore with experimentalForceLongPolling to prevent Next.js SSR WebSocket timeouts
+let db;
+try {
+  // Try to get existing instance (HMR)
+  db = getFirestore(app, 'farmquest');
+} catch (e) {
+  // Initialize new instance with long polling fallback for SSR/dev
+  db = initializeFirestore(app, { experimentalForceLongPolling: true }, 'farmquest');
+}
 
 export { app, auth, googleProvider, db };

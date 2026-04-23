@@ -217,7 +217,7 @@ body {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 20px;
   list-style: none;
 }
 
@@ -234,7 +234,7 @@ body {
 .nav-links a {
   text-decoration: none;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.01em;
   transition: color 0.2s;
