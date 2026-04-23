@@ -3,24 +3,28 @@
 import type { GrowthStage } from '@/types/quest'
 
 const STAGE_CONFIG: Record<GrowthStage, { emoji: string; label: string; color: string }> = {
-  seed: { emoji: '🌰', label: 'Seed', color: '#a78bfa' },
-  sprout: { emoji: '🌱', label: 'Sprout', color: '#4ade80' },
-  mature: { emoji: '🌿', label: 'Mature', color: '#22c55e' },
-  harvest: { emoji: '🌾', label: 'Harvest', color: '#facc15' },
+  0: { emoji: '🌰', label: 'Seed', color: '#a78bfa' },
+  1: { emoji: '🌱', label: 'Sprout', color: '#4ade80' },
+  2: { emoji: '🌿', label: 'Mature', color: '#22c55e' },
+  3: { emoji: '🌾', label: 'Harvest', color: '#facc15' },
 }
 
 interface PlantStatusCardProps {
   plantName: string
   plantEmoji: string
   stage: GrowthStage
-  health: number
-  hydration: number
   streak: number
-  level: number
+  sunlight?: string
+  waterFrequency?: number
+  startMethod?: string
 }
 
-export function PlantStatusCard({ plantName, plantEmoji, stage, health, hydration, streak, level }: PlantStatusCardProps) {
+const formatSunlight = (s: string) => s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+const formatStartMethod = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+export function PlantStatusCard({ plantName, plantEmoji, stage, streak, sunlight, waterFrequency, startMethod }: PlantStatusCardProps) {
   const stageInfo = STAGE_CONFIG[stage]
+  const displayLabel = (stage === 0 && startMethod) ? formatStartMethod(startMethod) : stageInfo.label
 
   return (
     <div className="quest-plant-card">
@@ -30,46 +34,34 @@ export function PlantStatusCard({ plantName, plantEmoji, stage, health, hydratio
           <div className="quest-plant-stage-ring" />
         </div>
         <div className="quest-plant-stage-badge" style={{ background: stageInfo.color }}>
-          {stageInfo.emoji} {stageInfo.label}
+          {stageInfo.emoji} {displayLabel}
         </div>
       </div>
 
       <div className="quest-plant-info">
-        <div className="quest-plant-name-row">
+        <div className="quest-plant-name-row" style={{ alignItems: 'center' }}>
           <h2 className="quest-plant-name">{plantName}</h2>
-          <span className="quest-plant-level">Lv.{level}</span>
         </div>
 
-        <div className="quest-plant-meters">
-          <div className="quest-meter">
-            <div className="quest-meter-header">
-              <span>💧 Hydration</span>
-              <span className="quest-meter-val">{hydration}%</span>
-            </div>
-            <div className="quest-meter-track">
-              <div
-                className="quest-meter-fill hydration"
-                style={{ width: `${hydration}%` }}
-              />
-            </div>
+        {(sunlight || waterFrequency) && (
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+             {sunlight && (
+               <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                 <span>☀️</span>
+                 <span>{formatSunlight(sunlight)}</span>
+               </div>
+             )}
+             {waterFrequency && (
+               <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                 <span>💧</span>
+                 <span>Every {waterFrequency} {waterFrequency === 1 ? 'day' : 'days'}</span>
+               </div>
+             )}
           </div>
-
-          <div className="quest-meter">
-            <div className="quest-meter-header">
-              <span>💚 Health</span>
-              <span className="quest-meter-val">{health}%</span>
-            </div>
-            <div className="quest-meter-track">
-              <div
-                className="quest-meter-fill health"
-                style={{ width: `${health}%` }}
-              />
-            </div>
-          </div>
-        </div>
+        )}
 
         {streak > 0 && (
-          <div className="quest-plant-streak-inline">
+          <div className="quest-plant-streak-inline" style={{ marginTop: '0.5rem' }}>
             🔥 {streak} day streak
           </div>
         )}

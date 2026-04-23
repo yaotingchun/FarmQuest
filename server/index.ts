@@ -19,7 +19,7 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 import express from "express";
 import cors from "cors";
 import plantsData from "./data/plants.json" with { type: "json" };
-import { generatePlantingPlans, generateSetupExplanation, type AIPlan } from "./ai.js";
+import { generatePlantingPlans, generateSetupExplanation, generateQuestTasks, type AIPlan } from "./ai.js";
 import { calculateCost } from "./cost.js";
 import { ragManager } from "./rag.js";
 
@@ -203,6 +203,24 @@ app.post("/api/plants/:plantId/explain", async (req, res) => {
   } catch (err) {
     console.error("[AI] Explanation API error:", err);
     res.status(500).json({ error: "Failed to generate explanation" });
+  }
+});
+// POST /api/generate-ai-tasks — translate plan explanation into specific quests
+app.post("/api/generate-ai-tasks", async (req, res) => {
+  const { plantId, plantName, planType, explanation } = req.body;
+
+  if (!plantId || !planType || !explanation) {
+    res.status(400).json({ error: "Missing required fields for task generation" });
+    return;
+  }
+
+  try {
+    console.log(`[AI] Generating quests for ${plantName} (${planType})...`);
+    const tasks = await generateQuestTasks(plantName, planType, explanation);
+    res.json(tasks);
+  } catch (err) {
+    console.error("[AI] Task generation API error:", err);
+    res.status(500).json({ error: "Failed to generate AI tasks" });
   }
 });
 

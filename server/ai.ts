@@ -85,6 +85,12 @@ const getProjectConfig = () => ({
   location: process.env.GOOGLE_VERTEX_LOCATION || "us-central1"
 });
 
+const DEFAULT_TEXT_MODEL = process.env.GOOGLE_VERTEX_TEXT_MODEL || "gemini-2.5-flash";
+
+const TASK_MODEL_CANDIDATES = Array.from(
+  new Set([DEFAULT_TEXT_MODEL, "gemini-2.5-flash", "gemini-1.5-flash"])
+);
+
 // Normalize credentials path if relative
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !path.isAbsolute(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
   process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, "..", process.env.GOOGLE_APPLICATION_CREDENTIALS);
@@ -248,7 +254,7 @@ async function getModel() {
   const config = getProjectConfig();
   const ai = new VertexAI({ project: config.projectId!, location: config.location });
   return ai.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: DEFAULT_TEXT_MODEL,
     generationConfig: { temperature: 0.7, maxOutputTokens: 128 }
   });
 }
@@ -477,7 +483,7 @@ export async function generateSetupExplanation(
   try {
     const ai = getVertexAI();
     const model = ai.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: DEFAULT_TEXT_MODEL,
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 900,
@@ -511,5 +517,98 @@ Format requirements:
   } catch (err) {
     console.error("[AI] Explanation generation failed:", err);
     return buildDeterministicLongExplanation(plantData, plan);
+  }
+}
+// ── AI Quest Task Generation ──
+export async function generateQuestTasks(
+  plantName: string,
+  planType: string,
+  explanation: string
+): Promise<{ main: any[], daily: string[] }> {
+  try {
+    const ai = getVertexAI();
+    const prompt = `User Plan: ${planType} ${plantName}.
+Details: ${explanation}
+
+Task: Generate JSON for quests. 
+- "main": 3-4 steps for STAGE 1 (SETUP/PLANTING) ONLY.
+- "daily": Include routine care AND 3-5 specific milestones for FUTURE STAGES (Sprout, Mature, Harvest).
+
+Format:
+{
+  "main": [{"title": "Step", "description": "1 sentence", "task_label": "done msg", "xp": 50}],
+  "daily": ["Routine task", "Stage 2 Milestone", "Stage 3 Milestone"]
+}
+Return ONLY JSON. Ground description in plan specifics.`;
+
+    let text = "";
+    let lastErr: unknown = null;
+
+    for (const modelName of TASK_MODEL_CANDIDATES) {
+      try {
+        console.log(`[AI] Trying task model ${modelName} for ${plantName} (${planType})...`);
+        const model = ai.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          },
+        });
+        const result = await model.generateContent(prompt);
+        text = extractAllText(result);
+        if (text) {
+          console.log(`[AI] Task model success: ${modelName}`);
+          break;
+        }
+      } catch (err) {
+        lastErr = err;
+        console.warn(`[AI] Task model failed: ${modelName}`, err);
+      }
+    }
+
+    if (!text) {
+      throw lastErr || new Error("No response text from any task model");
+    }
+    
+    // Clean up potential markdown formatting
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    // Try direct parse first, then fallback to extracting first JSON object block.
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      const start = text.indexOf("{");
+      const end = text.lastIndexOf("}");
+      if (start >= 0 && end > start) {
+        data = JSON.parse(text.slice(start, end + 1));
+      } else {
+        throw new Error("Model returned non-JSON task payload");
+      }
+    }
+
+    if (!Array.isArray(data?.main) || !Array.isArray(data?.daily)) {
+      throw new Error("Task payload missing 'main' or 'daily' arrays");
+    }
+
+    console.log(`[AI] Successfully generated ${data.main.length} main quests and ${data.daily.length} daily tasks.`);
+    
+    return {
+      main: data.main,
+      daily: data.daily
+    };
+  } catch (err) {
+    console.error("[AI] Quest generation failed:", err);
+    // Fallback to generic tasks
+    return {
+      main: [
+        { title: "Workspace Prep", description: "Set up your pots and tools.", task_label: "Prepared area", xp: 30 },
+        { title: "Soil Mix", description: "Prepare the nutrient-rich base.", task_label: "Mixed soil", xp: 50 },
+        { title: "Planting", description: "Carefully sow your seeds.", task_label: "Sown seeds", xp: 100 }
+      ],
+      daily: [
+        "Check moisture", "Monitor light", "Observe for Sprout (Stage 2)", "Track Growth (Stage 3)", "Prepare for Harvest (Stage 4)"
+      ]
+    };
   }
 }

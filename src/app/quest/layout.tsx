@@ -2,43 +2,39 @@
 
 import { QuestProvider } from '@/lib/QuestContext'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
+import { useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { href: '/quest', label: 'Home', icon: '🏠' },
-  { href: '/quest/quests', label: 'Quests', icon: '⚔️' },
-  { href: '/quest/calendar', label: 'Calendar', icon: '📅' },
-  { href: '/quest/progress', label: 'Progress', icon: '📊' },
-]
 
-function QuestNav() {
-  const pathname = usePathname()
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth()
+  const router = useRouter()
 
-  return (
-    <nav className="quest-bottom-nav">
-      {NAV_ITEMS.map(item => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={`quest-nav-item ${pathname === item.href ? 'active' : ''}`}
-        >
-          <span className="quest-nav-icon">{item.icon}</span>
-          <span className="quest-nav-label">{item.label}</span>
-        </Link>
-      ))}
-    </nav>
-  )
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login') // Redirect if not authenticated
+    }
+  }, [user, loading, router])
+
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
+      </div>
+    )
+  }
+
+  return <QuestProvider>{children}</QuestProvider>
 }
 
 export default function QuestLayout({ children }: { children: React.ReactNode }) {
   return (
-    <QuestProvider>
-      <div className="quest-layout">
-        <div className="quest-content">
-          {children}
-        </div>
-        <QuestNav />
+    <div className="quest-layout">
+      <div className="quest-content">
+        <AuthGuard>{children}</AuthGuard>
       </div>
-    </QuestProvider>
+    </div>
   )
 }

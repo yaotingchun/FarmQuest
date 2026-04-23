@@ -6,7 +6,7 @@ import { CalendarGrid } from '@/components/quest/CalendarGrid'
 import Link from 'next/link'
 
 export default function CalendarPage() {
-  const { plantState, calendarData, refreshCalendar, hasActivePlant } = useQuest()
+  const { calendarData, refreshCalendar, hasActivePlant, userPlants } = useQuest()
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
@@ -15,7 +15,7 @@ export default function CalendarPage() {
     if (hasActivePlant) {
       refreshCalendar(year, month)
     }
-  }, [year, month, hasActivePlant, refreshCalendar])
+  }, [year, month, hasActivePlant, refreshCalendar, userPlants])
 
   const handleMonthChange = (y: number, m: number) => {
     setYear(y)
@@ -33,9 +33,8 @@ export default function CalendarPage() {
   }
 
   // Calendar stats
-  const completed = calendarData.filter(d => d.day_status === 'completed').length
-  const missed = calendarData.filter(d => d.day_status === 'missed' || d.day_status === 'critical').length
-  const milestones = calendarData.filter(d => d.day_status === 'milestone').length
+  const completedCount = calendarData.filter(d => d.statuses.includes('completed')).length
+  const pendingCount = calendarData.filter(d => d.statuses.includes('pending')).length
 
   return (
     <div className="quest-page quest-calendar-page">
@@ -45,20 +44,16 @@ export default function CalendarPage() {
       </div>
 
       {/* Monthly Stats */}
-      <div className="quest-cal-stats">
-        <div className="quest-cal-stat">
-          <span className="quest-cal-stat-num" style={{ color: '#4ade80' }}>{completed}</span>
-          <span className="quest-cal-stat-label">Completed</span>
+        <div className="quest-cal-stats">
+          <div className="quest-cal-stat">
+            <span className="quest-cal-stat-num" style={{ color: 'var(--accent)' }}>{completedCount}</span>
+            <span className="quest-cal-stat-label">Completed</span>
+          </div>
+          <div className="quest-cal-stat">
+            <span className="quest-cal-stat-num" style={{ color: '#fbbf24' }}>{pendingCount}</span>
+            <span className="quest-cal-stat-label">Pending</span>
+          </div>
         </div>
-        <div className="quest-cal-stat">
-          <span className="quest-cal-stat-num" style={{ color: '#f87171' }}>{missed}</span>
-          <span className="quest-cal-stat-label">Missed</span>
-        </div>
-        <div className="quest-cal-stat">
-          <span className="quest-cal-stat-num" style={{ color: '#a78bfa' }}>{milestones}</span>
-          <span className="quest-cal-stat-label">Milestones</span>
-        </div>
-      </div>
 
       <CalendarGrid
         entries={calendarData}
