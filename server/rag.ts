@@ -24,7 +24,7 @@ interface PlantEmbedding {
 }
 
 class RAGManager {
-  private vertexAI: VertexAI;
+  private vertexAI ?: VertexAI;
   private plantEmbeddings: PlantEmbedding[] = [];
   private isInitialized = false;
 

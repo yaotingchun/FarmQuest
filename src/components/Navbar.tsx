@@ -31,9 +31,13 @@ export const Navbar = () => {
     () => [
       { label: 'Features', href: '/#features' },
       { label: 'How It Works', href: '/#how-it-works' },
-      { label: 'Forum', href: '/#forum' },
       { label: 'Explore Plants', href: '/explore' },
       { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
+      { label: 'Pick a Plant', href: '/recommendations', requiresAuth: true },
+      { label: 'Health Detection', href: '/diagnosis', requiresAuth: true },
+      { label: 'Plant Quest', href: '/quest', requiresAuth: true },
+      { label: 'Marketplace', href: '/marketplace', requiresAuth: true },
+      { label: 'Find My Plants', href: '/preferences', requiresAuth: true },
     ],
     []
   )
@@ -52,54 +56,54 @@ export const Navbar = () => {
   }
   return (
     <>
-    <nav className="navbar">
-      <Link href="/" className="nav-logo">
-        <div className="nav-logo-icon">
-          <Sprout size={24} color="var(--accent)" strokeWidth={1.75} fill="var(--accent)" fillOpacity={0.2} />
-        </div>
-        <span className="nav-logo-text">Farm<span>Quest</span></span>
-      </Link>
+      <nav className="navbar">
+        <Link href="/" className="nav-logo">
+          <div className="nav-logo-icon">
+            <Sprout size={24} color="var(--accent)" strokeWidth={1.75} fill="var(--accent)" fillOpacity={0.2} />
+          </div>
+          <span className="nav-logo-text">Farm<span>Quest</span></span>
+        </Link>
 
-      <ul className="nav-links">
-        {visibleNavItems.map((item) => (
-          <li
-            key={item.href}
-            className={`nav-link-item ${isActive(item.href) ? 'nav-link-item-active' : ''}`}
-          >
-            <Link href={item.href}>{item.label}</Link>
-          </li>
-        ))}
-        {profile ? (
-          <li>
-            <Link href="/profile" className="nav-profile-link">
-              <div className="nav-profile-info">
-                <span className="nav-profile-name">{profile.username}</span>
-                <span className="nav-profile-status">{profile.archetype || 'GROWER'}</span>
-              </div>
-              <div className="nav-profile-avatar">{profile.avatar}</div>
-            </Link>
-          </li>
-        ) : (
-          !loading && (
-            <li>
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="nav-cta"
-                style={{ background: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                Log In
-              </button>
+        <ul className="nav-links">
+          {visibleNavItems.map((item) => (
+            <li
+              key={item.href}
+              className={`nav-link-item ${isActive(item.href) ? 'nav-link-item-active' : ''}`}
+            >
+              <Link href={item.href}>{item.label}</Link>
             </li>
-          )
-        )}
-      </ul>
-    </nav>
-      
-    <LoginModal
-      isOpen={isLoginModalOpen}
-      onClose={() => setIsLoginModalOpen(false)}
-    />
-  </>
+          ))}
+          {profile ? (
+            <li>
+              <Link href="/profile" className="nav-profile-link">
+                <div className="nav-profile-info">
+                  <span className="nav-profile-name">{profile.username}</span>
+                  <span className="nav-profile-status">{profile.archetype || 'GROWER'}</span>
+                </div>
+                <div className="nav-profile-avatar">{profile.avatar}</div>
+              </Link>
+            </li>
+          ) : (
+            !loading && (
+              <li>
+                <button
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="nav-cta"
+                  style={{ background: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  Log In
+                </button>
+              </li>
+            )
+          )}
+        </ul>
+      </nav>
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
+    </>
   )
 }
 

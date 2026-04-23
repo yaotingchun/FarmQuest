@@ -5,7 +5,7 @@ import type { Quest } from '@/types/quest'
 interface QuestCardProps {
   quest: Quest
   index: number
-  onComplete: (index: number) => void
+  onComplete: (quest: Quest) => void
 }
 
 export function QuestCard({ quest, index, onComplete }: QuestCardProps) {
@@ -49,10 +49,10 @@ export function QuestCard({ quest, index, onComplete }: QuestCardProps) {
           </div>
         )}
 
-        {isActive && (
+        {isActive && quest.isActionable && (
           <button
             className="quest-main-complete-btn"
-            onClick={() => onComplete(index)}
+            onClick={() => onComplete(quest)}
           >
             Complete Quest →
           </button>

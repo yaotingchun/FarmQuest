@@ -1,181 +1,419 @@
 'use client'
 
-import { useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuest } from '@/lib/QuestContext'
+import { getQuestPlant } from '@/data/quest-plants'
 import { PlantStatusCard } from '@/components/quest/PlantStatusCard'
-import { TaskList } from '@/components/quest/TaskList'
-import { StreakCounter } from '@/components/quest/StreakCounter'
-import { XPBar } from '@/components/quest/XPBar'
-import { RecoveryBanner } from '@/components/quest/RecoveryBanner'
-import Link from 'next/link'
+import { getAllTasksDueToday } from '@/lib/ruleEngine'
+import { Trash2, AlertCircle, CheckCircle2, X } from 'lucide-react'
 
-function QuestHubContent() {
-  const searchParams = useSearchParams()
-  const {
-    plantState, plantData, todayTasks, hasActivePlant,
-    completeTask, xpInfo, currentStage, streakCount,
-    isRecoveryNeeded, availablePlants, selectPlant, resetQuest
-  } = useQuest()
+interface ThemedModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+  type?: 'danger' | 'success' | 'info'
+}
 
-  // Auto-select plant from query parameter (?plant=P001)
+function ThemedModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  type = 'info'
+}: ThemedModalProps) {
+  const [isRendered, setIsRendered] = useState(false)
+
   useEffect(() => {
-    const plantParam = searchParams.get('plant')
-    if (plantParam && !hasActivePlant) {
-      selectPlant(plantParam)
+    if (isOpen) {
+      setIsRendered(true)
+      document.body.style.overflow = 'hidden'
+    } else {
+      const timer = setTimeout(() => setIsRendered(false), 300)
+      document.body.style.overflow = 'unset'
+      return () => clearTimeout(timer)
     }
-  }, [searchParams, hasActivePlant, selectPlant])
+  }, [isOpen])
 
-  // ── Plant Picker (no active plant) ──
-  if (!hasActivePlant) {
-    return (
-      <div className="quest-page quest-picker">
-        <div className="quest-picker-header">
-          <div className="quest-picker-badge">🌱 PLANT QUEST</div>
-          <h1 className="quest-picker-title">
-            Choose Your <span className="quest-accent-text">Plant</span>
-          </h1>
-          <p className="quest-picker-desc">
-            Select a plant to begin your growing journey. Complete quests, earn XP, and watch it thrive!
-          </p>
-        </div>
+  if (!isRendered && !isOpen) return null
 
-        <div className="quest-picker-grid">
-          {availablePlants.slice(0, 12).map(plant => (
-            <button
-              key={plant.plant_id}
-              className="quest-picker-card"
-              onClick={() => selectPlant(plant.plant_id)}
-            >
-              <span className="quest-picker-emoji">{plant.emoji}</span>
-              <span className="quest-picker-name">{plant.name}</span>
-              <span className="quest-picker-info">
-                💧 Every {plant.water_frequency_days}d · ☀️ {plant.sunlight_type.replace('_', ' ')}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    )
+  const typeConfig = {
+    danger: {
+      icon: <AlertCircle style={{ color: '#ef4444' }} size={32} />,
+      confirmBtnStyle: { background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' },
+      glowStyle: { boxShadow: '0 0 20px rgba(239, 68, 68, 0.15)' }
+    },
+    success: {
+      icon: <CheckCircle2 style={{ color: '#10b981' }} size={32} />,
+      confirmBtnStyle: { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' },
+      glowStyle: { boxShadow: '0 0 20px rgba(16, 185, 129, 0.15)' }
+    },
+    info: {
+      icon: <AlertCircle style={{ color: '#3b82f6' }} size={32} />,
+      confirmBtnStyle: { background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', borderColor: 'rgba(59, 130, 246, 0.3)' },
+      glowStyle: { boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)' }
+    }
   }
 
-  // ── Active Quest Hub ──
-  const completedToday = todayTasks.filter(t => t.completed).length
-  const totalToday = todayTasks.length
-  const allDone = completedToday === totalToday && totalToday > 0
+  const config = typeConfig[type]
 
   return (
-    <div className="quest-page quest-hub">
-      {/* Page header */}
-      <div className="quest-hub-header">
-        <div>
-          <h1 className="quest-hub-title">Plant Quest</h1>
-          <p className="quest-hub-sub">Your daily plant care companion</p>
-        </div>
-        <button className="quest-reset-btn" onClick={resetQuest} title="Start over">
-          ↺
+    <div 
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem',
+        background: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(8px)',
+        opacity: isOpen ? 1 : 0,
+        transition: 'opacity 0.3s ease',
+        pointerEvents: isOpen ? 'auto' : 'none'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '400px',
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: '24px',
+          padding: '2.5rem 2rem',
+          transform: isOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
+          transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          ...config.glowStyle
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            padding: '4px'
+          }}
+        >
+          <X size={20} />
         </button>
-      </div>
 
-      {/* Recovery banner */}
-      {isRecoveryNeeded && plantState && (
-        <RecoveryBanner plantName={plantState.plant_name} health={plantState.health} />
-      )}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            {config.icon}
+          </div>
+          
+          <h3 style={{ 
+            fontSize: '1.25rem', 
+            fontWeight: 700, 
+            color: 'var(--text-primary)', 
+            marginBottom: '0.5rem'
+          }}>
+            {title}
+          </h3>
+          
+          <p style={{ 
+            color: 'var(--text-secondary)', 
+            marginBottom: '2rem', 
+            fontSize: '0.95rem',
+            lineHeight: 1.5 
+          }}>
+            {message}
+          </p>
 
-      {/* Plant Status */}
-      {plantState && plantData && (
-        <PlantStatusCard
-          plantName={plantState.plant_name}
-          plantEmoji={plantData.emoji}
-          stage={currentStage}
-          health={plantState.health}
-          hydration={plantState.hydration}
-          streak={streakCount}
-          level={plantState.current_level}
-        />
-      )}
-
-      {/* XP Bar */}
-      {plantState && (
-        <XPBar
-          current={xpInfo.current}
-          needed={xpInfo.needed}
-          progress={xpInfo.progress}
-          level={plantState.current_level}
-          totalXP={plantState.total_xp}
-        />
-      )}
-
-      {/* Streak + Quick Stats */}
-      {plantState && (
-        <div className="quest-hub-stats-row">
-          <StreakCounter count={streakCount} best={plantState.longest_streak} />
-          <div className="quest-hub-today-progress">
-            <div className="quest-hub-today-ring">
-              <svg viewBox="0 0 36 36" className="quest-ring-svg">
-                <path
-                  className="quest-ring-bg"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  className="quest-ring-fill"
-                  strokeDasharray={`${totalToday > 0 ? (completedToday / totalToday) * 100 : 0}, 100`}
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <span className="quest-ring-text">{completedToday}/{totalToday}</span>
-            </div>
-            <span className="quest-hub-today-label">Today</span>
+          <div style={{ display: 'flex', width: '100%', gap: '12px' }}>
+            <button
+              onClick={onClose}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '12px',
+                border: '1px solid var(--glass-border)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'var(--text-secondary)',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {cancelText}
+            </button>
+            <button
+              onClick={() => {
+                onConfirm()
+                onClose()
+              }}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '12px',
+                border: '1px solid transparent',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                ...config.confirmBtnStyle
+              }}
+            >
+              {confirmText}
+            </button>
           </div>
         </div>
-      )}
-
-      {/* Today's Tasks */}
-      <div className="quest-hub-tasks-section">
-        <div className="quest-hub-tasks-header">
-          <h2>Today&apos;s Tasks</h2>
-          {!plantState?.daily_unlocked && (
-            <span className="quest-hub-locked-hint">🔒 Complete Main Quest first</span>
-          )}
-        </div>
-
-        {plantState?.daily_unlocked ? (
-          todayTasks.length > 0 ? (
-            <>
-              <TaskList tasks={todayTasks} onComplete={completeTask} />
-              {allDone && (
-                <div className="quest-hub-all-done">
-                  🎉 All tasks completed! +{50} bonus XP
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="quest-hub-no-tasks">
-              <span>🌟</span>
-              <p>No tasks due today. Your plant is doing great!</p>
-            </div>
-          )
-        ) : (
-          <div className="quest-hub-locked-msg">
-            <span>⚔️</span>
-            <p>Complete the <Link href="/quest/quests" className="quest-link">Main Quest</Link> to unlock daily tasks.</p>
-          </div>
-        )}
       </div>
     </div>
   )
 }
 
-export default function QuestHubPage() {
+import { CalendarGrid } from '@/components/quest/CalendarGrid'
+
+function MultiPlantDashboard() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { userPlants, availablePlants, addPlant, setActivePlant, completeTask, deletePlant, calendarData, refreshCalendar } = useQuest()
+  const isAddingRef = useRef(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [plantToDelete, setPlantToDelete] = useState<{ id: string, name: string } | null>(null)
+
+  // Calendar State
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth())
+
+  useEffect(() => {
+    refreshCalendar(year, month)
+  }, [year, month, refreshCalendar, userPlants])
+
+  const handleMonthChange = (y: number, m: number) => {
+    setYear(y)
+    setMonth(m)
+  }
+
+  const normalizePlanType = (value: string | null): "Budget" | "Balanced" | "Premium" => {
+    if (value === "Balanced" || value === "Premium" || value === "Budget") return value
+    return "Budget"
+  }
+
+  useEffect(() => {
+    const plantToAdd = searchParams.get('plant')
+    const planToAdd = normalizePlanType(searchParams.get('plan'))
+
+    if (!plantToAdd || isAddingRef.current) return
+
+    const isValid = availablePlants.some((p) => p.plant_id === plantToAdd)
+    if (!isValid) {
+      router.replace('/quest')
+      return
+    }
+
+    isAddingRef.current = true
+    addPlant(plantToAdd, planToAdd).then((newId) => {
+      if (newId) {
+        setActivePlant(newId)
+        router.replace('/quest/quests')
+      } else {
+        router.replace('/quest')
+      }
+    }).finally(() => {
+      isAddingRef.current = false
+    })
+  }, [searchParams, availablePlants, addPlant, router, setActivePlant])
+
+  const handleGoToDetail = (instanceId: string) => {
+    setActivePlant(instanceId)
+    router.push('/quest/quests')
+  }
+
+  // Unified task list across all plants
+  const allTasksWrapped = getAllTasksDueToday(userPlants, getQuestPlant)
+
   return (
-    <Suspense fallback={
-      <div className="quest-page">
-        <p style={{ color: 'var(--text-muted)', textAlign: 'center', paddingTop: '120px' }}>
-          Loading quest...
-        </p>
+    <div className="quest-page" style={{ 
+      width: '100%', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      paddingTop: '3rem',
+      paddingBottom: '4rem'
+    }}>
+      <div style={{ width: '100%', maxWidth: '1240px', margin: '0 auto' }}>
+        <div className="quest-hub-layout">
+          <div className="quest-main-content">
+            <div className="quest-hub-header" style={{ marginBottom: '2.5rem' }}>
+              <div>
+                <h1 className="quest-hub-title" style={{ fontSize: '2rem' }}>My Garden</h1>
+                <p className="quest-hub-sub">Track all your plants and daily care in one place</p>
+              </div>
+            </div>
+
+            {userPlants.length === 0 ? (
+              <div className="quest-hub-no-tasks" style={{ padding: '4rem 1rem' }}>
+                <span>🌱</span>
+                <p>Your garden is empty.</p>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => router.push('/recommendations')}
+                  style={{ marginTop: '1.5rem' }}
+                >
+                  Add Your First Plant
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Active Plants Grid */}
+                <div className="quest-section-header" style={{ marginBottom: '1.25rem' }}>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>🌱 My Active Plants</h2>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '3rem' }}>
+                  {userPlants.map(plant => {
+                    const pData = getQuestPlant(plant.plant_id)
+                    if (!pData) return null
+                    return (
+                      <div key={plant.id} style={{ position: 'relative' }}>
+                        <div style={{ cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => handleGoToDetail(plant.id)}>
+                          <PlantStatusCard
+                              plantName={plant.plant_name}
+                              plantEmoji={pData.emoji}
+                              stage={plant.state.growthStage as any}
+                              streak={0} 
+                              sunlight={pData.sunlight_type}
+                              waterFrequency={pData.water_frequency_days}
+                              startMethod={pData.startMethod}
+                          />
+                          <div style={{ position: 'absolute', bottom: '20px', right: '24px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, opacity: 0.6 }}>
+                            View Quests →
+                          </div>
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPlantToDelete({ id: plant.id, name: plant.plant_name });
+                            setShowDeleteModal(true);
+                          }}
+                          style={{
+                            position: 'absolute',
+                            top: '16px',
+                            right: '16px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid var(--glass-border)',
+                            color: 'var(--text-muted)',
+                            padding: '8px',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                            zIndex: 10
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                            e.currentTarget.style.color = '#ef4444';
+                            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                            e.currentTarget.style.color = 'var(--text-muted)';
+                            e.currentTarget.style.borderColor = 'var(--glass-border)';
+                          }}
+                          title="Remove Plant"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Unified Daily Tasks */}
+                <div className="quest-hub-tasks-section">
+                  <div className="quest-hub-tasks-header" style={{ marginBottom: '1.25rem' }}>
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>⚡ Today&apos;s Actions Needed</h2>
+                  </div>
+                  
+                  {allTasksWrapped.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {allTasksWrapped.map(({ plant, task, plantData }) => (
+                        <div 
+                            key={task.id} 
+                            className={`quest-task-item ${task.completed ? 'completed' : ''}`}
+                            onClick={() => !task.completed && completeTask(plant.id, task.id)}
+                            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
+                        >
+                          <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
+                            {task.completed && <span>✓</span>}
+                          </div>
+                          <div className="quest-task-content">
+                            <span className="quest-task-label" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <span style={{ fontSize: '1.2em' }}>{plantData.emoji}</span> {task.label}
+                            </span>
+                            <div className="quest-task-meta">
+                              <span className="quest-task-cat-badge">{task.category}</span>
+                              <span className="quest-task-xp">+{task.xp_reward} XP</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="quest-hub-no-tasks" style={{ padding: '3rem 1rem' }}>
+                      <span>🌟</span>
+                      <p>All clear! Your garden is thriving today.</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Sidebar Calendar - Aligned with 'My Active Plants' header */}
+          <div className="quest-sidebar-content" style={{ marginTop: '7.5rem' }}>
+            <div style={{ marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Care Calendar</h3>
+            </div>
+            <CalendarGrid
+              entries={calendarData}
+              year={year}
+              month={month}
+              onMonthChange={handleMonthChange}
+            />
+          </div>
+        </div>
       </div>
-    }>
-      <QuestHubContent />
-    </Suspense>
+
+      <ThemedModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={() => {
+          if (plantToDelete) {
+            deletePlant(plantToDelete.id)
+            setPlantToDelete(null)
+          }
+        }}
+        type="danger"
+        title="Remove Plant?"
+        message={`Are you sure you want to remove your ${plantToDelete?.name}? This action cannot be undone.`}
+        confirmText="Remove"
+        cancelText="Keep Plant"
+      />
+    </div>
   )
+}
+
+export default function QuestDashboardPage() {
+  return <MultiPlantDashboard />
 }
