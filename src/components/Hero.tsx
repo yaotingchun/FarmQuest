@@ -1,8 +1,22 @@
 'use client'
 
 import React from 'react'
+import { useAuth } from '@/context/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export const Hero = () => {
+  const { profile } = useAuth()
+  const router = useRouter()
+
+  const handleStartQuest = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (profile) {
+      router.push('/preferences')
+    } else {
+      router.push('/?modal=login')
+    }
+  }
+
   return (
     <section className="hero">
       <h1 className="hero-title">
@@ -16,12 +30,12 @@ export const Hero = () => {
       </p>
 
       <div className="hero-actions">
-        <a href="#" className="btn-primary">
+        <button onClick={handleStartQuest} className="btn-primary" style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5L12 2Z" fill="currentColor"/>
           </svg>
           Start Your Quest
-        </a>
+        </button>
         <a href="#how-it-works" className="btn-secondary">
           See How It Works
         </a>

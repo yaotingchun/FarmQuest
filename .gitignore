@@ -39,4 +39,7 @@ credentials/
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+# credentials
+credentials/
+.env*
+

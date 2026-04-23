@@ -4,17 +4,35 @@ import React, { useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Upload, Leaf, RefreshCcw, AlertCircle, ShieldCheck, Activity } from 'lucide-react'
 import { diagnosePlant } from '@/app/actions/diagnose'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
 import { DiagnosisResult } from '@/types/diagnosis'
 import './diagnosis.css'
 
 export default function DiagnosisPage() {
+  const { profile, loading } = useAuth()
+  const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false)
   const [result, setResult] = useState<DiagnosisResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => {
+    if (!loading && !profile) {
+      router.push('/login')
+    }
+  }, [loading, profile, router])
+
+  if (loading || !profile) {
+    return (
+      <div style={{ padding: '100px 5%', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="skeleton" style={{ width: '100%', height: '400px', borderRadius: '28px' }}></div>
+      </div>
+    )
+  }
 
   const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const s = e.target.files?.[0]
@@ -42,7 +60,7 @@ export default function DiagnosisPage() {
 
   const runAnalysis = async () => {
     if (!file) return
-    setLoading(true); setError(null)
+    setLoadingAnalysis(true); setError(null)
     try {
       const fd = new FormData()
       fd.append('image', file)
@@ -50,7 +68,7 @@ export default function DiagnosisPage() {
       if (res.success && res.data) setResult(res.data)
       else setError(res.error || "Analysis failed.")
     } catch { setError("Network error.") }
-    finally { setLoading(false) }
+    finally { setLoadingAnalysis(false) }
   }
 
   const reset = () => {
@@ -77,7 +95,7 @@ export default function DiagnosisPage() {
           <p>Deploy advanced neural analysis to secure your harvest's future.</p>
         </div>
 
-        {!result && !loading && (
+        {!result && !loadingAnalysis && (
           <div 
             className={`dropzone-card ${dragActive ? 'dropzone-active' : ''}`}
             onClick={() => { if (!preview) fileInputRef.current?.click() }}
@@ -115,7 +133,7 @@ export default function DiagnosisPage() {
           </div>
         )}
 
-        {loading && (
+        {loadingAnalysis && (
           <div className="scanning-container">
             <div className="scanning-image-wrapper">
               <img src={preview!} alt="Scanning Target" />

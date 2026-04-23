@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: 'The micro-farming app that turns your home into a thriving garden. Track plants, earn XP, and join a community of urban growers.',
 }
 
+import { AuthProvider } from '@/context/AuthContext'
+
 export default function RootLayout({
   children,
 }: {
@@ -19,19 +21,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {/* Persistent Background Layer */}
-        <div className="bg-canvas">
-          <div className="bg-grid" />
-          <div className="orb orb-1" />
-          <div className="orb orb-2" />
-          <div className="orb orb-3" />
-        </div>
+        <AuthProvider>
+          {/* Persistent Background Layer */}
+          <div className="bg-canvas">
+            <div className="bg-grid" />
+            <div className="orb orb-1" />
+            <div className="orb orb-2" />
+            <div className="orb orb-3" />
+          </div>
 
-        <div className="page-wrapper">
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
-        </div>
+          <div className="page-wrapper">
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   )

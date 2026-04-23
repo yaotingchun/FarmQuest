@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { rankPlantsByPreferences, type UserPreference } from '@/lib/recommendationEngine'
+import { useAuth } from '@/context/AuthContext'
 import './preferences.css'
 
 // ── Step configuration (steps 1–3 stay as option-based) ───────────────────────
@@ -38,9 +39,9 @@ const OPTION_STEPS: OptionStep[] = [
     subtitle: 'This helps us find plants that actually thrive where you are.',
     icon: '☀️',
     options: [
-      { value: 'full_sun',  label: 'Full Sun',     emoji: '☀️',  sub: '6+ hours of direct sunlight' },
-      { value: 'partial',   label: 'Partial Shade', emoji: '🌤️', sub: '3–6 hours of sunlight' },
-      { value: 'low_light', label: 'Low Light',    emoji: '🌥️', sub: 'Minimal or indirect light' },
+      { value: 'full_sun', label: 'Full Sun', emoji: '☀️', sub: '6+ hours of direct sunlight' },
+      { value: 'partial', label: 'Partial Shade', emoji: '🌤️', sub: '3–6 hours of sunlight' },
+      { value: 'low_light', label: 'Low Light', emoji: '🌥️', sub: 'Minimal or indirect light' },
     ],
   },
   {
@@ -51,9 +52,9 @@ const OPTION_STEPS: OptionStep[] = [
     subtitle: "We'll match plants to your schedule — no guilt trips.",
     icon: '⏱️',
     options: [
-      { value: 'low',    label: 'Low',    emoji: '🙂', sub: 'Under 15 min / week' },
+      { value: 'low', label: 'Low', emoji: '🙂', sub: 'Under 15 min / week' },
       { value: 'medium', label: 'Medium', emoji: '🌿', sub: '15–30 min / week' },
-      { value: 'high',   label: 'High',   emoji: '💪', sub: '30+ min / week' },
+      { value: 'high', label: 'High', emoji: '💪', sub: '30+ min / week' },
     ],
   },
 ]
@@ -122,6 +123,7 @@ const DEFAULT_CLIMATE: Omit<ClimateData, 'latitude' | 'longitude' | 'locationNam
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function PreferencesPage() {
+  const { profile, loading } = useAuth()
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Partial<UserPreference>>({})
@@ -138,6 +140,12 @@ export default function PreferencesPage() {
 
   const isClimateStep = step === 3
   const progressPct = ((step + 1) / TOTAL_STEPS) * 100
+
+  useEffect(() => {
+    if (!loading && !profile) {
+      router.push('/login')
+    }
+  }, [loading, profile, router])
 
   // ── Auto-detect when climate step is reached ────────────────────────────────
   const detectLocation = useCallback(() => {
@@ -179,6 +187,29 @@ export default function PreferencesPage() {
     }
   }, [isClimateStep, geoStatus, detectLocation])
 
+  if (loading || !profile) {
+    return (
+      <div className="pref-shell">
+        <div className="pref-header">
+          <div className="skeleton" style={{ width: '100px', height: '20px' }}></div>
+        </div>
+        <div className="pref-progress-wrap">
+          <div className="skeleton" style={{ width: '100%', height: '100%' }}></div>
+        </div>
+        <div className="pref-card">
+          <div className="skeleton" style={{ width: '60px', height: '60px', marginBottom: '24px', borderRadius: '50%' }}></div>
+          <div className="skeleton" style={{ width: '80%', height: '32px', marginBottom: '16px' }}></div>
+          <div className="skeleton" style={{ width: '60%', height: '18px', marginBottom: '40px' }}></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="skeleton" style={{ width: '100%', height: '70px' }}></div>
+            <div className="skeleton" style={{ width: '100%', height: '70px' }}></div>
+            <div className="skeleton" style={{ width: '100%', height: '70px' }}></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // ── Option step selection ───────────────────────────────────────────────────
   function selectOption(value: string) {
     const next = { ...answers, [OPTION_STEPS[step].field]: value }
@@ -216,7 +247,6 @@ export default function PreferencesPage() {
     <div className="pref-shell">
       {/* Header */}
       <div className="pref-header">
-        <div className="pref-logo">🌱 FarmQuest</div>
         <div className="pref-step-counter">Step {step + 1} of {TOTAL_STEPS}</div>
       </div>
 
