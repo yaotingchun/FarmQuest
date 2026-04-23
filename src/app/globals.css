@@ -5779,3 +5779,302 @@ footer {
     flex-direction: column;
   }
 }
+
+/* ─────────────────────────────────────────────
+   DASHBOARD PAGE
+───────────────────────────────────────────── */
+.dashboard-page {
+  padding: 100px 5% 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.dashboard-skeleton-wrap {
+  padding-top: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.dashboard-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-welcome-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(94, 196, 130, 0.1);
+  border: 1px solid rgba(94, 196, 130, 0.2);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 50px;
+  width: fit-content;
+}
+
+.dashboard-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.dashboard-title-accent {
+  background: linear-gradient(135deg, var(--green-300), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dashboard-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+.dashboard-header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: 8px;
+}
+
+.dashboard-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  backdrop-filter: blur(12px);
+}
+
+/* ── Grid ── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* ── Card ── */
+.dashboard-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  padding: 32px 30px;
+  text-decoration: none;
+  color: var(--text-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+  cursor: pointer;
+}
+
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.dashboard-card:hover {
+  background: var(--glass-hover);
+  border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 40%, transparent);
+  transform: translateY(-6px);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.4),
+    0 0 40px color-mix(in srgb, var(--card-accent, var(--accent)) 12%, transparent);
+}
+
+.dashboard-card:hover::before {
+  opacity: 1;
+}
+
+/* Number label */
+.dashboard-card-num {
+  position: absolute;
+  top: 22px;
+  right: 26px;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 3rem;
+  color: var(--card-accent, var(--accent));
+  opacity: 0.08;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.dashboard-card:hover .dashboard-card-num {
+  opacity: 0.15;
+}
+
+/* Icon wrap */
+.dashboard-card-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dashboard-card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--card-accent, var(--accent)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 20%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.dashboard-card:hover .dashboard-card-icon {
+  background: color-mix(in srgb, var(--card-accent, var(--accent)) 20%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--card-accent, var(--accent)) 30%, transparent);
+}
+
+.dashboard-card-emoji {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.15));
+}
+
+/* Body */
+.dashboard-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.dashboard-card-subtitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--card-accent, var(--accent));
+  opacity: 0.85;
+}
+
+.dashboard-card-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.dashboard-card-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-top: 4px;
+}
+
+/* Tags */
+.dashboard-card-tags {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.dashboard-card-tag {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 50px;
+  transition: all 0.25s;
+}
+
+.dashboard-card:hover .dashboard-card-tag {
+  border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 25%, transparent);
+  color: var(--text-secondary);
+}
+
+/* CTA row */
+.dashboard-card-cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--card-accent, var(--accent));
+  margin-top: auto;
+  transition: gap 0.25s;
+}
+
+.dashboard-card:hover .dashboard-card-cta {
+  gap: 12px;
+}
+
+/* Glow overlay */
+.dashboard-card-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 110%,
+    color-mix(in srgb, var(--card-accent, var(--accent)) 10%, transparent),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.dashboard-card:hover .dashboard-card-glow {
+  opacity: 1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+  }
+
+  .dashboard-header-right {
+    padding-top: 0;
+  }
+}
