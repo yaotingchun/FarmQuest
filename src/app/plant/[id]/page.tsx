@@ -251,9 +251,8 @@ export default function PlantDetailPage({
 
 
   const handleStartPlanting = () => {
-    if (plant) {
-      router.push(`/quest?plant=${id}`);
-    }
+    if (!currentPlan) return;
+    router.push(`/quest?plant=${id}&plan=${encodeURIComponent(currentPlan.plan_type)}`);
   };
 
   // ── Loading State ──
