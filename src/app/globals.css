@@ -4228,22 +4228,42 @@ footer {
 
 /* ── Plant Status Card ── */
 .quest-plant-card {
+  position: relative;
   display: flex;
-  gap: 16px;
+  gap: 8px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
-  padding: 16px 20px;
+  padding: 16px 18px 16px 20px;
   margin-bottom: 14px;
   backdrop-filter: blur(16px);
+}
+
+.quest-plant-card-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding-top: 8px;
+}
+
+.quest-plant-source-wrap {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: flex;
+  justify-content: flex-end;
+  z-index: 2;
 }
 
 .quest-plant-card-visual {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
+  margin-top: 2px;
+  width: 64px;
 }
 
 .quest-plant-emoji-wrap {
@@ -4279,6 +4299,7 @@ footer {
   letter-spacing: 0.02em;
   display: flex !important;
   align-items: center !important;
+  white-space: nowrap;
   gap: 4px !important;
   justify-content: flex-start !important;
   width: fit-content;
@@ -4291,15 +4312,34 @@ footer {
 
 .quest-plant-name-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 30px;
 }
 
 .quest-plant-name {
   font-family: 'Cabinet Grotesk', sans-serif;
   font-weight: 800;
   font-size: 1.3rem;
+  line-height: 1.05;
+}
+
+.quest-plant-detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.quest-plant-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .quest-plant-level {
@@ -4309,6 +4349,72 @@ footer {
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+.quest-plant-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.quest-plant-source-badge.source-self {
+  background: rgba(74, 222, 128, 0.14);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.22);
+}
+
+.quest-plant-source-badge.source-posted {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.22);
+}
+
+.quest-plant-source-badge.source-accepted {
+  background: rgba(96, 165, 250, 0.14);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+}
+
+.quest-source-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quest-source-tab {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.quest-source-tab:hover {
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.quest-source-tab.active {
+  color: var(--text-primary);
+  background: rgba(94, 196, 130, 0.12);
+  border-color: rgba(94, 196, 130, 0.25);
+}
+
+.quest-source-tab-count {
+  margin-left: 6px;
+  font-size: 0.68rem;
+  opacity: 0.8;
 }
 
 .quest-plant-meters {
@@ -5125,9 +5231,54 @@ footer {
   padding: 48px 24px;
 }
 
+.quest-cal-header-counts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quest-cal-header-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quest-cal-header-pill.completed {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.quest-cal-header-pill.pending {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.quest-daily-locked-card {
+  background: linear-gradient(180deg, rgba(94, 196, 130, 0.08), rgba(94, 196, 130, 0.03));
+  border: 1px solid rgba(94, 196, 130, 0.16);
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+}
+
 .quest-daily-locked-icon {
-  font-size: 2.5rem;
-  margin-bottom: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .quest-daily-locked h3 {
@@ -5141,6 +5292,19 @@ footer {
   color: var(--text-secondary);
   font-size: 0.9rem;
   margin-bottom: 20px;
+}
+
+.quest-daily-locked-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-top: 8px;
 }
 
 .quest-daily-locked-btn {
@@ -5377,6 +5541,92 @@ footer {
   animation: slideUp 0.25s ease;
 }
 
+.quest-cal-section-toggle {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, rgba(94, 196, 130, 0.05), rgba(94, 196, 130, 0.02));
+  border: 1px solid rgba(94, 196, 130, 0.15);
+  border-radius: 14px;
+  padding: 11px 14px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.quest-cal-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quest-cal-toggle-chevron {
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: var(--accent);
+}
+
+.quest-cal-section-toggle.active .quest-cal-toggle-chevron {
+  transform: rotate(-180deg);
+}
+
+.quest-cal-section-toggle:hover {
+  background: linear-gradient(135deg, rgba(94, 196, 130, 0.12), rgba(94, 196, 130, 0.06));
+  border-color: rgba(94, 196, 130, 0.25);
+  transform: translateY(-1px);
+}
+
+.quest-cal-section-toggle.active {
+  background: linear-gradient(135deg, rgba(94, 196, 130, 0.15), rgba(94, 196, 130, 0.08));
+  border-color: rgba(94, 196, 130, 0.35);
+  box-shadow: 0 0 12px rgba(94, 196, 130, 0.1);
+}
+
+.quest-cal-group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 12px;
+  background: rgba(94, 196, 130, 0.2);
+  color: #4ade80;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border: 1px solid rgba(94, 196, 130, 0.25);
+  letter-spacing: 0.02em;
+}
+
+.quest-cal-group-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0 0 0;
+  animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -5442,46 +5692,71 @@ footer {
 }
 
 .quest-cal-plant-subgroup {
-  padding-left: 8px;
-  border-left: 2px solid rgba(255, 255, 255, 0.04);
+  padding-left: 10px;
+  border-left: 2px solid rgba(94, 196, 130, 0.12);
+  margin-bottom: 2px;
 }
 
 .quest-cal-plant-tag {
   display: inline-block;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 800;
   text-transform: uppercase;
   color: var(--accent);
-  opacity: 0.6;
-  margin-bottom: 4px;
+  opacity: 0.75;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  background: rgba(94, 196, 130, 0.08);
+  padding: 2px 8px;
+  border-radius: 6px;
 }
 
 .quest-cal-detail-task {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  padding: 4px 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.01);
+  transition: all 0.2s;
+}
+
+.quest-cal-detail-task:hover {
+  background: rgba(94, 196, 130, 0.06);
+  color: var(--text-primary);
 }
 
 .quest-cal-detail-task.done {
-  /* Inherit normal text color or slightly muted */
-  opacity: 0.8;
+  opacity: 0.75;
 }
 
 .quest-cal-detail-task.done span {
   text-decoration: none;
 }
 
+.quest-cal-detail-task.done:hover {
+  opacity: 0.95;
+}
+
 .quest-cal-task-check {
-  font-size: 0.75rem;
-  width: 16px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  font-weight: 700;
 }
 
 .quest-cal-task-check.checked {
-  color: var(--accent);
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
 }
 
 .quest-cal-no-tasks {

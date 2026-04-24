@@ -3,10 +3,10 @@
 import type { GrowthStage } from '@/types/quest'
 
 const STAGES: { key: GrowthStage; emoji: string; label: string; color: string }[] = [
-  { key: 'seed', emoji: '🌰', label: 'Seed', color: '#a78bfa' },
-  { key: 'sprout', emoji: '🌱', label: 'Sprout', color: '#4ade80' },
-  { key: 'mature', emoji: '🌿', label: 'Mature', color: '#22c55e' },
-  { key: 'harvest', emoji: '🌾', label: 'Harvest', color: '#facc15' },
+  { key: 0, emoji: '🌰', label: 'Seed', color: '#a78bfa' },
+  { key: 1, emoji: '🌱', label: 'Sprout', color: '#4ade80' },
+  { key: 2, emoji: '🌿', label: 'Mature', color: '#22c55e' },
+  { key: 3, emoji: '🌾', label: 'Harvest', color: '#facc15' },
 ]
 
 interface GrowthTimelineProps {

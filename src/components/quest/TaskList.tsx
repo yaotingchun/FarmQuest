@@ -12,14 +12,15 @@ interface TaskListProps {
   tasks: QuestTask[]
   onComplete: (taskId: string) => void
   grouped?: boolean
+  readOnly?: boolean
 }
 
-export function TaskList({ tasks, onComplete, grouped = false }: TaskListProps) {
+export function TaskList({ tasks, onComplete, grouped = false, readOnly = false }: TaskListProps) {
   if (!grouped) {
     return (
       <div className="quest-task-list">
         {tasks.map(task => (
-          <TaskItem key={task.id} task={task} onComplete={onComplete} />
+          <TaskItem key={task.id} task={task} onComplete={onComplete} readOnly={readOnly} />
         ))}
       </div>
     )
@@ -43,7 +44,7 @@ export function TaskList({ tasks, onComplete, grouped = false }: TaskListProps) 
               </span>
             </div>
             {catTasks.map(task => (
-              <TaskItem key={task.id} task={task} onComplete={onComplete} />
+              <TaskItem key={task.id} task={task} onComplete={onComplete} readOnly={readOnly} />
             ))}
           </div>
         )
@@ -52,12 +53,13 @@ export function TaskList({ tasks, onComplete, grouped = false }: TaskListProps) 
   )
 }
 
-function TaskItem({ task, onComplete }: { task: QuestTask; onComplete: (id: string) => void }) {
+function TaskItem({ task, onComplete, readOnly = false }: { task: QuestTask; onComplete: (id: string) => void; readOnly?: boolean }) {
   const cfg = CATEGORY_CONFIG[task.category]
   return (
     <div
       className={`quest-task-item ${task.completed ? 'completed' : ''}`}
-      onClick={() => !task.completed && onComplete(task.id)}
+      onClick={() => !task.completed && !readOnly && onComplete(task.id)}
+      style={{ cursor: task.completed || readOnly ? 'default' : 'pointer', opacity: readOnly && !task.completed ? 0.78 : 1 }}
     >
       <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
         {task.completed && <span>✓</span>}

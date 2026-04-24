@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { CalendarEntry, DayStatus } from '@/types/quest'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -29,16 +29,47 @@ interface CalendarGridProps {
 
 export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGridProps) {
   const [selectedDay, setSelectedDay] = useState<CalendarEntry | null>(null)
-
-  const groupedTasks = selectedDay?.tasks.reduce<Record<string, typeof selectedDay.tasks>>((acc, task) => {
-    const group = task.plant_name || 'General'
-    if (!acc[group]) acc[group] = []
-    acc[group].push(task)
-    return acc
-  }, {}) || {}
+  const [openSection, setOpenSection] = useState<'pending' | 'completed' | null>(null)
+  const hasInitializedTodayRef = useRef(false)
 
   const now = new Date()
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+  const selectedPendingTasks = useMemo(
+    () => selectedDay?.tasks.filter(task => !task.completed) ?? [],
+    [selectedDay]
+  )
+  const selectedCompletedTasks = useMemo(
+    () => selectedDay?.tasks.filter(task => task.completed) ?? [],
+    [selectedDay]
+  )
+
+  const renderTaskGroups = (tasks: CalendarEntry['tasks'], completed: boolean) => {
+    const taskGroups: Record<string, CalendarEntry['tasks']> = {}
+
+    for (const task of tasks) {
+      const group = task.plant_name || 'General'
+      if (!taskGroups[group]) taskGroups[group] = []
+      taskGroups[group].push(task)
+    }
+
+    return Object.entries(taskGroups).map(([plantName, plantTasks]) => {
+      const filtered = plantTasks.filter(task => completed ? task.completed : !task.completed)
+      if (filtered.length === 0) return null
+
+      return (
+        <div key={plantName} className="quest-cal-plant-subgroup">
+          <span className="quest-cal-plant-tag">{plantName}</span>
+          {filtered.map(task => (
+            <div key={task.id} className={`quest-cal-detail-task ${completed ? 'done' : ''}`}>
+              <span className={`quest-cal-task-check ${completed ? 'checked' : ''}`}>{completed ? '✓' : '○'}</span>
+              <span>{task.label}</span>
+            </div>
+          ))}
+        </div>
+      )
+    })
+  }
 
   // Build grid
   const firstDay = new Date(year, month, 1).getDay()
@@ -63,18 +94,31 @@ export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGr
     const todayEntry = entries.find(e => e.date === todayStr)
     if (todayEntry) {
       setSelectedDay(todayEntry)
+      setOpenSection(todayEntry.tasks.some(task => !task.completed) ? 'pending' : 'completed')
     }
   }
 
-  // Effect to auto-select today on first load if we are in today's month
+  // Effect to auto-select today only once after entries load
+  useEffect(() => {
+    if (hasInitializedTodayRef.current) return
+    const d = new Date()
+    const currentTodayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const entry = entries.find(e => e.date === currentTodayStr)
+    if (entry) {
+      setSelectedDay(entry)
+      setOpenSection(entry.tasks.some(task => !task.completed) ? 'pending' : 'completed')
+    }
+    hasInitializedTodayRef.current = true
+  }, [entries])
+
   useEffect(() => {
     if (!selectedDay) {
-      const d = new Date()
-      const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      const entry = entries.find(e => e.date === todayStr)
-      if (entry) setSelectedDay(entry)
+      setOpenSection(null)
+      return
     }
-  }, [entries, selectedDay])
+
+    setOpenSection(selectedDay.tasks.some(task => !task.completed) ? 'pending' : selectedDay.tasks.some(task => task.completed) ? 'completed' : null)
+  }, [selectedDay])
 
   return (
     <div className="quest-calendar">
@@ -155,7 +199,17 @@ export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGr
             <h4>{new Date(selectedDay.date + 'T00:00:00').toLocaleDateString('en-US', {
               weekday: 'long', month: 'long', day: 'numeric'
             })}</h4>
-            <button className="quest-cal-detail-close" onClick={() => setSelectedDay(null)}>✕</button>
+            <button
+              type="button"
+              className="quest-cal-detail-close"
+              onClick={(e) => {
+                e.stopPropagation()
+                setSelectedDay(null)
+                setOpenSection(null)
+              }}
+            >
+              ✕
+            </button>
           </div>
 
           <div className="quest-cal-detail-status">
@@ -174,47 +228,51 @@ export function CalendarGrid({ entries, year, month, onMonthChange }: CalendarGr
 
           {selectedDay.tasks.length > 0 ? (
             <div className="quest-cal-detail-tasks">
-              {/* 1. Pending Section */}
-              {selectedDay.tasks.some(t => !t.completed) && (
+              {selectedPendingTasks.length > 0 && (
                 <div className="quest-cal-status-group">
-                  <h5 className="quest-cal-group-status-title">Pending Tasks</h5>
-                  {Object.entries(groupedTasks).map(([plantName, plantTasks]) => {
-                    const pending = plantTasks.filter(t => !t.completed)
-                    if (pending.length === 0) return null
-                    return (
-                      <div key={plantName} className="quest-cal-plant-subgroup">
-                        <span className="quest-cal-plant-tag">{plantName}</span>
-                        {pending.map(task => (
-                          <div key={task.id} className="quest-cal-detail-task">
-                            <span className="quest-cal-task-check">○</span>
-                            <span>{task.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  })}
+                  <button
+                    type="button"
+                    className={`quest-cal-section-toggle ${openSection === 'pending' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenSection(prev => prev === 'pending' ? null : 'pending')
+                    }}
+                  >
+                    <div className="quest-cal-toggle-left">
+                      <span className="quest-cal-toggle-chevron">▼</span>
+                      <span>Pending Tasks</span>
+                    </div>
+                    <span className="quest-cal-group-count">{selectedPendingTasks.length}</span>
+                  </button>
+                  {openSection === 'pending' && (
+                    <div className="quest-cal-group-content">
+                      {renderTaskGroups(selectedPendingTasks, false)}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* 2. Completed Section */}
-              {selectedDay.tasks.some(t => t.completed) && (
+              {selectedCompletedTasks.length > 0 && (
                 <div className="quest-cal-status-group completed">
-                  <h5 className="quest-cal-group-status-title">Completed Tasks</h5>
-                  {Object.entries(groupedTasks).map(([plantName, plantTasks]) => {
-                    const completed = plantTasks.filter(t => t.completed)
-                    if (completed.length === 0) return null
-                    return (
-                      <div key={plantName} className="quest-cal-plant-subgroup">
-                        <span className="quest-cal-plant-tag">{plantName}</span>
-                        {completed.map(task => (
-                          <div key={task.id} className="quest-cal-detail-task done">
-                            <span className="quest-cal-task-check checked">✓</span>
-                            <span>{task.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  })}
+                  <button
+                    type="button"
+                    className={`quest-cal-section-toggle ${openSection === 'completed' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenSection(prev => prev === 'completed' ? null : 'completed')
+                    }}
+                  >
+                    <div className="quest-cal-toggle-left">
+                      <span className="quest-cal-toggle-chevron">▼</span>
+                      <span>Completed Tasks</span>
+                    </div>
+                    <span className="quest-cal-group-count">{selectedCompletedTasks.length}</span>
+                  </button>
+                  {openSection === 'completed' && (
+                    <div className="quest-cal-group-content">
+                      {renderTaskGroups(selectedCompletedTasks, true)}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

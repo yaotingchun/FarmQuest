@@ -109,6 +109,32 @@ textarea.mp-form-input { resize: vertical; min-height: 80px; }
 .mp-preview-row span:first-child { color: var(--text-muted); }
 .mp-preview-row span:last-child { color: var(--text-primary); font-weight: 600; }
 
+.mp-plant-summary { background: rgba(94,196,130,0.05); border: 1px solid rgba(94,196,130,0.12); border-radius: 12px; padding: 16px; margin-top: 8px; }
+.mp-plant-summary-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.mp-plant-summary-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text-primary); }
+.mp-plant-summary-plan { font-size: 0.75rem; font-weight: 700; color: var(--accent); background: rgba(94,196,130,0.14); border: 1px solid rgba(94,196,130,0.22); border-radius: 999px; padding: 4px 10px; }
+.mp-plant-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.mp-plant-summary-item { background: rgba(5,30,14,0.35); border: 1px solid rgba(94,196,130,0.1); border-radius: 10px; padding: 10px; }
+.mp-plant-summary-label { display: block; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.mp-plant-summary-value { color: var(--text-primary); font-size: 0.9rem; font-weight: 700; }
+.mp-plant-summary-desc { color: var(--text-secondary); font-size: 0.83rem; line-height: 1.5; margin-top: 4px; }
+.mp-plant-summary-subtitle { margin-top: 14px; margin-bottom: 8px; color: var(--accent); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; }
+.mp-setup-detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.mp-setup-detail-card { background: rgba(5,30,14,0.45); border: 1px solid rgba(94,196,130,0.12); border-radius: 10px; padding: 10px 12px; }
+.mp-setup-detail-title { color: var(--text-primary); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.mp-setup-detail-text { color: var(--text-secondary); font-size: 0.78rem; line-height: 1.4; }
+.mp-nutrition-stage-list { display: flex; flex-direction: column; gap: 8px; }
+.mp-nutrition-stage-card { background: rgba(5,30,14,0.45); border: 1px solid rgba(94,196,130,0.12); border-radius: 10px; padding: 10px 12px; }
+.mp-nutrition-stage-name { font-weight: 700; font-size: 0.85rem; color: var(--text-primary); text-transform: capitalize; margin-bottom: 4px; }
+.mp-nutrition-stage-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.75rem; color: var(--text-muted); }
+.mp-nutrition-stage-meta strong { color: var(--text-secondary); font-weight: 700; }
+
+@media (max-width: 700px) {
+	.mp-plant-summary-grid { grid-template-columns: 1fr; }
+	.mp-setup-detail-grid { grid-template-columns: 1fr; }
+	.mp-nutrition-stage-meta { grid-template-columns: 1fr; }
+}
+
 /* ═══ ORDER DETAIL PAGE ═══ */
 .mp-detail-page { padding: 100px 5% 60px; max-width: 900px; margin: 0 auto; }
 .mp-detail-header { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 28px; backdrop-filter: blur(16px); margin-bottom: 20px; }

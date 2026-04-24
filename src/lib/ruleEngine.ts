@@ -14,10 +14,24 @@ import { XP_VALUES } from '@/types/quest'
  * Calculates absolute full days since a Firestore Timestamp,
  * ignoring timezones and local clock drift.
  */
-export function daysSince(timestamp: Timestamp | undefined): number {
+export function daysSince(timestamp: any): number {
   if (!timestamp) return 999 // Large number defaults to "needs attention immediately"
+  
+  let then: number
+  if (typeof timestamp.toDate === 'function') {
+    then = timestamp.toDate().getTime()
+  } else if (timestamp instanceof Date) {
+    then = timestamp.getTime()
+  } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    then = new Date(timestamp).getTime()
+  } else if (timestamp._seconds) {
+    // Handle plain object serialization of Timestamp
+    then = timestamp._seconds * 1000
+  } else {
+    return 999
+  }
+
   const now = Date.now()
-  const then = timestamp.toDate().getTime()
   return Math.floor((now - then) / (1000 * 60 * 60 * 24))
 }
 

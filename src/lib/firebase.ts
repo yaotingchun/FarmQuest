@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore, initializeFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,7 +21,7 @@ const googleProvider = new GoogleAuthProvider();
 
 // Initialize Firestore
 // We use initializeFirestore with experimentalForceLongPolling to prevent Next.js SSR WebSocket timeouts
-let db;
+let db: Firestore;
 try {
   // Try to get existing instance (HMR)
   db = getFirestore(app, 'farmquest');

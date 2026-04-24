@@ -38,7 +38,7 @@ export const MAIN_QUEST_TEMPLATES = [
 
 // ── Daily Quest Templates by Category & Stage ──
 export const DAILY_TEMPLATES: Record<GrowthStage, { care: string[]; growth: string[]; observation: string[] }> = {
-  seed: {
+  0: {
     care: [
       'Lightly water your {plant_name} — keep soil moist but not soggy',
       'Ensure your {plant_name} is in a warm spot',
@@ -53,7 +53,7 @@ export const DAILY_TEMPLATES: Record<GrowthStage, { care: string[]; growth: stri
       'Note any signs of germination',
     ],
   },
-  sprout: {
+  1: {
     care: [
       'Water your {plant_name} according to schedule',
       'Rotate pot quarter-turn for even light exposure',
@@ -69,7 +69,7 @@ export const DAILY_TEMPLATES: Record<GrowthStage, { care: string[]; growth: stri
       'Measure and log current plant height',
     ],
   },
-  mature: {
+  2: {
     care: [
       'Water your {plant_name} thoroughly',
       'Rotate pot for balanced growth',
@@ -86,7 +86,7 @@ export const DAILY_TEMPLATES: Record<GrowthStage, { care: string[]; growth: stri
       'Log notable growth changes',
     ],
   },
-  harvest: {
+  3: {
     care: [
       'Give your {plant_name} a final thorough watering',
       'Ensure maximum sunlight for ripening',
@@ -131,22 +131,22 @@ export const RECOVERY_TEMPLATES: LLMQuestContent[] = [
 
 // ── Milestone Templates ──
 export const MILESTONE_TEMPLATES: Record<GrowthStage, LLMQuestContent> = {
-  seed: {
+  0: {
     title: '🌱 The Journey Begins!',
     description: 'You\'ve planted your {plant_name}! The first step in an amazing growing journey.',
     tasks: ['Take a photo of your freshly planted {plant_name}'],
   },
-  sprout: {
+  1: {
     title: '🌿 First Sprout! Your {plant_name} is alive!',
     description: 'Amazing — your {plant_name} has sprouted! The first green leaves are showing.',
     tasks: ['Celebrate your first sprout!', 'Take a photo to mark this milestone'],
   },
-  mature: {
+  2: {
     title: '🌳 Fully Grown! {plant_name} is thriving!',
     description: 'Your {plant_name} has reached full maturity. You\'re officially a skilled grower!',
     tasks: ['Admire your fully grown {plant_name}', 'Share your progress with the community'],
   },
-  harvest: {
+  3: {
     title: '🎉 Harvest Day! Time to reap the rewards!',
     description: 'The moment you\'ve been waiting for — your {plant_name} is ready to harvest!',
     tasks: ['Harvest your {plant_name}', 'Take a celebratory photo', 'Log your harvest weight'],

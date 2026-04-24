@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuest } from '@/lib/QuestContext'
 import { getQuestPlant } from '@/data/quest-plants'
@@ -186,8 +186,10 @@ function MultiPlantDashboard() {
   const searchParams = useSearchParams()
   const { userPlants, availablePlants, addPlant, setActivePlant, completeTask, deletePlant, calendarData, refreshCalendar } = useQuest()
   const isAddingRef = useRef(false)
+  const processedQueryRef = useRef<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [plantToDelete, setPlantToDelete] = useState<{ id: string, name: string } | null>(null)
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
 
   // Calendar State
   const now = new Date()
@@ -203,16 +205,57 @@ function MultiPlantDashboard() {
     setMonth(m)
   }
 
+  const filteredPlants = useMemo(() => {
+    return userPlants.filter((plant) => {
+      const category = plant.source_category || 'chosen_plant'
+      return sourceFilter === 'all' ? true : category === sourceFilter
+    })
+  }, [userPlants, sourceFilter])
+
+  const sourceCounts = useMemo(() => {
+    return {
+      all: userPlants.length,
+      chosen_plant: userPlants.filter((p) => (p.source_category || 'chosen_plant') === 'chosen_plant').length,
+      posted_order: userPlants.filter((p) => p.source_category === 'posted_order').length,
+      accepted_order: userPlants.filter((p) => p.source_category === 'accepted_order').length,
+    }
+  }, [userPlants])
+
   const normalizePlanType = (value: string | null): "Budget" | "Balanced" | "Premium" => {
     if (value === "Balanced" || value === "Premium" || value === "Budget") return value
     return "Budget"
   }
 
+  const normalizeSourceCategory = (value: string | null): 'chosen_plant' | 'posted_order' | 'accepted_order' => {
+    if (value === 'posted_order' || value === 'accepted_order' || value === 'chosen_plant') return value
+    return 'chosen_plant'
+  }
+
   useEffect(() => {
     const plantToAdd = searchParams.get('plant')
     const planToAdd = normalizePlanType(searchParams.get('plan'))
+    const sourceCategory = normalizeSourceCategory(searchParams.get('source'))
+    const orderId = searchParams.get('order')
+    const sharedProgressKey = orderId ? `marketplace-order-${orderId}` : undefined
 
-    if (!plantToAdd || isAddingRef.current) return
+    if (!plantToAdd) return
+
+    const queryKey = `${plantToAdd}|${planToAdd}|${sourceCategory}|${orderId || ''}`
+    if (processedQueryRef.current === queryKey) return
+    processedQueryRef.current = queryKey
+
+    const matchingPlant = userPlants.find(
+      (p) =>
+        p.plant_id === plantToAdd &&
+        (p.source_category || 'chosen_plant') === sourceCategory &&
+        (sharedProgressKey ? p.shared_progress_key === sharedProgressKey : true)
+    )
+
+    if (matchingPlant) {
+      setActivePlant(matchingPlant.id)
+      router.replace('/quest/quests')
+      return
+    }
 
     const isValid = availablePlants.some((p) => p.plant_id === plantToAdd)
     if (!isValid) {
@@ -221,7 +264,7 @@ function MultiPlantDashboard() {
     }
 
     isAddingRef.current = true
-    addPlant(plantToAdd, planToAdd).then((newId) => {
+    addPlant(plantToAdd, planToAdd, sourceCategory, { sharedProgressKey }).then((newId) => {
       if (newId) {
         setActivePlant(newId)
         router.replace('/quest/quests')
@@ -231,15 +274,21 @@ function MultiPlantDashboard() {
     }).finally(() => {
       isAddingRef.current = false
     })
-  }, [searchParams, availablePlants, addPlant, router, setActivePlant])
+  }, [searchParams, availablePlants, addPlant, router, setActivePlant, userPlants])
 
   const handleGoToDetail = (instanceId: string) => {
     setActivePlant(instanceId)
     router.push('/quest/quests')
   }
 
+  const canEditPlant = (plant: { source_category?: 'chosen_plant' | 'posted_order' | 'accepted_order' }) => {
+    return (plant.source_category || 'chosen_plant') !== 'posted_order'
+  }
+
   // Unified task list across all plants
   const allTasksWrapped = getAllTasksDueToday(userPlants, getQuestPlant)
+  const calendarCompletedCount = useMemo(() => calendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => t.completed).length, 0), [calendarData])
+  const calendarPendingCount = useMemo(() => calendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => !t.completed).length, 0), [calendarData])
 
   return (
     <div className="quest-page" style={{ 
@@ -247,13 +296,13 @@ function MultiPlantDashboard() {
       display: 'flex', 
       flexDirection: 'column', 
       alignItems: 'center', 
-      paddingTop: '3rem',
+      paddingTop: '1rem',
       paddingBottom: '4rem'
     }}>
       <div style={{ width: '100%', maxWidth: '1240px', margin: '0 auto' }}>
         <div className="quest-hub-layout">
           <div className="quest-main-content">
-            <div className="quest-hub-header" style={{ marginBottom: '2.5rem' }}>
+            <div className="quest-hub-header" style={{ marginBottom: '1rem' }}>
               <div>
                 <h1 className="quest-hub-title" style={{ fontSize: '2rem' }}>My Garden</h1>
                 <p className="quest-hub-sub">Track all your plants and daily care in one place</p>
@@ -275,13 +324,36 @@ function MultiPlantDashboard() {
             ) : (
               <>
                 {/* Active Plants Grid */}
-                <div className="quest-section-header" style={{ marginBottom: '1.25rem' }}>
-                  <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>🌱 My Active Plants</h2>
+                <div className="quest-section-header" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '1.5rem', flexWrap: 'wrap' }}>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>🌱 My Active Plants</h2>
+                  <div className="quest-source-tabs">
+                    {([
+                      ['all', 'All'],
+                      ['chosen_plant', '🌱 Self Planted'],
+                      ['posted_order', '📤 Posted Order'],
+                      ['accepted_order', '🚜 Accepted Order'],
+                    ] as const).map(([key, label]) => (
+                      <button
+                        key={key}
+                        className={`quest-source-tab ${sourceFilter === key ? 'active' : ''}`}
+                        onClick={() => setSourceFilter(key)}
+                      >
+                        {label}
+                        <span className="quest-source-tab-count">{sourceCounts[key]}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '3rem' }}>
-                  {userPlants.map(plant => {
+                  {filteredPlants.length === 0 ? (
+                    <div className="quest-hub-no-tasks" style={{ padding: '2.5rem 1rem' }}>
+                      <span>🌿</span>
+                      <p>No plants in this category yet.</p>
+                    </div>
+                  ) : filteredPlants.map(plant => {
                     const pData = getQuestPlant(plant.plant_id)
                     if (!pData) return null
+                    const isEditable = canEditPlant(plant)
                     return (
                       <div key={plant.id} style={{ position: 'relative' }}>
                         <div style={{ cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => handleGoToDetail(plant.id)}>
@@ -290,6 +362,7 @@ function MultiPlantDashboard() {
                               plantEmoji={pData.emoji}
                               stage={plant.state.growthStage as any}
                               streak={0} 
+                              sourceCategory={plant.source_category || 'chosen_plant'}
                               sunlight={pData.sunlight_type}
                               waterFrequency={pData.water_frequency_days}
                               startMethod={pData.startMethod}
@@ -298,42 +371,44 @@ function MultiPlantDashboard() {
                             View Quests →
                           </div>
                         </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPlantToDelete({ id: plant.id, name: plant.plant_name });
-                            setShowDeleteModal(true);
-                          }}
-                          style={{
-                            position: 'absolute',
-                            top: '16px',
-                            right: '16px',
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid var(--glass-border)',
-                            color: 'var(--text-muted)',
-                            padding: '8px',
-                            borderRadius: '12px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s',
-                            zIndex: 10
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
-                            e.currentTarget.style.color = '#ef4444';
-                            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                            e.currentTarget.style.color = 'var(--text-muted)';
-                            e.currentTarget.style.borderColor = 'var(--glass-border)';
-                          }}
-                          title="Remove Plant"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {isEditable && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPlantToDelete({ id: plant.id, name: plant.plant_name });
+                              setShowDeleteModal(true);
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: '58px',
+                              right: '16px',
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              border: '1px solid var(--glass-border)',
+                              color: 'var(--text-muted)',
+                              padding: '8px',
+                              borderRadius: '12px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s',
+                              zIndex: 10
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                              e.currentTarget.style.color = '#ef4444';
+                              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                              e.currentTarget.style.color = 'var(--text-muted)';
+                              e.currentTarget.style.borderColor = 'var(--glass-border)';
+                            }}
+                            title="Remove Plant"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     )
                   })}
@@ -347,27 +422,31 @@ function MultiPlantDashboard() {
                   
                   {allTasksWrapped.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      {allTasksWrapped.map(({ plant, task, plantData }) => (
-                        <div 
-                            key={task.id} 
-                            className={`quest-task-item ${task.completed ? 'completed' : ''}`}
-                            onClick={() => !task.completed && completeTask(plant.id, task.id)}
-                            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
-                        >
-                          <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
-                            {task.completed && <span>✓</span>}
-                          </div>
-                          <div className="quest-task-content">
-                            <span className="quest-task-label" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                              <span style={{ fontSize: '1.2em' }}>{plantData.emoji}</span> {task.label}
-                            </span>
-                            <div className="quest-task-meta">
-                              <span className="quest-task-cat-badge">{task.category}</span>
-                              <span className="quest-task-xp">+{task.xp_reward} XP</span>
+                      {allTasksWrapped.map(({ plant, task, plantData }) => {
+                        const isEditable = canEditPlant(plant)
+                        return (
+                          <div 
+                              key={task.id} 
+                              className={`quest-task-item ${task.completed ? 'completed' : ''}`}
+                              onClick={() => !task.completed && isEditable && completeTask(plant.id, task.id)}
+                              style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', cursor: task.completed || !isEditable ? 'default' : 'pointer', opacity: !isEditable && !task.completed ? 0.78 : 1 }}
+                          >
+                            <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
+                              {task.completed && <span>✓</span>}
+                            </div>
+                            <div className="quest-task-content">
+                              <span className="quest-task-label" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '1.2em' }}>{plantData.emoji}</span> {task.label}
+                              </span>
+                              <div className="quest-task-meta">
+                                <span className="quest-task-cat-badge">{task.category}</span>
+                                <span className="quest-task-xp">+{task.xp_reward} XP</span>
+                                {!isEditable && <span className="quest-task-cat-badge" style={{ background: 'rgba(251, 191, 36, 0.12)', color: '#fbbf24' }}>View only</span>}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   ) : (
                     <div className="quest-hub-no-tasks" style={{ padding: '3rem 1rem' }}>
@@ -382,8 +461,12 @@ function MultiPlantDashboard() {
 
           {/* Sidebar Calendar - Aligned with 'My Active Plants' header */}
           <div className="quest-sidebar-content" style={{ marginTop: '7.5rem' }}>
-            <div style={{ marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
+            <div style={{ marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Care Calendar</h3>
+              <div className="quest-cal-header-counts">
+                <span className="quest-cal-header-pill completed">Completed {calendarCompletedCount}</span>
+                <span className="quest-cal-header-pill pending">Pending {calendarPendingCount}</span>
+              </div>
             </div>
             <CalendarGrid
               entries={calendarData}

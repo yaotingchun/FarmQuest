@@ -254,6 +254,11 @@ export default function PlantDetailPage({
     router.push(`/quest/quests?plant=${id}&plan=${encodeURIComponent(currentPlan.plan_type)}`);
   };
 
+  const handlePostOrder = () => {
+    if (!currentPlan) return;
+    router.push(`/marketplace/create?plant=${id}&plan=${encodeURIComponent(currentPlan.plan_type)}`);
+  };
+
   // ── Loading State ──
   if (loading) return <SkeletonPage />;
 
@@ -424,6 +429,10 @@ export default function PlantDetailPage({
           <button className="btn-primary setup-cta" onClick={handleStartPlanting}>
             <Rocket size={18} />
             <span>Start Planting</span>
+          </button>
+          <button className="btn-secondary setup-ai-btn" onClick={handlePostOrder}>
+            <Sparkles size={18} />
+            <span>Post Order</span>
           </button>
           <button className="btn-secondary setup-ai-btn" onClick={handleAIExplain}>
             <Sparkles size={18} />

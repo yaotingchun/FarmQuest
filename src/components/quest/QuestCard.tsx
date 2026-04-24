@@ -6,9 +6,11 @@ interface QuestCardProps {
   quest: Quest
   index: number
   onComplete: (quest: Quest) => void
+  readOnly?: boolean
+  isLast?: boolean
 }
 
-export function QuestCard({ quest, index, onComplete }: QuestCardProps) {
+export function QuestCard({ quest, index, onComplete, readOnly = false, isLast = false }: QuestCardProps) {
   const isLocked = quest.status === 'locked'
   const isActive = quest.status === 'active'
   const isCompleted = quest.status === 'completed'
@@ -22,7 +24,7 @@ export function QuestCard({ quest, index, onComplete }: QuestCardProps) {
           {isLocked && '🔒'}
           {isActive && <span className="quest-active-pulse" />}
         </div>
-        {index < 2 && <div className={`quest-status-line ${isCompleted ? 'filled' : ''}`} />}
+        {!isLast && <div className={`quest-status-line ${isCompleted ? 'filled' : ''}`} />}
       </div>
 
       <div className="quest-main-card-body">
@@ -49,13 +51,19 @@ export function QuestCard({ quest, index, onComplete }: QuestCardProps) {
           </div>
         )}
 
-        {isActive && quest.isActionable && (
+        {isActive && quest.isActionable && !readOnly && (
           <button
             className="quest-main-complete-btn"
             onClick={() => onComplete(quest)}
           >
             Complete Quest →
           </button>
+        )}
+
+        {isActive && quest.isActionable && readOnly && (
+          <div className="quest-main-completed-badge" style={{ background: 'rgba(251, 191, 36, 0.12)', color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.2)' }}>
+            👁️ View only
+          </div>
         )}
 
         {isCompleted && (

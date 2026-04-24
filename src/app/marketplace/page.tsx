@@ -13,9 +13,11 @@ import './marketplace.css'
 interface PlantOrder {
   id: string; plant_name: string; plant_emoji: string; quantity_kg: number;
   reward_rm: number; deadline_days: number; difficulty: string; status: string;
-  requester_name: string; requester_avatar: string; location: string;
+  requester_uid: string; requester_name: string; requester_avatar: string;
+  plant_id?: string; plan_type?: 'Budget' | 'Balanced' | 'Premium';
+  farmer_uid?: string; farmer_name?: string; location: string;
   latitude?: number; longitude?: number;
-  created_at: string; farmer_name?: string;
+  created_at: string;
 }
 
 export default function MarketplacePage() {
@@ -107,7 +109,7 @@ export default function MarketplacePage() {
             <Link href="/marketplace/my-orders" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
               My Orders
             </Link>
-            <Link href="/marketplace/create" className="btn-primary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+            <Link href="/recommendations" className="btn-primary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
               + Post Order
             </Link>
           </div>
