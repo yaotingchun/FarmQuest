@@ -11,7 +11,7 @@ export const Hero = () => {
   const handleStartQuest = (e: React.MouseEvent) => {
     e.preventDefault()
     if (profile) {
-      router.push('/preferences')
+      router.push('/dashboard')
     } else {
       router.push('/?modal=login')
     }

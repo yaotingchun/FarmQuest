@@ -26,7 +26,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showPrompt, setShowPrompt] = useState(false);
   
   const router = useRouter();
   const { setAccessToken } = useAuth();
@@ -40,7 +39,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       setConfirmPassword('');
       setLoading(false);
       setIsLogin(true);
-      setShowPrompt(false);
     }
   }, [isOpen]);
 
@@ -81,7 +79,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         }
         await createUserWithEmailAndPassword(auth, email, password);
       }
-      setShowPrompt(true);
+      router.push('/dashboard');
+      onClose();
     } catch (err: any) {
       setError(getErrorMessage(err as AuthError));
     } finally {
@@ -99,7 +98,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       if (token) {
         setAccessToken(token);
       }
-      setShowPrompt(true);
+      router.push('/dashboard');
+      onClose();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -107,14 +107,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handlePromptChoice = (startNow: boolean) => {
-    if (startNow) {
-      router.push('/preferences');
-    } else {
-      router.push('/');
-    }
-    onClose();
-  };
+
 
   return (
     <div className="login-modal-overlay" onClick={onClose}>
@@ -123,137 +116,108 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <X size={20} />
         </button>
 
-        {showPrompt ? (
-          <div className="login-prompt-view">
-            <div className="login-prompt-icon-group">
-              <div className="login-prompt-badge">Login Successful</div>
-            </div>
-            <h2 className="login-modal-title">Ready to Start?</h2>
-            <p className="login-modal-subtitle" style={{ marginBottom: '32px' }}>
-              Your account is all set. Would you like to start finding the perfect plants for your space right now?
-            </p>
-            
-            <div className="login-prompt-actions">
-              <button 
-                className="login-submit-btn" 
-                onClick={() => handlePromptChoice(true)}
-              >
-                Yes, let's start!
-              </button>
-              <button 
-                className="login-prompt-skip" 
-                onClick={() => handlePromptChoice(false)}
-              >
-                Maybe later
-              </button>
+        <div className="login-modal-header">
+          <div className="login-modal-icon-wrap">
+            <Sprout size={32} color="#020d06" />
+          </div>
+          <h2 className="login-modal-title">
+            {isLogin ? 'Welcome Back' : 'Join FarmQuest'}
+          </h2>
+          <p className="login-modal-subtitle">
+            {isLogin ? 'Continue your growth journey' : 'Start your digital farm today'}
+          </p>
+        </div>
+
+        {error && (
+          <div className="login-error">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleEmailAuth}>
+          <div className="login-form-group">
+            <label htmlFor="modal-email">Email Address</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                id="modal-email"
+                type="email"
+                className="login-input"
+                placeholder="your@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
             </div>
           </div>
-        ) : (
-          <>
-            <div className="login-modal-header">
-              <div className="login-modal-icon-wrap">
-                <Sprout size={32} color="#020d06" />
-              </div>
-              <h2 className="login-modal-title">
-                {isLogin ? 'Welcome Back' : 'Join FarmQuest'}
-              </h2>
-              <p className="login-modal-subtitle">
-                {isLogin ? 'Continue your growth journey' : 'Start your digital farm today'}
-              </p>
-            </div>
 
-            {error && (
-              <div className="login-error">
-                <AlertCircle size={16} />
-                <span>{error}</span>
-              </div>
-            )}
+          <div className="login-form-group">
+            <label htmlFor="modal-password">Password</label>
+            <input
+              id="modal-password"
+              type="password"
+              className="login-input"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-            <form onSubmit={handleEmailAuth}>
-              <div className="login-form-group">
-                <label htmlFor="modal-email">Email Address</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id="modal-email"
-                    type="email"
-                    className="login-input"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              <div className="login-form-group">
-                <label htmlFor="modal-password">Password</label>
-                <input
-                  id="modal-password"
-                  type="password"
-                  className="login-input"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              {!isLogin && (
-                <div className="login-form-group">
-                  <label htmlFor="modal-confirm-password">Confirm Password</label>
-                  <input
-                    id="modal-confirm-password"
-                    type="password"
-                    className="login-input"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              )}
-
-              <button className="login-submit-btn" type="submit" disabled={loading}>
-                {loading ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  isLogin ? 'Sign In' : 'Create Account'
-                )}
-              </button>
-            </form>
-
-            <div className="login-divider">or continue with</div>
-
-            <button 
-              className="login-btn-google" 
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-            >
-              <img 
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-                alt="Google" 
-                className="google-icon"
+          {!isLogin && (
+            <div className="login-form-group">
+              <label htmlFor="modal-confirm-password">Confirm Password</label>
+              <input
+                id="modal-confirm-password"
+                type="password"
+                className="login-input"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                required
               />
-              Google Sign In
-            </button>
-
-            <div className="login-toggle">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
-              <button 
-                className="login-toggle-btn" 
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setConfirmPassword('');
-                  setError(null);
-                }}
-              >
-                {isLogin ? 'Join now' : 'Log in here'}
-              </button>
             </div>
-          </>
-        )}
+          )}
+
+          <button className="login-submit-btn" type="submit" disabled={loading}>
+            {loading ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : (
+              isLogin ? 'Sign In' : 'Create Account'
+            )}
+          </button>
+        </form>
+
+        <div className="login-divider">or continue with</div>
+
+        <button 
+          className="login-btn-google" 
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+        >
+          <img 
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+            alt="Google" 
+            className="google-icon"
+          />
+          Google Sign In
+        </button>
+
+        <div className="login-toggle">
+          {isLogin ? "Don't have an account?" : "Already have an account?"}
+          <button 
+            className="login-toggle-btn" 
+            type="button"
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setConfirmPassword('');
+              setError(null);
+            }}
+          >
+            {isLogin ? 'Join now' : 'Log in here'}
+          </button>
+        </div>
       </div>
     </div>
   );

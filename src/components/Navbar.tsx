@@ -29,21 +29,22 @@ export const Navbar = () => {
 
   const navItems = useMemo(
     () => [
-      { label: 'Features', href: '/#features' },
-      { label: 'How It Works', href: '/#how-it-works' },
-      { label: 'Explore Plants', href: '/explore' },
-      { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
-      { label: 'Pick a Plant', href: '/recommendations', requiresAuth: true },
+      { label: 'Features', href: '/#features', guestOnly: true },
+      { label: 'How It Works', href: '/#how-it-works', guestOnly: true },
+      { label: 'Home', href: '/dashboard', requiresAuth: true },
+      { label: 'Find My Plants', href: '/preferences', requiresAuth: true },
       { label: 'Health Detection', href: '/diagnosis', requiresAuth: true },
       { label: 'Plant Quest', href: '/quest', requiresAuth: true },
       { label: 'Marketplace', href: '/marketplace', requiresAuth: true },
-      { label: 'Find My Plants', href: '/preferences', requiresAuth: true },
     ],
     []
   )
 
   const visibleNavItems = useMemo(
-    () => navItems.filter((item) => !item.requiresAuth || !!profile),
+    () => navItems.filter((item: any) => 
+      (!item.requiresAuth || !!profile) && 
+      (!item.guestOnly || !profile)
+    ),
     [navItems, profile]
   )
 

@@ -5,63 +5,78 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import {
-  Leaf, Sprout, Shield, Map, ArrowRight, Zap, Star,
+  Leaf, Sprout, Shield, Map, ArrowRight, Zap, Star, ShoppingCart, BookOpen, Trophy, User, Swords
 } from 'lucide-react'
 
-const FEATURES = [
-  {
-    id: 'find-my-plant',
-    number: '01',
-    icon: <Map size={32} strokeWidth={1.5} />,
-    emoji: '🗺️',
-    title: 'Find My Plant',
-    subtitle: 'AI-Powered Recommendations',
-    desc: 'Answer a few quick questions about your space, climate, and lifestyle. Our smart engine will recommend the perfect plants tailored just for you.',
-    href: '/preferences',
-    cta: 'Start Questionnaire',
-    accent: '#5ec482',
-    tags: ['Smart Match', 'Climate-Aware', 'Personalized'],
-  },
-  {
-    id: 'pick-a-plant',
-    number: '02',
-    icon: <Sprout size={32} strokeWidth={1.5} />,
-    emoji: '🌱',
-    title: 'Pick a Plant',
-    subtitle: 'Browse & Select',
-    desc: 'Explore our curated plant catalogue and handpick the ones that spark your interest. Filter by difficulty, season, and growing space.',
-    href: '/recommendations',
-    cta: 'Browse Plants',
-    accent: '#42c96c',
-    tags: ['Full Catalogue', 'Filter by Space', 'Difficulty Rated'],
-  },
-  {
+const FEATURES = {
+  top: [
+    {
+      id: 'find-my-plant',
+      icon: <Map size={24} />,
+      emoji: '🗺️',
+      title: 'Find My Plant',
+      desc: 'AI Matching',
+      href: '/preferences',
+      accent: '#5ec482',
+    },
+    {
+      id: 'start-growing',
+      icon: <Sprout size={24} />,
+      emoji: '🌱',
+      title: 'Start Growing',
+      desc: 'Pick Your First',
+      href: '/recommendations',
+      accent: '#42c96c',
+    },
+    {
+      id: 'health-detection',
+      icon: <Shield size={24} />,
+      emoji: '🔬',
+      title: 'Health Detection',
+      desc: 'AI Diagnostics',
+      href: '/diagnosis',
+      accent: '#60a5fa',
+    },
+  ],
+  main: {
     id: 'plant-quest',
-    number: '03',
-    icon: <Star size={32} strokeWidth={1.5} />,
-    emoji: '⚡',
+    icon: <Swords size={120} strokeWidth={1.5} />,
+    emoji: '🏆',
     title: 'Plant Quest',
-    subtitle: 'Daily Quests & XP',
-    desc: 'Level up your farming journey. Complete daily care tasks, earn XP, track streaks, and watch your plants grow stage by stage.',
+    subtitle: 'MAIN EXPERIENCE',
+    desc: 'Level up your journey. Complete daily tasks, earn XP, and track streaks.',
     href: '/quest',
-    cta: 'Start Quest',
-    accent: '#facc15',
-    tags: ['Daily Tasks', 'XP & Levels', 'Streak Tracker'],
+    cta: 'Continue',
+    accent: '#5ec482',
+    tags: ['Tasks', 'XP', 'Streaks'],
   },
-  {
-    id: 'health-detection',
-    number: '04',
-    icon: <Shield size={32} strokeWidth={1.5} />,
-    emoji: '🔬',
-    title: 'Health Detection',
-    subtitle: 'AI Diagnostics',
-    desc: 'Upload a photo of your plant and our AI will instantly diagnose its health, identify diseases, and provide a personalized treatment protocol.',
-    href: '/diagnosis',
-    cta: 'Run Diagnosis',
-    accent: '#60a5fa',
-    tags: ['AI-Powered', 'Instant Results', 'Treatment Plan'],
-  },
-]
+  other: {
+    title: 'Other Features',
+    items: [
+      {
+        id: 'marketplace',
+        icon: <ShoppingCart size={20} />,
+        title: 'Marketplace',
+        desc: 'Buy & Sell',
+        href: '/marketplace',
+      },
+      {
+        id: 'plant-database',
+        icon: <BookOpen size={20} />,
+        title: 'Plant Database',
+        desc: 'Explore Species',
+        href: '/explore',
+      },
+      {
+        id: 'profile',
+        icon: <User size={20} />,
+        title: 'Profile',
+        desc: 'View your progress',
+        href: '/profile',
+      },
+    ]
+  }
+}
 
 export default function DashboardPage() {
   const { profile, loading } = useAuth()
@@ -78,7 +93,7 @@ export default function DashboardPage() {
       <div className="dashboard-page">
         <div className="dashboard-skeleton-wrap">
           <div className="skeleton" style={{ height: '80px', borderRadius: '16px', marginBottom: '16px' }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
             {[...Array(4)].map((_, i) => (
               <div key={i} className="skeleton" style={{ height: '320px', borderRadius: '24px' }} />
             ))}
@@ -93,10 +108,6 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="dashboard-header">
         <div className="dashboard-header-left">
-          <div className="dashboard-welcome-badge">
-            <Leaf size={12} />
-            Your Farm Hub
-          </div>
           <h1 className="dashboard-title">
             Welcome back, <span className="dashboard-title-accent">{profile.username}</span>
           </h1>
@@ -104,63 +115,82 @@ export default function DashboardPage() {
             Choose where to grow today — each tool is designed to help you farm smarter.
           </p>
         </div>
-        <div className="dashboard-header-right">
-          <div className="dashboard-stat-chip">
-            <Zap size={14} color="#facc15" />
-            <span>Lv. {profile.level ?? 1}</span>
-          </div>
-          <div className="dashboard-stat-chip">
-            <Sprout size={14} color="var(--accent)" />
-            <span>{profile.plantsGrown ?? 0} Grown</span>
-          </div>
-        </div>
       </div>
 
-      {/* Feature Grid */}
-      <div className="dashboard-grid">
-        {FEATURES.map((feature, idx) => (
-          <Link
-            key={feature.id}
-            href={feature.href}
-            className="dashboard-card"
-            id={`dashboard-card-${feature.id}`}
-            style={{ '--card-accent': feature.accent } as React.CSSProperties}
-          >
-            {/* Number tag */}
-            <span className="dashboard-card-num">{feature.number}</span>
-
-            {/* Icon */}
-            <div className="dashboard-card-icon-wrap">
-              <div className="dashboard-card-icon" style={{ color: feature.accent }}>
-                {feature.icon}
+      {/* Bento Grid */}
+      <div className="bento-container">
+        {/* Top Row: 3 Small Cards */}
+        <div className="bento-top-row">
+          {FEATURES.top.map((f) => (
+            <Link key={f.id} href={f.href} className="bento-card bento-small" style={{ '--card-accent': f.accent } as any}>
+              <div className="bento-icon-box">{f.icon}</div>
+              <div className="bento-content">
+                <div className="bento-label-group">
+                  <h3>{f.title}</h3>
+                  <span className="bento-pro-badge">PRO</span>
+                </div>
+                <p>{f.desc}</p>
               </div>
-              <span className="dashboard-card-emoji">{feature.emoji}</span>
-            </div>
+              <ArrowRight size={16} className="bento-arrow" />
+            </Link>
+          ))}
+        </div>
 
-            {/* Content */}
-            <div className="dashboard-card-body">
-              <p className="dashboard-card-subtitle">{feature.subtitle}</p>
-              <h2 className="dashboard-card-title">{feature.title}</h2>
-              <p className="dashboard-card-desc">{feature.desc}</p>
+        {/* Bottom Row: Main Experience + Side Column */}
+        <div className="bento-bottom-row">
+          {/* Main Quest Card */}
+          <Link href={FEATURES.main.href} className="bento-card bento-main" style={{ '--card-accent': FEATURES.main.accent } as any}>
+            <div className="bento-main-header">
+              <span className="bento-main-badge">
+                <Star size={12} fill="currentColor" />
+                {FEATURES.main.subtitle}
+              </span>
             </div>
+            
+            <div className="bento-main-body">
+              <div className="bento-main-content">
+                <h2 className="bento-main-title">{FEATURES.main.title}</h2>
+                <p className="bento-main-desc">{FEATURES.main.desc}</p>
+                
+                <div className="bento-main-tags">
+                  {FEATURES.main.tags.map(tag => (
+                    <span key={tag} className="bento-tag">{tag}</span>
+                  ))}
+                </div>
 
-            {/* Tags */}
-            <div className="dashboard-card-tags">
-              {feature.tags.map(tag => (
-                <span key={tag} className="dashboard-card-tag">{tag}</span>
-              ))}
+                <div className="bento-main-cta">
+                  <span>{FEATURES.main.cta}</span>
+                  <div className="cta-play-icon">▶</div>
+                </div>
+              </div>
+
+              <div className="bento-main-visual">
+                <div className="bento-main-icon-wrap">{FEATURES.main.icon}</div>
+                <div className="bento-main-glow" />
+              </div>
             </div>
-
-            {/* CTA */}
-            <div className="dashboard-card-cta">
-              <span>{feature.cta}</span>
-              <ArrowRight size={16} />
-            </div>
-
-            {/* Glow overlay on hover */}
-            <div className="dashboard-card-glow" />
           </Link>
-        ))}
+
+          <div className="bento-side-col">
+            <div className="bento-card bento-other">
+              <div className="bento-other-header">
+                <h4>{FEATURES.other.title}</h4>
+              </div>
+              <div className="bento-other-grid">
+                {FEATURES.other.items.map((f) => (
+                  <Link key={f.id} href={f.href} className="bento-other-item">
+                    <div className="bento-other-icon">{f.icon}</div>
+                    <div className="bento-other-text">
+                      <h5>{f.title}</h5>
+                      <p>{f.desc}</p>
+                    </div>
+                    <ArrowRight size={14} className="bento-other-arrow" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
