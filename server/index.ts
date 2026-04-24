@@ -247,6 +247,7 @@ interface MarketplaceOrder {
   plant_id: string;
   plant_name: string;
   plant_emoji: string;
+  plan_type?: 'Budget' | 'Balanced' | 'Premium';
   quantity_kg: number;
   reward_rm: number;
   deadline_days: number;
@@ -264,6 +265,10 @@ interface MarketplaceOrder {
   completed_at?: string;
   checkpoints: any[];
   total_votes: number;
+  ai_tasks?: {
+    main: any[];
+    daily: string[];
+  };
 }
 
 interface MarketplaceUpdate {
@@ -285,7 +290,7 @@ const ordersRef = db.collection('marketplace_orders');
 const updatesRef = db.collection('marketplace_updates');
 
 // Helper: generate checkpoints based on plant growth data
-function generateCheckpoints(plantId: string, deadlineDays: number) {
+function generateCheckpoints(plantId: string, deadlineDays: number): any[] {
   const plant = (plantsData as any).plants.find((p: any) => p.plant_id === plantId);
   const totalDays = plant?.growth_days || deadlineDays;
 
@@ -710,6 +715,7 @@ app.post("/api/marketplace/orders", async (req, res) => {
   const {
     requester_uid, requester_name, requester_avatar,
     plant_id, plant_name, plant_emoji,
+    plan_type,
     quantity_kg, reward_rm, deadline_days,
     location, latitude, longitude, notes, difficulty
   } = req.body;
@@ -732,6 +738,7 @@ app.post("/api/marketplace/orders", async (req, res) => {
       plant_id,
       plant_name: plant_name || plant_id,
       plant_emoji: plant_emoji || '🌱',
+      plan_type: plan_type || 'Budget',
       quantity_kg: Number(quantity_kg),
       reward_rm: Number(reward_rm),
       deadline_days: Number(deadline_days),
@@ -964,6 +971,70 @@ app.post("/api/marketplace/orders/:orderId/vote", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to vote" });
+  }
+});
+
+// POST /api/marketplace/orders/:orderId/shared-progress — Sync quest progress between requester/farmer plants
+app.post("/api/marketplace/orders/:orderId/shared-progress", async (req, res) => {
+  try {
+    const orderRef = ordersRef.doc(req.params.orderId);
+    const orderSnap = await orderRef.get();
+
+    if (!orderSnap.exists) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    const order = orderSnap.data() as MarketplaceOrder;
+    const { plant_id, source_category, state, task_state, ai_tasks } = req.body;
+
+    if (!plant_id || !state || !task_state) {
+      res.status(400).json({ error: "Missing shared progress fields" });
+      return;
+    }
+
+    const sharedKey = `marketplace-order-${order.id}`;
+    const updatedAt = new Date().toISOString();
+
+    await orderRef.update({
+      shared_progress_key: sharedKey,
+      shared_progress_state: state,
+      shared_progress_task_state: task_state,
+      shared_progress_updated_at: admin.firestore.Timestamp.now(),
+      shared_progress_source_category: source_category || 'chosen_plant',
+      ai_tasks: ai_tasks || order.ai_tasks || null,
+    });
+
+    const updatePlantsForUser = async (uid?: string) => {
+      if (!uid) return;
+      const plantsRef = db.collection('users').doc(uid).collection('user_plants');
+      const snap = await plantsRef.where('shared_progress_key', '==', sharedKey).get();
+      const matches = snap.docs.filter((doc) => {
+        const data = doc.data() as any;
+        return data.plant_id === plant_id;
+      });
+
+      if (!matches.length) return;
+
+      const batch = db.batch();
+      matches.forEach((docSnap) => {
+        batch.update(docSnap.ref, {
+          state,
+          task_state,
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          ai_tasks: ai_tasks || null,
+        });
+      });
+      await batch.commit();
+    };
+
+    await updatePlantsForUser(order.requester_uid);
+    await updatePlantsForUser(order.farmer_uid);
+
+    res.json({ ok: true, order_id: order.id, shared_progress_key: sharedKey });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to sync shared progress" });
   }
 });
 

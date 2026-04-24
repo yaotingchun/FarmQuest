@@ -9,6 +9,7 @@ import '../marketplace.css'
 interface Order {
   id: string; plant_name: string; plant_emoji: string; quantity_kg: number;
   reward_rm: number; deadline_days: number; difficulty: string; status: string;
+  plant_id: string; plan_type?: 'Budget' | 'Balanced' | 'Premium';
   requester_name: string; requester_avatar: string; farmer_name?: string;
   farmer_avatar?: string; location: string; created_at: string;
 }
@@ -91,14 +92,14 @@ export default function MyOrdersPage() {
           <span className="mp-empty-icon">{tab === 'posted' ? '📋' : '🚜'}</span>
           <h3>No orders yet</h3>
           <p>{tab === 'posted' ? 'Post your first plant order!' : 'Browse the marketplace and accept an order.'}</p>
-          <Link href={tab === 'posted' ? '/marketplace/create' : '/marketplace'} className="btn-primary" style={{ marginTop: 16, display: 'inline-flex', padding: '10px 24px', fontSize: '0.85rem' }}>
+          <Link href={tab === 'posted' ? '/preferences' : '/marketplace'} className="btn-primary" style={{ marginTop: 16, display: 'inline-flex', padding: '10px 24px', fontSize: '0.85rem' }}>
             {tab === 'posted' ? '+ Post Order' : 'Browse Orders'}
           </Link>
         </div>
       ) : (
         <div className="mp-grid">
           {orders.map(order => (
-            <Link href={`/marketplace/${order.id}`} key={order.id} className="mp-card">
+            <Link href={`/quest?plant=${encodeURIComponent(order.plant_id || '')}&plan=${encodeURIComponent(order.plan_type || 'Budget')}&source=${tab === 'posted' ? 'posted_order' : 'accepted_order'}&order=${encodeURIComponent(order.id)}`} key={order.id} className="mp-card">
               <div className="mp-card-top">
                 <div className="mp-card-plant">
                   <span className="mp-card-emoji">{order.plant_emoji}</span>

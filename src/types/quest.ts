@@ -7,6 +7,7 @@ export type TaskCategory = 'care' | 'growth' | 'observation'
 // ── Quest Types ──
 export type QuestType = 'main' | 'daily'
 export type QuestStatus = 'locked' | 'active' | 'completed'
+export type PlantSourceCategory = 'chosen_plant' | 'posted_order' | 'accepted_order'
 
 // ── Calendar Day Status ──
 export type DayStatus = 'completed' | 'pending' | 'milestone'
@@ -63,6 +64,8 @@ export interface UserPlant {
   task_state: TaskState
 
   selected_plan_type?: "Budget" | "Balanced" | "Premium"
+  source_category?: PlantSourceCategory
+  shared_progress_key?: string
   ai_tasks?: {
     main: Quest[]
     daily: string[]

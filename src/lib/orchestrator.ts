@@ -1,6 +1,6 @@
-import type { LLMQuestContent, PlantState, QuestPlantData, GrowthStage } from '@/types/quest'
+import type { LLMQuestContent, UserPlantState, QuestPlantData, GrowthStage } from '@/types/quest'
 import { fillTemplate, getRecoveryTemplate, getMainQuestTemplates, MILESTONE_TEMPLATES, DAILY_TEMPLATES } from './staticTemplates'
-import { calculateGrowthStage } from './ruleEngine'
+import { getGrowthStage } from './ruleEngine'
 
 const CACHE_KEY = 'fq_quest_llm_cache'
 const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
@@ -52,7 +52,7 @@ function setCache(cacheKey: string, content: LLMQuestContent): void {
  * Falls back to static template on any failure.
  */
 async function callLLM(
-  plantState: PlantState,
+  plantState: UserPlantState,
   plant: QuestPlantData,
   taskLabels: string[],
   type: 'daily' | 'recovery' | 'milestone'
@@ -61,13 +61,13 @@ async function callLLM(
     const { generateQuestContent } = await import('@/app/actions/questAI')
     const result = await generateQuestContent({
       plant_name: plant.name,
-      growth_stage: plantState.current_stage,
+      growth_stage: plantState.growthStage,
       water_frequency: plant.water_frequency_days,
       sunlight: plant.sunlight_type,
       hydration: plantState.hydration,
       health: plantState.health,
       tasks_due: taskLabels,
-      streak: plantState.streak_count,
+      streak: 0,
       type,
     })
     if (result && result.title && result.description && Array.isArray(result.tasks)) {
@@ -83,7 +83,7 @@ async function callLLM(
  * Get formatted daily quest content — tries LLM with cache, falls back to static.
  */
 export async function getDailyQuestContent(
-  state: PlantState,
+  state: UserPlantState,
   plant: QuestPlantData,
   taskLabels: string[]
 ): Promise<LLMQuestContent> {
@@ -102,7 +102,7 @@ export async function getDailyQuestContent(
   }
 
   // 3. Fall back to static template
-  const stage = calculateGrowthStage(state, plant)
+  const stage = getGrowthStage(state.xp)
   const templates = DAILY_TEMPLATES[stage]
   return {
     title: `Daily Care for ${plant.name}`,
@@ -118,7 +118,7 @@ export async function getDailyQuestContent(
  * Get formatted recovery quest content.
  */
 export async function getRecoveryQuestContent(
-  state: PlantState,
+  state: UserPlantState,
   plant: QuestPlantData
 ): Promise<LLMQuestContent> {
   const cacheKey = `recovery-${plant.plant_id}-${Date.now()}`

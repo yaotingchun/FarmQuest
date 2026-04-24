@@ -30,7 +30,6 @@ export default function Home() {
       <Features />
       <StatsBand />
       <HowItWorks />
-      <Forum />
       <CTA />
     </>
   )

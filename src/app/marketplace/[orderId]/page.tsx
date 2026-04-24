@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, MapPin, Clock, Scale, Shield, ThumbsUp, CheckCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import MapView from '@/components/MapView'
 import '../marketplace.css'
@@ -12,9 +13,10 @@ interface Checkpoint {
   completed: boolean; completed_at?: string; votes: number;
 }
 interface Order {
-  id: string; plant_name: string; plant_emoji: string; quantity_kg: number;
+  id: string; plant_id: string; plant_name: string; plant_emoji: string; quantity_kg: number;
   reward_rm: number; deadline_days: number; difficulty: string; status: string;
   requester_uid: string; requester_name: string; requester_avatar: string;
+  plan_type?: 'Budget' | 'Balanced' | 'Premium';
   farmer_uid?: string; farmer_name?: string; farmer_avatar?: string;
   location: string; latitude?: number; longitude?: number;
   notes: string; created_at: string; accepted_at?: string;
@@ -23,6 +25,7 @@ interface Order {
 
 export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params)
+  const router = useRouter()
   const { user, profile } = useAuth()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
@@ -46,7 +49,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         farmer_avatar: profile?.avatar || '🧑‍🌾',
       }),
     })
-    if (res.ok) { setToast('✅ Order accepted!'); fetchOrder() }
+    if (res.ok) {
+      setToast('✅ Order accepted!')
+      setTimeout(() => {
+        router.push(`/quest?plant=${encodeURIComponent(order?.plant_id || '')}&plan=${encodeURIComponent(order?.plan_type || 'Budget')}&source=accepted_order&order=${encodeURIComponent(orderId)}`)
+      }, 900)
+    }
   }
 
   const handleCheckpoint = async (cpIndex: number) => {

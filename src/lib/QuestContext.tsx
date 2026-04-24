@@ -5,7 +5,7 @@ import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, serverTimest
 import { v4 as uuidv4 } from 'uuid'
 import { db } from './firebase'
 import { useAuth } from '@/context/AuthContext'
-import type { UserPlant, QuestPlantData, QuestTask, CalendarEntry, DayStatus } from '@/types/quest'
+import type { UserPlant, QuestPlantData, QuestTask, CalendarEntry, DayStatus, PlantSourceCategory } from '@/types/quest'
 import { XP_VALUES } from '@/types/quest'
 import { derivePlantStatus, getTasksDueToday, getGrowthStage } from './ruleEngine'
 import { getQuestPlant, QUEST_PLANTS } from '@/data/quest-plants'
@@ -19,7 +19,12 @@ interface QuestContextValue {
   availablePlants: QuestPlantData[]
 
   setActivePlant: (plantId: string | null) => void
-  addPlant: (staticPlantId: string, planType?: "Budget" | "Balanced" | "Premium") => Promise<string | undefined>
+  addPlant: (
+    staticPlantId: string,
+    planType?: "Budget" | "Balanced" | "Premium",
+    sourceCategory?: PlantSourceCategory,
+    options?: { sharedProgressKey?: string }
+  ) => Promise<string | undefined>
   deletePlant: (instanceId: string) => Promise<void>
   completeTask: (instanceId: string, taskType: string) => Promise<void>
   
@@ -136,13 +141,40 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       }
 
       if (isToday) {
-        const todayTasks: QuestTask[] = userPlants.flatMap((plant) =>
+        const todayTasksFromSchedule: QuestTask[] = userPlants.flatMap((plant) =>
           getDailyTasksForPlant(plant).map((task) => ({
             ...task,
             plant_id: plant.plant_id,
             plant_name: plant.plant_name,
           }))
         )
+
+        const todayCompletedFromLog: QuestTask[] = []
+        for (const plant of userPlants) {
+          const completionLog = (plant.task_state?.completion_log || {}) as Record<string, Array<{ id: string; label?: string }>>
+          const dayLog = completionLog[dateKey] || []
+          for (const item of dayLog) {
+            todayCompletedFromLog.push({
+              id: `${plant.id}-${item.id}`,
+              label: item.label || resolveTaskLabel(plant, item.id),
+              completed: true,
+              category: 'care',
+              xp_reward: 0,
+              plant_id: plant.plant_id,
+              plant_name: plant.plant_name,
+            })
+          }
+        }
+
+        const taskMap = new Map<string, QuestTask>()
+        for (const task of todayTasksFromSchedule) {
+          taskMap.set(`${task.plant_name || ''}|${task.label}`, task)
+        }
+        for (const task of todayCompletedFromLog) {
+          taskMap.set(`${task.plant_name || ''}|${task.label}`, { ...task, completed: true })
+        }
+
+        const todayTasks = Array.from(taskMap.values())
 
         const todayStatuses: DayStatus[] = []
         const anyMilestone = todayTasks.some(t => t.id.includes('t_seed') || t.id.includes('t_sprout') || t.id.includes('t_mature'))
@@ -204,6 +236,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
         // Parse plant doc
         const plant: UserPlant = {
           ...data,
+          source_category: data.source_category || 'chosen_plant',
           // Handle cases where serverTimestamp might be pending
           created_at: data.created_at?.toDate ? data.created_at : Timestamp.now(),
           updated_at: data.updated_at?.toDate ? data.updated_at : Timestamp.now(),
@@ -266,7 +299,12 @@ export function QuestProvider({ children }: { children: ReactNode }) {
 
   // ── Methods ──
 
-  const addPlant = useCallback(async (staticPlantId: string, planType: "Budget" | "Balanced" | "Premium" = "Budget"): Promise<string | undefined> => {
+  const addPlant = useCallback(async (
+    staticPlantId: string,
+    planType: "Budget" | "Balanced" | "Premium" = "Budget",
+    sourceCategory: PlantSourceCategory = 'chosen_plant',
+    options?: { sharedProgressKey?: string }
+  ): Promise<string | undefined> => {
     if (!user) return undefined
     const staticData = getQuestPlant(staticPlantId)
     if (!staticData) return undefined
@@ -282,6 +320,8 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       updated_at: Timestamp.now(),
       last_checked_at: Timestamp.now(),
       selected_plan_type: planType,
+      source_category: sourceCategory,
+      shared_progress_key: options?.sharedProgressKey,
       state: {
         growthStage: 0,
         health: 100,
@@ -289,6 +329,26 @@ export function QuestProvider({ children }: { children: ReactNode }) {
         xp: 0
       },
       task_state: {}
+    }
+
+    // Try to pre-load tasks from shared order if applicable
+    let existingAiTasks = null
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    
+    if (options?.sharedProgressKey?.startsWith('marketplace-order-')) {
+      try {
+        const orderId = options.sharedProgressKey.replace('marketplace-order-', '')
+        const orderRes = await fetch(`${API_URL}/api/marketplace/orders/${orderId}`)
+        if (orderRes.ok) {
+          const order = await orderRes.json()
+          if (order.ai_tasks) {
+            existingAiTasks = order.ai_tasks
+            newPlant.ai_tasks = existingAiTasks
+          }
+        }
+      } catch (e) {
+        console.warn("[QuestContext] Failed to pre-fetch shared tasks:", e)
+      }
     }
 
     const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
@@ -341,7 +401,12 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     setActivePlantId(instanceId)
 
     // Generate AI quests in background (non-blocking for navigation).
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    if (existingAiTasks) {
+      setIsGeneratingTasks(false)
+      pendingActivePlantIdRef.current = null
+      return instanceId
+    }
+
     ;(async () => {
       try {
         // 1. Get Plan Detail
@@ -377,6 +442,22 @@ export function QuestProvider({ children }: { children: ReactNode }) {
                 ai_tasks: aiTasks,
                 updated_at: serverTimestamp()
               })
+
+              // Sync these tasks to the marketplace order if this is an order-based plant
+              if (options?.sharedProgressKey?.startsWith('marketplace-order-')) {
+                const oId = options.sharedProgressKey.replace('marketplace-order-', '')
+                await fetch(`${API_URL}/api/marketplace/orders/${oId}/shared-progress`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    plant_id: staticPlantId,
+                    state: newPlant.state,
+                    task_state: newPlant.task_state,
+                    ai_tasks: aiTasks
+                  })
+                }).catch(err => console.error("[QuestContext] Failed to sync tasks to order:", err))
+              }
+
               console.log(`[QuestContext] AI tasks ready for ${instanceId}`)
             }
           }
@@ -414,6 +495,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     if (!user) return
     const plant = userPlants.find(p => p.id === instanceId)
     if (!plant || plant.status === 'dead') return
+    if ((plant.source_category || 'chosen_plant') === 'posted_order') return
 
     // Handle both prefix-based tasks (water-123), exact milestones, and dynamic AI main quests (main-0).
     const taskPrefix = taskId.split('-')[0]
@@ -437,7 +519,12 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     if (taskType.startsWith('main-')) {
       const mainIndex = parseInt(taskType.split('-')[1] || '0', 10)
       const mainQuest = plant.ai_tasks?.main?.[mainIndex]
-      newState.xp += typeof mainQuest?.xp_reward === 'number' ? mainQuest.xp_reward : XP_VALUES.MAIN_QUEST_STEP
+      const questXp = typeof (mainQuest as any)?.xp === 'number'
+        ? (mainQuest as any).xp
+        : typeof (mainQuest as any)?.xp_reward === 'number'
+          ? (mainQuest as any).xp_reward
+          : XP_VALUES.MAIN_QUEST_STEP
+      newState.xp += questXp
       newTaskState[taskId] = true
     } else switch (taskType) {
       case 'water':
@@ -508,15 +595,31 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
     
     try {
-        await updateDoc(docRef, {
+      await updateDoc(docRef, {
+        state: newState,
+        task_state: newTaskState,
+        updated_at: serverTimestamp(),
+      })
+
+      const sharedKey = plant.shared_progress_key
+      const orderId = sharedKey?.startsWith('marketplace-order-') ? sharedKey.replace('marketplace-order-', '') : null
+      if (orderId) {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+        await fetch(`${API_URL}/api/marketplace/orders/${encodeURIComponent(orderId)}/shared-progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plant_id: plant.plant_id,
+            source_category: plant.source_category || 'chosen_plant',
             state: newState,
             task_state: newTaskState,
-            updated_at: serverTimestamp(),
+          }),
         })
+      }
     } catch (e) {
         console.error("Failed to complete task:", e)
     }
-  }, [user, userPlants])
+    }, [user, userPlants, resolveTaskLabel])
 
   return (
     <QuestContext.Provider value={{
