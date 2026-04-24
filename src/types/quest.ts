@@ -67,6 +67,7 @@ export interface UserPlant {
     main: Quest[]
     daily: string[]
   }
+  google_calendar_event_id?: string
 }
 
 

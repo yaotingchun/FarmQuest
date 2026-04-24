@@ -9,6 +9,7 @@ import type { UserPlant, QuestPlantData, QuestTask, CalendarEntry, DayStatus } f
 import { XP_VALUES } from '@/types/quest'
 import { derivePlantStatus, getTasksDueToday, getGrowthStage } from './ruleEngine'
 import { getQuestPlant, QUEST_PLANTS } from '@/data/quest-plants'
+import { createCalendarEvent, deleteCalendarEvent, syncDailyTasksToGoogle } from '@/lib/googleCalendar'
 
 interface QuestContextValue {
   userPlants: UserPlant[]
@@ -37,7 +38,7 @@ export function useQuest() {
 }
 
 export function QuestProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, accessToken, isGoogleUser } = useAuth()
   const [userPlants, setUserPlants] = useState<UserPlant[]>([])
   const [activePlantId, setActivePlantId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -158,6 +159,12 @@ export function QuestProvider({ children }: { children: ReactNode }) {
           statuses: todayStatuses,
           milestone_label: milestoneLabel || (anyMilestone ? todayTasks.find(t => t.id.includes('t_'))?.label : undefined)
         })
+
+        // Background sync to Google Calendar
+        if (isGoogleUser && accessToken && (todayTasks.length > 0 || anyCompleted)) {
+          syncDailyTasksToGoogle(accessToken, dateKey, todayTasks).catch(console.error)
+        }
+
         continue
       }
 
@@ -170,7 +177,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     }
 
     setCalendarData(entries)
-  }, [userPlants, getDailyTasksForPlant, resolveTaskLabel])
+  }, [userPlants, getDailyTasksForPlant, resolveTaskLabel, isGoogleUser, accessToken])
 
   // ── Firestore Real-time Sync & Initialization ──
   useEffect(() => {
@@ -293,10 +300,43 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       last_checked_at: serverTimestamp(),
     })
 
+    // ── Google Calendar Integration ──
+    let calendarEventId: string | undefined = undefined
+    if (isGoogleUser && accessToken) {
+      try {
+        const totalDurationDays = (staticData.growth_stages.seed.duration_days || 7) +
+                                  (staticData.growth_stages.sprout.duration_days || 14) +
+                                  (staticData.growth_stages.mature.duration_days || 30)
+        
+        const startDate = new Date()
+        const endDate = new Date()
+        endDate.setDate(startDate.getDate() + totalDurationDays)
+
+        const eventId = await createCalendarEvent({
+          accessToken,
+          plantName: staticData.name,
+          description: `🌱 Starting my ${staticData.name} quest in FarmQuest! Track my progress: https://farmquest.app`,
+          startDate,
+          endDate
+        })
+
+        if (eventId) {
+          calendarEventId = eventId
+          // Update the Firestore doc with the event ID
+          await updateDoc(docRef, {
+            google_calendar_event_id: eventId
+          })
+        }
+      } catch (err) {
+        console.error("Failed to sync with Google Calendar:", err)
+      }
+    }
+
     // Optimistic local state so UI can open selected plant immediately.
     setUserPlants((prev) => {
       const exists = prev.some((p) => p.id === instanceId)
-      return exists ? prev : [newPlant, ...prev]
+      const plantWithEvent = calendarEventId ? { ...newPlant, google_calendar_event_id: calendarEventId } : newPlant
+      return exists ? prev : [plantWithEvent, ...prev]
     })
     setActivePlantId(instanceId)
 
@@ -354,12 +394,21 @@ export function QuestProvider({ children }: { children: ReactNode }) {
 
   const deletePlant = useCallback(async (instanceId: string) => {
     if (!user) return
+    const plant = userPlants.find(p => p.id === instanceId)
     const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
+    
+    // ── Google Calendar Integration (Delete Event) ──
+    if (isGoogleUser && accessToken && plant?.google_calendar_event_id) {
+      deleteCalendarEvent(accessToken, plant.google_calendar_event_id).catch(e => 
+        console.error("Failed to delete calendar event:", e)
+      )
+    }
+
     await deleteDoc(docRef)
     if (activePlantId === instanceId) {
        setActivePlantId(null)
     }
-  }, [user, activePlantId])
+  }, [user, activePlantId, userPlants, isGoogleUser, accessToken])
 
   const completeTask = useCallback(async (instanceId: string, taskId: string) => {
     if (!user) return

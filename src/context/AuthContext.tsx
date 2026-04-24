@@ -31,12 +31,18 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  accessToken: string | null;
+  setAccessToken: (token: string | null) => void;
+  isGoogleUser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  accessToken: null,
+  setAccessToken: () => {},
+  isGoogleUser: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -69,7 +75,10 @@ const createDefaultProfile = (user: User): UserProfile => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com') || false;
 
   useEffect(() => {
     // Initial sync check from localStorage on mount (prevents hydration error)
@@ -122,7 +131,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      profile, 
+      loading, 
+      accessToken, 
+      setAccessToken,
+      isGoogleUser
+    }}>
       {children}
     </AuthContext.Provider>
   );

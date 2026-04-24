@@ -9,6 +9,8 @@ import {
   AuthError 
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
+import { GoogleAuthProvider } from 'firebase/auth';
+import { useAuth } from '@/context/AuthContext';
 import { Sprout, X, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import './LoginModal.css';
 
@@ -27,6 +29,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [showPrompt, setShowPrompt] = useState(false);
   
   const router = useRouter();
+  const { setAccessToken } = useAuth();
 
   // Clear state on open/close
   useEffect(() => {
@@ -90,7 +93,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     setError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
+      if (token) {
+        setAccessToken(token);
+      }
       setShowPrompt(true);
     } catch (err: any) {
       setError(err.message);
