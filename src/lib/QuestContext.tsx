@@ -321,7 +321,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       last_checked_at: Timestamp.now(),
       selected_plan_type: planType,
       source_category: sourceCategory,
-      shared_progress_key: options?.sharedProgressKey,
+      ...(options?.sharedProgressKey ? { shared_progress_key: options.sharedProgressKey } : {}),
       state: {
         growthStage: 0,
         health: 100,

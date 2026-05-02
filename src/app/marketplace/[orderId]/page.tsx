@@ -178,59 +178,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         )}
       </div>
 
-      {/* Trust Meter */}
-      <div className="mp-trust">
-        <div className="mp-trust-header">
-          <h3><Shield size={16} color="var(--accent)" /> Trust & Verification</h3>
-          <span className="mp-trust-score">{trustPct}%</span>
-        </div>
-        <div className="mp-trust-bar">
-          <div className="mp-trust-fill" style={{ width: `${trustPct}%` }} />
-        </div>
-        <div className="mp-trust-labels">
-          <span>{completedCPs}/{totalCPs} checkpoints</span>
-          <span>{order.total_votes} community votes</span>
-        </div>
-      </div>
-
-      {/* Checkpoints Timeline */}
-      <div className="mp-checkpoints">
-        <h3><CheckCircle size={16} color="var(--accent)" /> Growth Checkpoints</h3>
-        <div className="mp-timeline">
-          {order.checkpoints.map((cp) => {
-            const isActive = !cp.completed && nextCP?.index === cp.index
-            return (
-              <div key={cp.index} className={`mp-checkpoint ${cp.completed ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
-                <div className="mp-checkpoint-dot" />
-                <div className="mp-checkpoint-content">
-                  <div className="mp-checkpoint-top">
-                    <span className="mp-checkpoint-label">{cp.label}</span>
-                    <span className="mp-checkpoint-day">Day {cp.due_day}</span>
-                  </div>
-                  <p className="mp-checkpoint-desc">{cp.description}</p>
-                  <div className="mp-checkpoint-footer">
-                    {cp.completed ? (
-                      <span className="mp-checkpoint-date">✅ {new Date(cp.completed_at!).toLocaleDateString()}</span>
-                    ) : isActive && (order.status === 'accepted' || order.status === 'in_progress') ? (
-                      <button className="mp-action-btn mp-action-primary" style={{ padding: '6px 16px', fontSize: '0.75rem', flex: 'none' }}
-                        onClick={() => handleCheckpoint(cp.index)}>
-                        📸 Submit Update
-                      </button>
-                    ) : (
-                      <span className="mp-checkpoint-date" style={{ color: 'var(--text-muted)' }}>⏳ Pending</span>
-                    )}
-                    {cp.completed && (
-                      <button className="mp-vote-btn" onClick={() => handleVote(cp.index)}>
-                        <ThumbsUp size={12} /> {cp.votes}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
     </div>
   )
 }
