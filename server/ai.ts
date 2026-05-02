@@ -75,25 +75,32 @@ function buildBudgetPlanFromDatabase(plantData: PlantSetup): AIPlan {
 // ── Vertex AI Client ──
 import { VertexAI } from "@google-cloud/vertexai";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const getProjectConfig = () => ({
-  projectId: process.env.GOOGLE_VERTEX_PROJECT,
+  projectId: process.env.GOOGLE_VERTEX_PROJECT || process.env.GCP_PROJECT_ID || 'farmquest-493806',
   location: process.env.GOOGLE_VERTEX_LOCATION || "us-central1"
 });
 
 const DEFAULT_TEXT_MODEL = process.env.GOOGLE_VERTEX_TEXT_MODEL || "gemini-2.5-flash";
 
 const TASK_MODEL_CANDIDATES = Array.from(
-  new Set([DEFAULT_TEXT_MODEL, "gemini-2.5-flash", "gemini-1.5-flash"])
+  new Set([DEFAULT_TEXT_MODEL, "gemini-2.5-flash", "gemini-1.5-flash-002"])
 );
 
 // Normalize credentials path if relative
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !path.isAbsolute(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
-  process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, "..", process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  const absolutePath = path.resolve(__dirname, "..", process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  if (fs.existsSync(absolutePath)) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = absolutePath;
+  } else {
+    // If it doesn't exist, remove it so it doesn't break Cloud Run
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  }
 }
 
 let vertexAI: VertexAI | null = null;

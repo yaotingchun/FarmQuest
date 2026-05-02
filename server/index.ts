@@ -1,18 +1,21 @@
 import dotenv from "dotenv";
 import path from "path";
+import fs from "fs";
 
-// Load .env FIRST — before any module that reads process.env
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+// Load .env if it exists (mainly for local development)
+dotenv.config({ path: path.resolve(__dirname, "../.env"), silent: true } as any);
 
 // Fix GOOGLE_APPLICATION_CREDENTIALS to absolute path
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (!path.isAbsolute(credPath)) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(
-      __dirname,
-      "..",
-      credPath
-    );
+    const absolutePath = path.resolve(__dirname, "..", credPath);
+    if (fs.existsSync(absolutePath)) {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = absolutePath;
+    } else {
+      // If it doesn't exist, remove it so it doesn't break Cloud Run
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
   }
 }
 

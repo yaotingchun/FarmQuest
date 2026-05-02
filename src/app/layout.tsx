@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 }
 
 import { AuthProvider } from '@/context/AuthContext'
+import { Suspense } from 'react'
 
 export default function RootLayout({
   children,
@@ -31,7 +32,9 @@ export default function RootLayout({
           </div>
 
           <div className="page-wrapper">
-            <Navbar />
+            <Suspense fallback={null}>
+              <Navbar />
+            </Suspense>
             <main>{children}</main>
             <Footer />
           </div>

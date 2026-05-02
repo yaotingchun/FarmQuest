@@ -12,7 +12,9 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 
-export default function QuestsPage() {
+import { Suspense } from 'react'
+
+function QuestsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { userPlants, activePlantId, completeTask, deletePlant, setActivePlant, availablePlants, addPlant, calendarData, refreshCalendar } = useQuest()
@@ -361,5 +363,17 @@ export default function QuestsPage() {
         <MainContent />
       </div>
     </div>
+  )
+}
+
+export default function QuestsPage() {
+  return (
+    <Suspense fallback={
+      <div className="quest-page" style={{ width: '100%', display: 'flex', justifyContent: 'center', paddingTop: '4rem' }}>
+        <div className="quest-hub-no-tasks"><span>🌿</span><p>Loading your quests...</p></div>
+      </div>
+    }>
+      <QuestsContent />
+    </Suspense>
   )
 }

@@ -9,6 +9,8 @@ import { useAuth } from '@/context/AuthContext'
 import MapView from '@/components/MapView'
 import type { MapMarker } from '@/components/MapView'
 import './marketplace.css'
+ 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface PlantOrder {
   id: string; plant_name: string; plant_emoji: string; quantity_kg: number;
@@ -33,7 +35,7 @@ export default function MarketplacePage() {
 
   // Fetch orders
   useEffect(() => {
-    fetch('http://localhost:3001/api/marketplace/orders')
+    fetch(`${API_URL}/api/marketplace/orders`)
       .then(r => r.json())
       .then(data => { setOrders(data); setLoading(false) })
       .catch(() => setLoading(false))

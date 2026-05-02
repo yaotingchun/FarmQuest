@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Clock, Leaf, ChevronRight, AlertTriangle } from "lucide-react";
 import type { PlantSummary, Difficulty } from "@/types/plant";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 const difficultyColors: Record<string, string> = {
   easy: "badge-easy",

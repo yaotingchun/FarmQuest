@@ -6,16 +6,21 @@ import fs from 'fs';
 
 import { DiagnosisResponse } from '@/types/diagnosis';
 
-const project = process.env.GOOGLE_VERTEX_PROJECT || '';
-const location = process.env.GOOGLE_VERTEX_LOCATION || 'us-central1';
-const keyFilePath = path.join(process.cwd(), 'credentials', 'google.json');
-
-// Force the environment variable to be an absolute path
-process.env.GOOGLE_APPLICATION_CREDENTIALS = keyFilePath;
-
-const vertexAI = new VertexAI({ project, location });
-
 export async function diagnosePlant(formData: FormData): Promise<DiagnosisResponse> {
+  const project = process.env.GOOGLE_VERTEX_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || 'farmquest-493806';
+  const location = process.env.GOOGLE_VERTEX_LOCATION || 'us-central1';
+  
+  console.log(`[Diagnosis] Initializing Vertex AI with Project: ${project}, Location: ${location}`);
+  
+  const keyFilePath = path.join(process.cwd(), 'credentials', 'google.json');
+
+  if (fs.existsSync(keyFilePath)) {
+    console.log(`[Diagnosis] Found local credentials at ${keyFilePath}`);
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = keyFilePath;
+  }
+
+  const vertexAI = new VertexAI({ project, location });
+
   try {
     const file = formData.get('image') as File;
     if (!file) {

@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import MapView from '@/components/MapView'
 import '../marketplace.css'
+ 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface Checkpoint {
   index: number; label: string; description: string; due_day: number;
@@ -32,7 +34,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [toast, setToast] = useState('')
 
   const fetchOrder = () => {
-    fetch(`http://localhost:3001/api/marketplace/orders/${orderId}`)
+    fetch(`${API_URL}/api/marketplace/orders/${orderId}`)
       .then(r => r.json())
       .then(data => { setOrder(data); setLoading(false) })
       .catch(() => setLoading(false))
@@ -41,7 +43,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   useEffect(() => { fetchOrder() }, [orderId])
 
   const handleAccept = async () => {
-    const res = await fetch(`http://localhost:3001/api/marketplace/orders/${orderId}/accept`, {
+    const res = await fetch(`${API_URL}/api/marketplace/orders/${orderId}/accept`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         farmer_uid: user?.uid || 'current_user',
@@ -58,7 +60,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   }
 
   const handleCheckpoint = async (cpIndex: number) => {
-    const res = await fetch(`http://localhost:3001/api/marketplace/orders/${orderId}/updates`, {
+    const res = await fetch(`${API_URL}/api/marketplace/orders/${orderId}/updates`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         farmer_uid: user?.uid || order?.farmer_uid,
@@ -72,14 +74,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   }
 
   const handleComplete = async () => {
-    const res = await fetch(`http://localhost:3001/api/marketplace/orders/${orderId}/complete`, {
+    const res = await fetch(`${API_URL}/api/marketplace/orders/${orderId}/complete`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
     })
     if (res.ok) { setToast('🎉 Order completed! Reward released.'); fetchOrder() }
   }
 
   const handleVote = async (cpIndex: number) => {
-    await fetch(`http://localhost:3001/api/marketplace/orders/${orderId}/vote`, {
+    await fetch(`${API_URL}/api/marketplace/orders/${orderId}/vote`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ checkpoint_index: cpIndex, voter_uid: user?.uid || 'anon' }),
     })

@@ -11,7 +11,7 @@ import { generateAIExplanation } from "@/utils/ai-placeholders";
 import type { PlantSetup, Difficulty } from "@/types/plant";
 import styles from "./carousel.module.css";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 const difficultyColors: Record<string, string> = {
   easy: "badge-easy",

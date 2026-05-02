@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { ArrowLeft, Scale, Clock, MapPin } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import '../marketplace.css'
+ 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface Order {
   id: string; plant_name: string; plant_emoji: string; quantity_kg: number;
@@ -24,7 +26,7 @@ export default function MyOrdersPage() {
   useEffect(() => {
     if (!user) {
       // Show all demo data for non-logged-in users
-      fetch('http://localhost:3001/api/marketplace/orders')
+      fetch(`${API_URL}/api/marketplace/orders`)
         .then(r => r.json())
         .then(data => {
           setPosted(data.slice(0, 3))
@@ -34,7 +36,7 @@ export default function MyOrdersPage() {
         .catch(() => setLoading(false))
       return
     }
-    fetch(`http://localhost:3001/api/marketplace/my-orders?uid=${user.uid}`)
+    fetch(`${API_URL}/api/marketplace/my-orders?uid=${user.uid}`)
       .then(r => r.json())
       .then(data => {
         setPosted(data.as_requester || [])

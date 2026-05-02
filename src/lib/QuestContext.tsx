@@ -333,7 +333,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
 
     // Try to pre-load tasks from shared order if applicable
     let existingAiTasks = null
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
     
     if (options?.sharedProgressKey?.startsWith('marketplace-order-')) {
       try {
@@ -604,7 +604,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       const sharedKey = plant.shared_progress_key
       const orderId = sharedKey?.startsWith('marketplace-order-') ? sharedKey.replace('marketplace-order-', '') : null
       if (orderId) {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
         await fetch(`${API_URL}/api/marketplace/orders/${encodeURIComponent(orderId)}/shared-progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

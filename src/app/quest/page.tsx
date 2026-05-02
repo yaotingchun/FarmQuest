@@ -497,6 +497,16 @@ function MultiPlantDashboard() {
   )
 }
 
+import { Suspense } from 'react'
+
 export default function QuestDashboardPage() {
-  return <MultiPlantDashboard />
+  return (
+    <Suspense fallback={
+      <div className="quest-page" style={{ width: '100%', display: 'flex', justifyContent: 'center', paddingTop: '4rem' }}>
+        <div className="quest-hub-no-tasks"><span>🌿</span><p>Loading your garden dashboard...</p></div>
+      </div>
+    }>
+      <MultiPlantDashboard />
+    </Suspense>
+  )
 }

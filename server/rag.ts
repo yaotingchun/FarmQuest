@@ -3,17 +3,24 @@ import plantsData from "./data/plants.json" with { type: "json" };
 import priceData from "./data/prices.json" with { type: "json" };
 import dotenv from "dotenv";
 import path from "path";
+import fs from "fs";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const getProjectConfig = () => ({
-  projectId: process.env.GOOGLE_VERTEX_PROJECT,
+  projectId: process.env.GOOGLE_VERTEX_PROJECT || process.env.GCP_PROJECT_ID || 'farmquest-493806',
   location: process.env.GOOGLE_VERTEX_LOCATION || "us-central1"
 });
 
 // Normalize credentials path if relative
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !path.isAbsolute(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
-  process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, "..", process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  const absolutePath = path.resolve(__dirname, "..", process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  if (fs.existsSync(absolutePath)) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = absolutePath;
+  } else {
+    // If it doesn't exist, unset it so it doesn't break Cloud Run
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  }
 }
 
 interface PlantEmbedding {

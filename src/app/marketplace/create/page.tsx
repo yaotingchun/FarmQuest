@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Sprout, MapPin } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import '../marketplace.css'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface PlantOption {
   plant_id: string; name: string; emoji: string;
@@ -28,7 +29,7 @@ interface AIPlan {
   nutrition?: { stages: { stage: string; npk?: string; type?: string; frequency?: string }[] }
 }
 
-export default function CreateOrderPage() {
+function CreateOrderContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, profile } = useAuth()
@@ -50,7 +51,7 @@ export default function CreateOrderPage() {
   const hasPrefill = !!prefillPlantId
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/marketplace/plant-options')
+    fetch(`${API_URL}/api/marketplace/plant-options`)
       .then(r => r.json())
       .then((data) => {
         setPlants(data)
@@ -67,7 +68,7 @@ export default function CreateOrderPage() {
 
   useEffect(() => {
     if (!prefillPlantId) return
-    fetch(`http://localhost:3001/api/plants/${prefillPlantId}/ai-plans`)
+    fetch(`${API_URL}/api/plants/${prefillPlantId}/ai-plans`)
       .then(r => r.json())
       .then((plans: AIPlan[]) => {
         const plan = plans.find(p => p.plan_type === prefillPlanType) || plans[0]
@@ -95,7 +96,7 @@ export default function CreateOrderPage() {
     if (!canSubmit) return
     setSubmitting(true)
     try {
-      const res = await fetch('http://localhost:3001/api/marketplace/orders', {
+      const res = await fetch(`${API_URL}/api/marketplace/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -291,5 +292,13 @@ export default function CreateOrderPage() {
         </button>
       </div>
     </div>
+  )
+}
+
+export default function CreateOrderPage() {
+  return (
+    <Suspense fallback={<div className="mp-create-page"><div className="mp-empty"><h3>Loading setup...</h3></div></div>}>
+      <CreateOrderContent />
+    </Suspense>
   )
 }
