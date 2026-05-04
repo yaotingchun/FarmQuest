@@ -1,5 +1,6 @@
 'use client'
 
+import '../quest/quest.css'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'

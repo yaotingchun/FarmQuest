@@ -1,5 +1,6 @@
 'use client'
 
+import './quest.css'
 import { QuestProvider } from '@/lib/QuestContext'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'

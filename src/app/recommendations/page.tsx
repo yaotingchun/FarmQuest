@@ -1,5 +1,6 @@
 "use client";
 
+import "../plant/plant.css";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Clock, Leaf, ChevronRight, AlertTriangle } from "lucide-react";

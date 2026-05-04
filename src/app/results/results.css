@@ -96,8 +96,15 @@
 }
 
 @keyframes card-appear {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .result-card::before {
@@ -260,7 +267,9 @@
 }
 
 /* ── Score bar ───────────────────────────────────────────────────────────────── */
-.score-bar-wrap { margin-top: auto; }
+.score-bar-wrap {
+  margin-top: auto;
+}
 
 .score-bar-label {
   display: flex;
@@ -315,7 +324,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────────── */

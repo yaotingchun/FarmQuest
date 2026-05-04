@@ -1,5 +1,6 @@
 "use client";
 
+import "../../plant/plant.css";
 import { useEffect, useState, use, useCallback, useRef, useMemo } from "react";
 import { ArrowLeft, Sparkles, Rocket, AlertTriangle, Clock, ChevronLeft, ChevronRight, X, BrainCircuit, RefreshCcw } from "lucide-react";
 
@@ -26,13 +27,13 @@ const formatDifficulty = (d: string) => d.charAt(0).toUpperCase() + d.slice(1).t
 
 function normalizeExplanationText(text: string): string {
   return text
-    .replace(/\bpt\b\s*:/gi, "Pot:")
-    .replace(/\bpt\b/gi, "Pot")
-    .replace(/\bpotting\s*:/gi, "Pot:")
-    .replace(/\bsoil\s*:/gi, "Soil:")
-    .replace(/\bseed\s*:/gi, "Seed:")
-    .replace(/\bnutrition\s*:/gi, "Nutrition:")
-    .replace(/\bnutri\w*\s*:/gi, "Nutrition:");
+    .replace(/(?:^|\n|\s)\*?P[tT]\b\s*:\*?\s*/g, "Pot: ")
+    .replace(/(?:^|\n|\s)\*?P[tT]\b\s*(?!\w)/g, "Pot ")
+    .replace(/(?:^|\n|\s)\*?potting\b\s*:\*?\s*/gi, "Pot: ")
+    .replace(/(?:^|\n|\s)\*?soil\b\s*:\*?\s*/gi, "Soil: ")
+    .replace(/(?:^|\n|\s)\*?seed\b\s*:\*?\s*/gi, "Seed: ")
+    .replace(/(?:^|\n|\s)\*?nutrition\b\s*:\*?\s*/gi, "Nutrition: ")
+    .replace(/(?:^|\n|\s)\*?nutri\w*\b\s*:\*?\s*/gi, "Nutrition: ");
 }
 
 // ── Typing Effect Component ──
@@ -485,7 +486,7 @@ export default function PlantDetailPage({
             </div>
 
             <div className={styles['ai-modal-footer']}>
-              <button className="btn-forest" onClick={() => setShowModal(false)}>
+              <button className="setup-cta" style={{ minWidth: '140px', padding: '10px 24px', fontSize: '0.85rem', height: 'auto' }} onClick={() => setShowModal(false)}>
                 Got it, thanks!
               </button>
             </div>
