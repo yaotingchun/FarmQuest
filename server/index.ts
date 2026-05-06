@@ -98,6 +98,7 @@ const finalizePlansWithCosts = (plans: AIPlan[]): AIPlan[] => {
 
 // GET /api/plants — return all plants (summary only)
 app.get("/api/plants", (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
   const summaries = (plantsData as any).plants.map((p: any) => ({
     plant_id: p.plant_id,
     name: p.name,
@@ -111,7 +112,9 @@ app.get("/api/plants", (_req, res) => {
 
 // GET /api/plants/:plantId — return full plant setup data
 app.get("/api/plants/:plantId", (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
   const plant = (plantsData as any).plants.find((p: any) => p.plant_id === req.params.plantId);
+  console.log(`[API] GET /api/plants/${req.params.plantId} -> Found: ${plant?.name || 'NOT FOUND'}`);
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
     return;
@@ -368,7 +371,7 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_001',
       requester_name: 'Sarah',
       requester_avatar: '👩',
-      plant_id: 'P001',
+      plant_id: 'P009',
       plant_name: 'Lettuce',
       plant_emoji: '🥬',
       quantity_kg: 5,
@@ -385,8 +388,8 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_002',
       requester_name: 'Daniel',
       requester_avatar: '🧑',
-      plant_id: 'P003',
-      plant_name: 'Tomato',
+      plant_id: 'P006',
+      plant_name: 'Cherry Tomato',
       plant_emoji: '🍅',
       quantity_kg: 3,
       reward_rm: 50,
@@ -419,8 +422,8 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_001',
       requester_name: 'Sarah',
       requester_avatar: '👩',
-      plant_id: 'P009',
-      plant_name: 'Basil',
+      plant_id: 'P014',
+      plant_name: 'Mint',
       plant_emoji: '🌿',
       quantity_kg: 1,
       reward_rm: 20,
@@ -428,7 +431,7 @@ async function seedDemoOrdersToFirestore() {
       location: 'Melaka City',
       latitude: 2.1896,
       longitude: 102.2501,
-      notes: 'Sweet basil for my Italian cooking!',
+      notes: 'Fresh mint for my tea!',
       difficulty: 'easy',
       status: 'open',
     },
@@ -436,7 +439,7 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_004',
       requester_name: 'James',
       requester_avatar: '🧑',
-      plant_id: 'P002',
+      plant_id: 'P001',
       plant_name: 'Kangkung',
       plant_emoji: '🥬',
       quantity_kg: 8,
@@ -457,7 +460,7 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_005',
       requester_name: 'Lisa',
       requester_avatar: '👩',
-      plant_id: 'P007',
+      plant_id: 'P014',
       plant_name: 'Mint',
       plant_emoji: '🌿',
       quantity_kg: 0.5,
@@ -496,7 +499,7 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_007',
       requester_name: 'Christina',
       requester_avatar: '👩',
-      plant_id: 'P001',
+      plant_id: 'P009',
       plant_name: 'Lettuce',
       plant_emoji: '🥬',
       quantity_kg: 3,
@@ -513,7 +516,7 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_008',
       requester_name: 'Farid',
       requester_avatar: '🧑',
-      plant_id: 'P006',
+      plant_id: 'P002',
       plant_name: 'Lady Finger',
       plant_emoji: '🥒',
       quantity_kg: 5,
@@ -531,8 +534,8 @@ async function seedDemoOrdersToFirestore() {
       requester_name: 'Ahmad',
       requester_avatar: '🧑',
       plant_id: 'P003',
-      plant_name: 'Tomato',
-      plant_emoji: '🍅',
+      plant_name: 'Long Bean',
+      plant_emoji: '🫛',
       quantity_kg: 10,
       reward_rm: 80,
       deadline_days: 60,
@@ -547,8 +550,8 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_010',
       requester_name: 'Siti',
       requester_avatar: '👩',
-      plant_id: 'P009',
-      plant_name: 'Basil',
+      plant_id: 'P013',
+      plant_name: 'Chives',
       plant_emoji: '🌿',
       quantity_kg: 2,
       reward_rm: 25,
@@ -556,7 +559,7 @@ async function seedDemoOrdersToFirestore() {
       location: 'Kuala Terengganu, Terengganu',
       latitude: 5.3302,
       longitude: 103.1408,
-      notes: 'Thai basil if possible.',
+      notes: 'Fresh chives for garnishing.',
       difficulty: 'easy',
       status: 'open',
     },
@@ -565,15 +568,15 @@ async function seedDemoOrdersToFirestore() {
       requester_name: 'Muthu',
       requester_avatar: '🧑',
       plant_id: 'P004',
-      plant_name: 'Eggplant',
-      plant_emoji: '🍆',
+      plant_name: 'Sweet Potato Leaves',
+      plant_emoji: '🍃',
       quantity_kg: 6,
       reward_rm: 45,
       deadline_days: 50,
       location: 'Alor Setar, Kedah',
       latitude: 6.1210,
       longitude: 100.3601,
-      notes: 'Long purple eggplants.',
+      notes: 'Young tender shoots.',
       difficulty: 'medium',
       status: 'open',
     },
@@ -581,7 +584,7 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_012',
       requester_name: 'Mei Ling',
       requester_avatar: '👩',
-      plant_id: 'P002',
+      plant_id: 'P001',
       plant_name: 'Kangkung',
       plant_emoji: '🥬',
       quantity_kg: 4,
@@ -602,7 +605,7 @@ async function seedDemoOrdersToFirestore() {
   for (const demo of demoOrders) {
     const id = `ORD-${String(orderIdCounter++).padStart(4, '0')}`;
     const checkpoints = generateCheckpoints(demo.plant_id!, demo.deadline_days!);
-    
+
     // Mark checkpoints complete for in-progress and completed orders
     if (demo.status === 'in_progress') {
       checkpoints[0].completed = true;
@@ -732,7 +735,7 @@ app.post("/api/marketplace/orders", async (req, res) => {
     // Generate a unique short ID for the order
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     const id = `ORD-${Date.now().toString().slice(-4)}${randomSuffix}`;
-    
+
     const order: MarketplaceOrder = {
       id,
       requester_uid: requester_uid || 'anonymous',
@@ -770,12 +773,12 @@ app.post("/api/marketplace/orders/:orderId/accept", async (req, res) => {
   try {
     const docRef = ordersRef.doc(req.params.orderId);
     const doc = await docRef.get();
-    
+
     if (!doc.exists) {
       res.status(404).json({ error: "Order not found" });
       return;
     }
-    
+
     const order = doc.data() as MarketplaceOrder;
     if (order.status !== 'open') {
       res.status(400).json({ error: "Order is not available for acceptance" });
@@ -788,7 +791,7 @@ app.post("/api/marketplace/orders/:orderId/accept", async (req, res) => {
       res.status(400).json({ error: "You cannot accept your own order" });
       return;
     }
-    
+
     order.status = 'accepted';
     order.farmer_uid = farmer_uid || 'unknown';
     order.farmer_name = farmer_name || 'Farmer';
@@ -802,6 +805,27 @@ app.post("/api/marketplace/orders/:orderId/accept", async (req, res) => {
       farmer_avatar: order.farmer_avatar,
       accepted_at: order.accepted_at
     });
+
+    // ── Update requester's UserPlant if it exists ──
+    try {
+      const sharedKey = `marketplace-order-${req.params.orderId}`;
+      const requesterPlantsRef = db.collection('users').doc(order.requester_uid).collection('user_plants');
+      const plantQuery = await requesterPlantsRef.where('shared_progress_key', '==', sharedKey).get();
+      
+      if (!plantQuery.empty) {
+        const batch = db.batch();
+        plantQuery.docs.forEach(docSnap => {
+          batch.update(docSnap.ref, {
+            order_status: 'accepted',
+            updated_at: admin.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        await batch.commit();
+        console.log(`[Marketplace] Updated requester plant status for order ${order.id}`);
+      }
+    } catch (plantErr) {
+      console.error(`[Marketplace] Failed to update requester plant status:`, plantErr);
+    }
 
     console.log(`[Marketplace] Order ${order.id} accepted by ${order.farmer_name}`);
     res.json(order);
@@ -818,7 +842,7 @@ app.get("/api/marketplace/orders/:orderId/updates", async (req, res) => {
       .where("order_id", "==", req.params.orderId)
       .orderBy("timestamp", "desc")
       .get();
-      
+
     const updates = snapshot.docs.map(doc => doc.data());
     res.json(updates);
   } catch (err) {
@@ -832,12 +856,12 @@ app.post("/api/marketplace/orders/:orderId/updates", async (req, res) => {
   try {
     const docRef = ordersRef.doc(req.params.orderId);
     const doc = await docRef.get();
-    
+
     if (!doc.exists) {
       res.status(404).json({ error: "Order not found" });
       return;
     }
-    
+
     const order = doc.data() as MarketplaceOrder;
     if (order.status !== 'accepted' && order.status !== 'in_progress') {
       res.status(400).json({ error: "Order is not in a state to receive updates" });
@@ -872,7 +896,7 @@ app.post("/api/marketplace/orders/:orderId/updates", async (req, res) => {
 
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     const updateId = `UPD-${Date.now().toString().slice(-4)}${randomSuffix}`;
-    
+
     const update: MarketplaceUpdate = {
       id: updateId,
       order_id: order.id,
@@ -901,7 +925,7 @@ app.post("/api/marketplace/orders/:orderId/complete", async (req, res) => {
   try {
     const docRef = ordersRef.doc(req.params.orderId);
     const doc = await docRef.get();
-    
+
     if (!doc.exists) {
       res.status(404).json({ error: "Order not found" });
       return;
@@ -931,7 +955,7 @@ app.post("/api/marketplace/orders/:orderId/vote", async (req, res) => {
     const { checkpoint_index, voter_uid } = req.body;
     const docRef = ordersRef.doc(req.params.orderId);
     const doc = await docRef.get();
-    
+
     if (!doc.exists) {
       res.status(404).json({ error: "Order not found" });
       return;
@@ -942,7 +966,7 @@ app.post("/api/marketplace/orders/:orderId/vote", async (req, res) => {
     if (cp) {
       cp.votes = (cp.votes || 0) + 1;
       order.total_votes = (order.total_votes || 0) + 1;
-      
+
       await docRef.update({
         checkpoints: order.checkpoints,
         total_votes: order.total_votes
@@ -959,7 +983,7 @@ app.post("/api/marketplace/orders/:orderId/vote", async (req, res) => {
     if (!updateSnapshot.empty) {
       const updateDoc = updateSnapshot.docs[0];
       const updateData = updateDoc.data() as MarketplaceUpdate;
-      
+
       if (!updateData.voter_uids.includes(voter_uid)) {
         updateData.votes += 1;
         updateData.voter_uids.push(voter_uid);
@@ -1026,6 +1050,7 @@ app.post("/api/marketplace/orders/:orderId/shared-progress", async (req, res) =>
           task_state,
           updated_at: admin.firestore.FieldValue.serverTimestamp(),
           ai_tasks: ai_tasks || null,
+          order_status: order.status,
         });
       });
       await batch.commit();
@@ -1080,7 +1105,7 @@ app.get("/api/marketplace/plant-options", (_req, res) => {
 
 app.listen(PORT, async () => {
   console.log(`🌱 FarmQuest API running on http://localhost:${PORT}`);
-  
+
   // Seed database
   try {
     await seedDemoOrdersToFirestore();
@@ -1095,29 +1120,29 @@ app.listen(PORT, async () => {
     console.error("[RAG] Initialization failed:", err);
   }
 
-/* 
-  // Pre-warm the cache in the background
-  console.log("[Cache] Starting background pre-warming of AI plans...");
-  (async () => {
-    for (const plant of (plantsData as any).plants) {
-      if (!plansCache.has(plant.plant_id)) {
-        try {
-          console.log(`[Cache Pre-warm] Generating plans for ${plant.plant_id}...`);
-          const { plans: rawPlans, isFallback } = await generatePlantingPlans(plant as any);
-          if (rawPlans && !isFallback) {
-            const plans = finalizePlansWithCosts(rawPlans);
-            plansCache.set(plant.plant_id, plans);
-            console.log(`[Cache Pre-warm] Success for ${plant.plant_id}`);
-          } else if (isFallback) {
-            console.log(`[Cache Pre-warm] Skipping cache for fallback result (${plant.plant_id})`);
+  /* 
+    // Pre-warm the cache in the background
+    console.log("[Cache] Starting background pre-warming of AI plans...");
+    (async () => {
+      for (const plant of (plantsData as any).plants) {
+        if (!plansCache.has(plant.plant_id)) {
+          try {
+            console.log(`[Cache Pre-warm] Generating plans for ${plant.plant_id}...`);
+            const { plans: rawPlans, isFallback } = await generatePlantingPlans(plant as any);
+            if (rawPlans && !isFallback) {
+              const plans = finalizePlansWithCosts(rawPlans);
+              plansCache.set(plant.plant_id, plans);
+              console.log(`[Cache Pre-warm] Success for ${plant.plant_id}`);
+            } else if (isFallback) {
+              console.log(`[Cache Pre-warm] Skipping cache for fallback result (${plant.plant_id})`);
+            }
+          } catch (err) {
+            console.error(`[Cache Pre-warm] Failed for ${plant.plant_id}:`, err);
           }
-        } catch (err) {
-          console.error(`[Cache Pre-warm] Failed for ${plant.plant_id}:`, err);
         }
       }
-    }
-    console.log("[Cache] Pre-warming complete!");
-  })();
-*/
+      console.log("[Cache] Pre-warming complete!");
+    })();
+  */
 });
 // Restarting seed

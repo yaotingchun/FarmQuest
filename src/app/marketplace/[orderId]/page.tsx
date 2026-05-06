@@ -54,7 +54,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     if (res.ok) {
       setToast('✅ Order accepted!')
       setTimeout(() => {
-        router.push(`/quest?plant=${encodeURIComponent(order?.plant_id || '')}&plan=${encodeURIComponent(order?.plan_type || 'Budget')}&source=accepted_order&order=${encodeURIComponent(orderId)}`)
+        router.push(`/quest?order=${encodeURIComponent(orderId)}&source=accepted_order`)
       }, 900)
     }
   }

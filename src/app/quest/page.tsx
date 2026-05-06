@@ -65,7 +65,7 @@ function ThemedModal({
   const config = typeConfig[type]
 
   return (
-    <div 
+    <div
       style={{
         position: 'fixed',
         inset: 0,
@@ -82,7 +82,7 @@ function ThemedModal({
       }}
       onClick={onClose}
     >
-      <div 
+      <div
         style={{
           position: 'relative',
           width: '100%',
@@ -98,7 +98,7 @@ function ThemedModal({
         }}
         onClick={e => e.stopPropagation()}
       >
-        <button 
+        <button
           onClick={onClose}
           style={{
             position: 'absolute',
@@ -118,21 +118,21 @@ function ThemedModal({
           <div style={{ marginBottom: '1rem' }}>
             {config.icon}
           </div>
-          
-          <h3 style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: 700, 
-            color: 'var(--text-primary)', 
+
+          <h3 style={{
+            fontSize: '1.25rem',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
             marginBottom: '0.5rem'
           }}>
             {title}
           </h3>
-          
-          <p style={{ 
-            color: 'var(--text-secondary)', 
-            marginBottom: '2rem', 
+
+          <p style={{
+            color: 'var(--text-secondary)',
+            marginBottom: '2rem',
             fontSize: '0.95rem',
-            lineHeight: 1.5 
+            lineHeight: 1.5
           }}>
             {message}
           </p>
@@ -232,48 +232,64 @@ function MultiPlantDashboard() {
   }
 
   useEffect(() => {
-    const plantToAdd = searchParams.get('plant')
-    const planToAdd = normalizePlanType(searchParams.get('plan'))
-    const sourceCategory = normalizeSourceCategory(searchParams.get('source'))
     const orderId = searchParams.get('order')
+    const plantFromUrl = searchParams.get('plant')
+    const planFromUrl = normalizePlanType(searchParams.get('plan'))
+    const sourceCategory = normalizeSourceCategory(searchParams.get('source'))
     const sharedProgressKey = orderId ? `marketplace-order-${orderId}` : undefined
 
-    if (!plantToAdd) return
+    // Helper to add the plant and navigate
+    const handleAdd = async (pId: string, pType: "Budget" | "Balanced" | "Premium") => {
+      const queryKey = `${pId}|${pType}|${sourceCategory}|${orderId || ''}`
+      if (processedQueryRef.current === queryKey) return
+      processedQueryRef.current = queryKey
 
-    const queryKey = `${plantToAdd}|${planToAdd}|${sourceCategory}|${orderId || ''}`
-    if (processedQueryRef.current === queryKey) return
-    processedQueryRef.current = queryKey
+      const matchingPlant = userPlants.find(
+        (p) =>
+          p.plant_id === pId &&
+          (p.source_category || 'chosen_plant') === sourceCategory &&
+          (sharedProgressKey ? p.shared_progress_key === sharedProgressKey : true)
+      )
 
-    const matchingPlant = userPlants.find(
-      (p) =>
-        p.plant_id === plantToAdd &&
-        (p.source_category || 'chosen_plant') === sourceCategory &&
-        (sharedProgressKey ? p.shared_progress_key === sharedProgressKey : true)
-    )
-
-    if (matchingPlant) {
-      setActivePlant(matchingPlant.id)
-      router.replace('/quest/quests')
-      return
-    }
-
-    const isValid = availablePlants.some((p) => p.plant_id === plantToAdd)
-    if (!isValid) {
-      router.replace('/quest')
-      return
-    }
-
-    isAddingRef.current = true
-    addPlant(plantToAdd, planToAdd, sourceCategory, { sharedProgressKey }).then((newId) => {
-      if (newId) {
-        setActivePlant(newId)
+      if (matchingPlant) {
+        setActivePlant(matchingPlant.id)
         router.replace('/quest/quests')
-      } else {
-        router.replace('/quest')
+        return
       }
-    }).finally(() => {
-      isAddingRef.current = false
-    })
+
+      const isValid = availablePlants.some((p) => p.plant_id === pId)
+      if (!isValid) {
+        router.replace('/quest')
+        return
+      }
+
+      isAddingRef.current = true
+      addPlant(pId, pType, sourceCategory, { sharedProgressKey }).then((newId) => {
+        if (newId) {
+          setActivePlant(newId)
+          router.replace('/quest/quests')
+        } else {
+          router.replace('/quest')
+        }
+      }).finally(() => {
+        isAddingRef.current = false
+      })
+    }
+
+    if (plantFromUrl) {
+      handleAdd(plantFromUrl, planFromUrl)
+    } else if (orderId) {
+      // Direct order access: fetch order to get plant_id
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+      fetch(`${API_URL}/api/marketplace/orders/${orderId}`)
+        .then(r => r.json())
+        .then(order => {
+          if (order && order.plant_id) {
+            handleAdd(order.plant_id, order.plan_type || 'Budget')
+          }
+        })
+        .catch(err => console.error("Failed to fetch order for routing:", err))
+    }
   }, [searchParams, availablePlants, addPlant, router, setActivePlant, userPlants])
 
   const handleGoToDetail = (instanceId: string) => {
@@ -287,7 +303,7 @@ function MultiPlantDashboard() {
 
   // Unified task list across all plants (filtered by selected category)
   const allTasksWrapped = useMemo(() => getAllTasksDueToday(filteredPlants, getQuestPlant), [filteredPlants])
-  
+
   const filteredCalendarData = useMemo(() => {
     if (sourceFilter === 'all') return calendarData
     const filteredIds = new Set(filteredPlants.map(p => p.id))
@@ -308,11 +324,11 @@ function MultiPlantDashboard() {
   const calendarPendingCount = useMemo(() => filteredCalendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => !t.completed).length, 0), [filteredCalendarData])
 
   return (
-    <div className="quest-page" style={{ 
-      width: '100%', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
+    <div className="quest-page" style={{
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
       paddingTop: '1rem',
       paddingBottom: '4rem'
     }}>
@@ -330,8 +346,8 @@ function MultiPlantDashboard() {
               <div className="quest-hub-no-tasks" style={{ padding: '4rem 1rem' }}>
                 <span>🌱</span>
                 <p>Your garden is empty.</p>
-                <button 
-                  className="btn-primary" 
+                <button
+                  className="btn-primary"
                   onClick={() => router.push('/recommendations')}
                   style={{ marginTop: '1.5rem' }}
                 >
@@ -375,21 +391,22 @@ function MultiPlantDashboard() {
                       <div key={plant.id} style={{ position: 'relative' }}>
                         <div style={{ cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => handleGoToDetail(plant.id)}>
                           <PlantStatusCard
-                              plantName={plant.plant_name}
-                              plantEmoji={pData.emoji}
-                              stage={plant.state.growthStage as any}
-                              streak={0} 
-                              sourceCategory={plant.source_category || 'chosen_plant'}
-                              sunlight={pData.sunlight_type}
-                              waterFrequency={pData.water_frequency_days}
-                              startMethod={pData.startMethod}
+                            plantName={plant.plant_name}
+                            plantEmoji={pData.emoji}
+                            stage={plant.state.growthStage as any}
+                            streak={0}
+                            sourceCategory={plant.source_category || 'chosen_plant'}
+                            orderStatus={plant.order_status}
+                            sunlight={pData.sunlight_type}
+                            waterFrequency={pData.water_frequency_days}
+                            startMethod={pData.startMethod}
                           />
                           <div style={{ position: 'absolute', bottom: '20px', right: '24px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, opacity: 0.6 }}>
                             View Quests →
                           </div>
                         </div>
                         {isEditable && (
-                          <button 
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setPlantToDelete({ id: plant.id, name: plant.plant_name });
@@ -436,17 +453,17 @@ function MultiPlantDashboard() {
                   <div className="quest-hub-tasks-header" style={{ marginBottom: '1.25rem' }}>
                     <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>⚡ Today&apos;s Actions Needed</h2>
                   </div>
-                  
+
                   {allTasksWrapped.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       {allTasksWrapped.map(({ plant, task, plantData }) => {
                         const isEditable = canEditPlant(plant)
                         return (
-                          <div 
-                              key={task.id} 
-                              className={`quest-task-item ${task.completed ? 'completed' : ''}`}
-                              onClick={() => !task.completed && isEditable && completeTask(plant.id, task.id)}
-                              style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', cursor: task.completed || !isEditable ? 'default' : 'pointer', opacity: !isEditable && !task.completed ? 0.78 : 1 }}
+                          <div
+                            key={task.id}
+                            className={`quest-task-item ${task.completed ? 'completed' : ''}`}
+                            onClick={() => !task.completed && isEditable && completeTask(plant.id, task.id)}
+                            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', cursor: task.completed || !isEditable ? 'default' : 'pointer', opacity: !isEditable && !task.completed ? 0.78 : 1 }}
                           >
                             <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
                               {task.completed && <span>✓</span>}

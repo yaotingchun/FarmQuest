@@ -120,7 +120,7 @@ function CreateOrderContent() {
       if (res.ok) {
         const createdOrder = await res.json()
         setToast('🌱 Order posted successfully!')
-        setTimeout(() => router.push(`/quest/quests?plant=${encodeURIComponent(selectedPlant!.plant_id)}&plan=${encodeURIComponent(prefillPlanType)}&source=posted_order&order=${encodeURIComponent(createdOrder.id)}`), 1200)
+        setTimeout(() => router.push(`/quest?order=${encodeURIComponent(createdOrder.id)}&source=posted_order`), 1200)
       }
     } catch {
       setToast('Failed to create order')
