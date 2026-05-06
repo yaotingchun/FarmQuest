@@ -135,23 +135,37 @@ export function derivePlantStatus(plant: UserPlant, plantData: QuestPlantData): 
 // ── Task Generation ──
 
 /**
- * Dynamically infers tasks due today based on static intervals and dynamic timestamps.
+ * Dynamically infers tasks due on a specific date based on static intervals and dynamic timestamps.
  * NEVER stored in Firestore.
  */
-export function getTasksDueToday(plant: UserPlant, plantData: QuestPlantData): QuestTask[] {
+export function getTasksDueOnDate(plant: UserPlant, plantData: QuestPlantData, targetDate: Date = new Date()): QuestTask[] {
   if (plant.status === "dead") return []
 
   const tasks: QuestTask[] = []
-  const now = new Date()
-  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const dateKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`
   
-  // Helper to check if task was done today via completion_log
+  // Helper to check if task was done on targetDate via completion_log
   const completionLog = (plant.task_state?.completion_log || {}) as Record<string, Array<{ id: string; label?: string }>>
-  const doneToday = (taskId: string) => (completionLog[todayKey] || []).some(item => item.id === taskId || item.id.startsWith(taskId + '-'))
+  const doneOnDate = (taskId: string) => (completionLog[dateKey] || []).some(item => item.id === taskId || item.id.startsWith(taskId + '-'))
+
+  const daysSinceRelative = (timestamp: any) => {
+    if (!timestamp) return 999
+    let then: number
+    if (typeof timestamp.toDate === 'function') then = timestamp.toDate().getTime()
+    else if (timestamp instanceof Date) then = timestamp.getTime()
+    else if (typeof timestamp === 'string' || typeof timestamp === 'number') then = new Date(timestamp).getTime()
+    else if (timestamp._seconds) then = timestamp._seconds * 1000
+    else return 999
+    
+    // Normalize both to mid-day to avoid TZ issues
+    const d1 = new Date(then); d1.setHours(12, 0, 0, 0);
+    const d2 = new Date(targetDate); d2.setHours(12, 0, 0, 0);
+    return Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24))
+  }
 
   // Water Task
-  const daysSinceWater = daysSince(plant.task_state.lastWateredAt)
-  const isWaterDone = doneToday('water')
+  const daysSinceWater = daysSinceRelative(plant.task_state?.lastWateredAt)
+  const isWaterDone = doneOnDate('water')
   if (daysSinceWater >= plantData.water_frequency_days || isWaterDone) {
     tasks.push({
       id: `water-${plant.id}`,
@@ -162,12 +176,12 @@ export function getTasksDueToday(plant: UserPlant, plantData: QuestPlantData): Q
     })
   }
 
-  const stage = plant.state.growthStage
+  const stage = plant.state?.growthStage || 0
 
   // Fertilize Task
   if (stage >= 1) { // Sprout or higher
-    const daysSinceFertilize = daysSince(plant.task_state.lastFertilizedAt)
-    const isFertilizeDone = doneToday('fertilize')
+    const daysSinceFertilize = daysSinceRelative(plant.task_state?.lastFertilizedAt)
+    const isFertilizeDone = doneOnDate('fertilize')
     if (daysSinceFertilize >= plantData.fertilize_interval_days || isFertilizeDone) {
       tasks.push({
         id: `fertilize-${plant.id}`,
@@ -179,11 +193,10 @@ export function getTasksDueToday(plant: UserPlant, plantData: QuestPlantData): Q
     }
   }
 
-  // Prune/Maintenance (Using prune_interval_days)
+  // Prune/Maintenance
   if (stage >= 2) { 
-    const isPruneDone = doneToday('prune')
-    // Tie to fertilize interval for now if lastPrunedAt missing, or check log
-    if (daysSince(plant.task_state.lastFertilizedAt) >= plantData.prune_interval_days || isPruneDone) {
+    const isPruneDone = doneOnDate('prune')
+    if (daysSinceRelative(plant.task_state?.lastFertilizedAt) >= plantData.prune_interval_days || isPruneDone) {
         tasks.push({
             id: `prune-${plant.id}`,
             label: `Prune and maintain ${plantData.name}`,
@@ -195,7 +208,7 @@ export function getTasksDueToday(plant: UserPlant, plantData: QuestPlantData): Q
   }
 
   // Daily Observation Task
-  const isObserveDone = doneToday('observe')
+  const isObserveDone = doneOnDate('observe')
   tasks.push({
     id: `observe-${plant.id}`,
     label: `Check ${plantData.name} leaves & soil`,
@@ -205,6 +218,10 @@ export function getTasksDueToday(plant: UserPlant, plantData: QuestPlantData): Q
   })
 
   return tasks
+}
+
+export function getTasksDueToday(plant: UserPlant, plantData: QuestPlantData): QuestTask[] {
+  return getTasksDueOnDate(plant, plantData, new Date())
 }
 
 export function getAllTasksDueToday(userPlants: UserPlant[], getPlantData: (id: string) => QuestPlantData | undefined) {

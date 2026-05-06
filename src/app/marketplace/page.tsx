@@ -67,8 +67,8 @@ export default function MarketplacePage() {
 
   const filtered = useMemo(() => {
     return orders.filter(o => {
-      // 1. Exclude user's own requested orders from the public browse
-      if (user && o.requester_uid === user.uid) return false
+      // 1. (Removed) Exclude user's own requested orders from the public browse
+      // if (user && o.requester_uid === user.uid) return false
 
       // 2. Filter by Marketplace Visibility:
       // - Show all 'open' orders (available for everyone)
@@ -80,9 +80,8 @@ export default function MarketplacePage() {
 
       const matchSearch = o.plant_name.toLowerCase().includes(search.toLowerCase()) ||
         o.location.toLowerCase().includes(search.toLowerCase())
-      const matchStatus = statusFilter === 'all' || o.status === statusFilter
       const matchDiff = diffFilter === 'all' || o.difficulty === diffFilter
-      return matchSearch && matchStatus && matchDiff
+      return matchSearch && matchDiff
     })
   }, [orders, search, statusFilter, diffFilter, user])
 
@@ -218,12 +217,7 @@ export default function MarketplacePage() {
           <Search size={16} className="mp-search-icon" />
           <input placeholder="Search plants or locations..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select className="mp-filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-          <option value="all">All Status</option>
-          <option value="open">Open</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
-        </select>
+
         <select className="mp-filter-select" value={diffFilter} onChange={e => setDiffFilter(e.target.value)}>
           <option value="all">Any Difficulty</option>
           <option value="easy">Easy</option>

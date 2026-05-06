@@ -90,6 +90,26 @@ function CreateOrderContent() {
     }
   }, [])
 
+  const resolveAddress = async () => {
+    if (!gpsPos) return
+    setLocation('Resolving address...')
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gpsPos.lat}&lon=${gpsPos.lng}&format=json&accept-language=en`)
+      const data = await res.json()
+      if (data.address) {
+        const city = data.address.city || data.address.town || data.address.village || data.address.suburb || ''
+        const state = data.address.state || ''
+        if (city && state) setLocation(`${city}, ${state}`)
+        else if (data.display_name) setLocation(data.display_name.split(',').slice(0, 2).join(',').trim())
+        else setLocation(`GPS: ${gpsPos.lat.toFixed(4)}, ${gpsPos.lng.toFixed(4)}`)
+      } else {
+        setLocation(`GPS: ${gpsPos.lat.toFixed(4)}, ${gpsPos.lng.toFixed(4)}`)
+      }
+    } catch {
+      setLocation(`GPS: ${gpsPos.lat.toFixed(4)}, ${gpsPos.lng.toFixed(4)}`)
+    }
+  }
+
   const canSubmit = selectedPlant && quantity && reward && deadline && !submitting
 
   const handleSubmit = async () => {
@@ -120,7 +140,7 @@ function CreateOrderContent() {
       if (res.ok) {
         const createdOrder = await res.json()
         setToast('🌱 Order posted successfully!')
-        setTimeout(() => router.push(`/quest/quests?plant=${encodeURIComponent(selectedPlant!.plant_id)}&plan=${encodeURIComponent(prefillPlanType)}&source=posted_order&order=${encodeURIComponent(createdOrder.id)}`), 1200)
+        setTimeout(() => router.push('/marketplace/my-orders'), 1200)
       }
     } catch {
       setToast('Failed to create order')
@@ -259,9 +279,7 @@ function CreateOrderContent() {
           <div style={{ display: 'flex', gap: 8 }}>
             <input className="mp-form-input" placeholder="e.g. Bangsar, KL" value={location}
               onChange={e => setLocation(e.target.value)} />
-            <button className="mp-gps-btn" onClick={() => {
-              if (gpsPos) setLocation(`GPS: ${gpsPos.lat.toFixed(4)}, ${gpsPos.lng.toFixed(4)}`)
-            }}><MapPin size={12} /> GPS</button>
+            <button className="mp-gps-btn" onClick={resolveAddress}><MapPin size={12} /> GPS</button>
           </div>
         </div>
         <div className="mp-form-group">

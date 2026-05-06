@@ -37,9 +37,22 @@
 }
 
 .plan-tab:disabled {
-  opacity: 0.6;
+  opacity: 0.8;
   cursor: not-allowed;
 }
+
+.plan-tab-loading {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tab-skeleton-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
 
 .plan-tab-active {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);

@@ -171,6 +171,13 @@ export async function syncDailyTasksToGoogle(accessToken: string, dateStr: strin
     const events = await listCalendarEvents(accessToken, timeMin, timeMax);
     const existingEvent = events.find(e => e.summary === summary && e.start?.date === startStr);
 
+    if (tasks.length === 0) {
+      if (existingEvent) {
+        return await deleteCalendarEvent(accessToken, existingEvent.id);
+      }
+      return true;
+    }
+
     const eventBody = {
       summary,
       description,

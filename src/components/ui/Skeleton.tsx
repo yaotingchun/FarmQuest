@@ -1,5 +1,9 @@
 "use client";
 
+export function SkeletonBlock({ width, height, style }: { width?: string | number; height?: string | number; style?: React.CSSProperties }) {
+  return <div className="skeleton-block" style={{ width, height, ...style }} />;
+}
+
 export function SkeletonCard() {
   return (
     <div className="setup-card">

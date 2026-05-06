@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useQuest } from '@/lib/QuestContext'
 import { getQuestPlant } from '@/data/quest-plants'
 import { getTasksDueToday, xpForNextLevel, calculateLevel, getAllTasksDueToday } from '@/lib/ruleEngine'
@@ -13,11 +13,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 
 import { Suspense } from 'react'
+import { ThemedModal } from '@/components/ui/ThemedModal'
 
 function QuestsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { userPlants, activePlantId, completeTask, deletePlant, setActivePlant, availablePlants, addPlant, calendarData, refreshCalendar } = useQuest()
+  const { userPlants, activePlantId, completeTask, deletePlant, setActivePlant, availablePlants, addPlant, calendarData, refreshCalendar, isGeneratingTasks } = useQuest()
   const [activeTab, setActiveTab ] = useState<'main' | 'daily'>('main')
   const [viewMode, setViewMode] = useState<'list' | 'detail'>(activePlantId ? 'detail' : 'list')
   const isAddingRef = useRef(false)
@@ -25,6 +26,7 @@ function QuestsContent() {
   const selectedPlanType = searchParams.get('plan') as 'Budget' | 'Balanced' | 'Premium' | null
   const selectedSource = searchParams.get('source') as 'chosen_plant' | 'posted_order' | 'accepted_order' | null
   const selectedOrderId = searchParams.get('order')
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
 
 
   // Handle auto-activation from search params (e.g. after adding a plant)
@@ -80,129 +82,68 @@ function QuestsContent() {
   }, [activePlantId, searchParams])
 
   const activePlant = userPlants.find(p => p.id === activePlantId)
+
+  useEffect(() => {
+    if (activePlant) {
+      const isUnacceptedPostedOrder = activePlant.source_category === 'posted_order' && !activePlant.is_accepted
+      if (isUnacceptedPostedOrder) {
+        router.push('/quest')
+      }
+    } else if (!activePlantId && !isResolvingDirectOpen && !isAddingRef.current && !isGeneratingTasks) {
+      router.push('/quest')
+    }
+  }, [activePlant, activePlantId, isResolvingDirectOpen, isGeneratingTasks, router])
+
   const canEditPlant = (plant: { source_category?: 'chosen_plant' | 'posted_order' | 'accepted_order' }) => {
     return (plant.source_category || 'chosen_plant') !== 'posted_order'
   }
 
 
+  const isDailyUnlocked = useMemo(() => {
+    if (!activePlant) return false
+    const rawMainQuests = activePlant.ai_tasks?.main || []
+    const isLegacyData = rawMainQuests.some((q: any) => q.title === 'Dashboard Setup' || q.title === 'Seedling Care')
+    const mainQuestsFromAI = isLegacyData ? [] : rawMainQuests
+
+    if (mainQuestsFromAI.length > 0) {
+      return mainQuestsFromAI.every((_, i) => activePlant.task_state?.[`main-${i}`])
+    } else {
+      return !!activePlant.task_state?.intro
+    }
+  }, [activePlant])
+
+  const [showDailyUnlockedModal, setShowDailyUnlockedModal] = useState(false)
+  const previousDailyUnlockedRef = useRef<boolean>(isDailyUnlocked)
+
+  useEffect(() => {
+    if (activePlant && isDailyUnlocked && !previousDailyUnlockedRef.current) {
+      setShowDailyUnlockedModal(true)
+    }
+    previousDailyUnlockedRef.current = isDailyUnlocked
+  }, [isDailyUnlocked, activePlant])
+
   const MainContent = () => {
-    if (isResolvingDirectOpen) {
+    if (isResolvingDirectOpen || !activePlant) {
       return (
         <div className="quest-main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
           <div className="quest-hub-no-tasks" style={{ padding: '3rem 1rem', width: '100%' }}>
             <span>🌿</span>
-            <p>Opening your plant quest...</p>
+            <p>Loading your plant quest...</p>
           </div>
         </div>
       )
     }
 
-    // ── VIEW: PLANT LIST (HUB) ──
-    if (viewMode === 'list' || !activePlant) {
-      const allTasksWrapped = getAllTasksDueToday(userPlants, getQuestPlant)
+    const hasNoTasks = !activePlant.ai_tasks || !activePlant.ai_tasks.main || activePlant.ai_tasks.main.length === 0
 
-      return (
-        <div className="quest-main-content">
-          <div className="quest-hub-header" style={{ marginBottom: '2.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h1 className="quest-hub-title" style={{ fontSize: '1.85rem' }}>My Garden Hub</h1>
-                <p className="quest-hub-sub">Select a plant to view specialized quests</p>
-              </div>
-              <Link href="/" style={{ 
-                textDecoration: 'none', 
-                color: 'var(--text-muted)', 
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                padding: '8px 12px',
-                border: '1px solid var(--glass-border)',
-                borderRadius: '12px'
-              }}>
-                Back to Site
-              </Link>
-            </div>
+    if (isGeneratingTasks && hasNoTasks) {
+       return (
+        <div className="quest-main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <div className="quest-hub-no-tasks" style={{ padding: '3rem 1rem', width: '100%' }}>
+            <div className="mp-badge-dot" style={{ margin: '0 auto 16px', width: 12, height: 12 }} />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>Initializing Quest...</h3>
+            <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>Preparing your garden for the new plant.</p>
           </div>
-
-          {/* Daily Tasks Section */}
-          {userPlants.length > 0 && allTasksWrapped.length > 0 && (
-            <div className="quest-hub-tasks-section" style={{ marginBottom: '2.5rem' }}>
-              <div className="quest-hub-tasks-header" style={{ marginBottom: '1.25rem' }}>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>⚡ Today&apos;s Actions Needed</h2>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                 {allTasksWrapped.map(({ plant, task, plantData }) => {
-                   const isEditable = canEditPlant(plant)
-                   return (
-                     <div 
-                        key={task.id} 
-                        className={`quest-task-item ${task.completed ? 'completed' : ''}`}
-                        onClick={() => !task.completed && isEditable && completeTask(plant.id, task.id)}
-                        style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', cursor: task.completed || !isEditable ? 'default' : 'pointer', opacity: !isEditable && !task.completed ? 0.78 : 1 }}
-                     >
-                       <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
-                         {task.completed && <span>✓</span>}
-                       </div>
-                       <div className="quest-task-content">
-                         <span className="quest-task-label" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                           <span style={{ fontSize: '1.2em' }}>{plantData.emoji}</span> {task.label}
-                         </span>
-                         <div className="quest-task-meta">
-                           <span className="quest-task-cat-badge">{task.category}</span>
-                           <span className="quest-task-xp">+{task.xp_reward} XP</span>
-                           {!isEditable && <span className="quest-task-cat-badge" style={{ background: 'rgba(251, 191, 36, 0.12)', color: '#fbbf24' }}>View only</span>}
-                         </div>
-                       </div>
-                     </div>
-                   )
-                 })}
-              </div>
-            </div>
-          )}
-
-          <div className="quest-section-header" style={{ marginBottom: '1.25rem' }}>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>🌱 My Plants</h2>
-          </div>
-
-          {userPlants.length === 0 ? (
-            <div className="quest-hub-no-tasks" style={{ padding: '4rem 1rem' }}>
-              <span>🌱</span>
-              <p>Your garden is currently empty.</p>
-              <button className="btn-primary" onClick={() => router.push('/recommendations')} style={{ marginTop: '1.5rem' }}>
-                Start Planting
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {userPlants.map(plant => {
-                const pData = getQuestPlant(plant.plant_id)
-                if (!pData) return null
-                return (
-                  <div 
-                    key={plant.id} 
-                    onClick={() => {
-                      setActivePlant(plant.id)
-                      setViewMode('detail')
-                    }}
-                    style={{ cursor: 'pointer', position: 'relative' }}
-                  >
-                    <PlantStatusCard
-                      plantName={plant.plant_name}
-                      plantEmoji={pData.emoji}
-                      stage={plant.state.growthStage as any}
-                      streak={0}
-                            sourceCategory={plant.source_category || 'chosen_plant'}
-                      sunlight={pData.sunlight_type}
-                      waterFrequency={pData.water_frequency_days}
-                      startMethod={pData.startMethod}
-                    />
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                      View Quests →
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
         </div>
       )
     }
@@ -230,7 +171,7 @@ function QuestsContent() {
             xp_reward: q.xp,
             status: activePlant.task_state?.[taskKey] ? 'completed' : (prevCompleted ? 'active' : 'locked'),
             isActionable: true,
-            tasks: [{ id: taskKey, label: q.task_label, completed: !!activePlant.task_state?.[taskKey], category: 'growth', xp_reward: q.xp }],
+            tasks: [{ id: taskKey, label: q.task_label, completed: !!activePlant.task_state?.[taskKey], category: 'setup', xp_reward: q.xp }],
           } as Quest
         })
       : [{
@@ -241,7 +182,7 @@ function QuestsContent() {
           xp_reward: 30,
           status: activePlant.task_state?.intro ? 'completed' : 'active',
           isActionable: true,
-          tasks: [{ id: 'intro-t1', label: 'Prepared area', completed: !!activePlant.task_state?.intro, category: 'growth', xp_reward: 30 }],
+          tasks: [{ id: 'intro-t1', label: 'Prepared area', completed: !!activePlant.task_state?.intro, category: 'setup', xp_reward: 30 }],
         }]
 
     const isDailyUnlocked = mainQuests.every((q) => q.status === 'completed')
@@ -254,7 +195,7 @@ function QuestsContent() {
     })) || getTasksDueToday(activePlant, plantData)
 
     return (
-      <div className="quest-main-content" style={{ maxWidth: '920px', margin: '0 auto', width: '100%' }}>
+      <div className="quest-main-content" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
         <div className="quest-quests-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
           <button 
             onClick={() => {
@@ -311,10 +252,23 @@ function QuestsContent() {
         )}
 
         {isDead ? (
-          <div className="quest-daily-locked">
-            <h3>Plant Withered</h3>
+          <div className="quest-daily-locked" style={{ textAlign: 'center', padding: '3rem 2rem', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>
+            <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🥀</div>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>Plant Withered</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '400px', margin: '0 auto 2rem' }}>
+              This plant has reached the end of its journey. You can remove it to start a new quest in your garden.
+            </p>
             {canEditActivePlant && (
-              <button className="quest-delete-btn" onClick={() => { deletePlant(activePlant.id); setViewMode('list'); }}>Remove Plant</button>
+              <button 
+                className="btn-primary" 
+                onClick={() => { 
+                  deletePlant(activePlant.id); 
+                  router.push('/quest?deleted=true'); 
+                }}
+                style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px 32px' }}
+              >
+                Remove Plant
+              </button>
             )}
           </div>
         ) : (
@@ -359,9 +313,22 @@ function QuestsContent() {
       paddingTop: '1rem',
       paddingBottom: '4rem'
     }}>
-      <div style={{ width: '100%', maxWidth: '980px', margin: '0 auto' }}>
+      <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
         <MainContent />
       </div>
+
+      <ThemedModal
+        isOpen={showDailyUnlockedModal}
+        onClose={() => setShowDailyUnlockedModal(false)}
+        onConfirm={() => {
+          setShowDailyUnlockedModal(false)
+          setActiveTab('daily')
+        }}
+        title="Daily Quests Unlocked!"
+        message="You have completed all main tasks for this plant. Daily care quests are now available to keep your plant healthy!"
+        confirmText="View Daily Quests"
+        type="success"
+      />
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { useEffect, useState, use, useCallback, useRef, useMemo } from "react";
 import { ArrowLeft, Sparkles, Rocket, AlertTriangle, Clock, ChevronLeft, ChevronRight, X, BrainCircuit, RefreshCcw } from "lucide-react";
 
 import { useRouter } from "next/navigation";
-import { SkeletonPage } from "@/components/ui/Skeleton";
+import { SkeletonPage, SkeletonBlock } from "@/components/ui/Skeleton";
 import { PotCard, SoilCard, SeedCard, NutritionCard } from "@/components/planting-setup/Cards";
 import { ShoppingList } from "@/components/planting-setup/ShoppingList";
 import { generateAIExplanation } from "@/utils/ai-placeholders";
@@ -385,7 +385,7 @@ export default function PlantDetailPage({
                 return (
                   <button
                     key={type}
-                    className={`${styles['plan-tab']} ${type === activePlanType ? styles['plan-tab-active'] : ''} ${styles[`plan-tab-${type.toLowerCase()}`]}`}
+                    className={`${styles['plan-tab']} ${type === activePlanType ? styles['plan-tab-active'] : ''} ${styles[`plan-tab-${type.toLowerCase()}`]} ${isDisabled ? styles['plan-tab-loading'] : ''}`}
                     onClick={() => {
                       if (isDisabled) return;
                       const index = planIndexByType.get(type);
@@ -393,14 +393,24 @@ export default function PlantDetailPage({
                     }}
                     disabled={isDisabled}
                   >
-                    {type}
+                    {aiLoading ? (
+                      <div className={styles['tab-skeleton-wrap']}>
+                        <RefreshCcw size={12} className="animate-spin" />
+                        <span>{type}</span>
+                      </div>
+                    ) : type}
                   </button>
                 );
               })}
             </div>
           </div>
           <div className="plan-cost-display">
-            {currentPlan.cost !== undefined && (
+            {aiLoading ? (
+              <div className="plan-cost-skeleton">
+                <SkeletonBlock width={100} height={14} style={{ marginBottom: 4 }} />
+                <SkeletonBlock width={140} height={24} />
+              </div>
+            ) : currentPlan.cost !== undefined ? (
               <>
                 <div className="plan-cost-amount">
                   <span className="plan-cost-label">Estimated Cost:</span>
@@ -410,7 +420,7 @@ export default function PlantDetailPage({
                 </div>
                 <span className="plan-cost-disclaimer">Based on average market prices</span>
               </>
-            )}
+            ) : null}
           </div>
         </div>
 

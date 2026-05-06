@@ -2,7 +2,7 @@
 export type GrowthStage = 0 | 1 | 2 | 3 // 0=Seed, 1=Sprout, 2=Mature, 3=Harvest
 
 // ── Task Categories ──
-export type TaskCategory = 'care' | 'growth' | 'observation'
+export type TaskCategory = 'care' | 'growth' | 'observation' | 'setup'
 
 // ── Quest Types ──
 export type QuestType = 'main' | 'daily'
@@ -71,6 +71,7 @@ export interface UserPlant {
     daily: string[]
   }
   google_calendar_event_id?: string
+  is_accepted?: boolean
 }
 
 

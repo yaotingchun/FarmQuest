@@ -122,7 +122,6 @@ function extractAllText(result: any): string {
   return parts
     .map((p: any) => (typeof p?.text === "string" ? p.text : ""))
     .join("")
-    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -534,19 +533,14 @@ export async function generateQuestTasks(
 ): Promise<{ main: any[], daily: string[] }> {
   try {
     const ai = getVertexAI();
-    const prompt = `User Plan: ${planType} ${plantName}.
-Details: ${explanation}
-
-Task: Generate JSON for quests. 
-- "main": 3-4 steps for STAGE 1 (SETUP/PLANTING) ONLY.
-- "daily": Include routine care AND 3-5 specific milestones for FUTURE STAGES (Sprout, Mature, Harvest).
-
-Format:
+    const prompt = `Task: Generate quest steps for ${plantName} (${planType} setup).
+Schema:
 {
   "main": [{"title": "Step", "description": "1 sentence", "task_label": "done msg", "xp": 50}],
   "daily": ["Routine task", "Stage 2 Milestone", "Stage 3 Milestone"]
 }
-Return ONLY JSON. Ground description in plan specifics.`;
+Details: ${explanation}
+Ground descriptions in the plan specifics. Generate 3-4 main steps and 5-7 daily items.`;
 
     let text = "";
     let lastErr: unknown = null;
@@ -559,6 +553,7 @@ Return ONLY JSON. Ground description in plan specifics.`;
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 2048,
+            responseMimeType: "application/json",
           },
         });
         const result = await model.generateContent(prompt);
@@ -578,17 +573,23 @@ Return ONLY JSON. Ground description in plan specifics.`;
     }
     
     // Clean up potential markdown formatting
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    text = text.replace(/```json\s*/g, "").replace(/```/g, "").trim();
 
-    // Try direct parse first, then fallback to extracting first JSON object block.
     let data: any;
     try {
       data = JSON.parse(text);
     } catch {
+      // Robust extraction: find the first { and the last }
       const start = text.indexOf("{");
       const end = text.lastIndexOf("}");
       if (start >= 0 && end > start) {
-        data = JSON.parse(text.slice(start, end + 1));
+        const potentialJson = text.slice(start, end + 1);
+        try {
+          data = JSON.parse(potentialJson);
+        } catch (parseErr) {
+          console.error("[AI] JSON Slice Parse Failed:", potentialJson);
+          throw new Error("Model returned malformed JSON even after slicing");
+        }
       } else {
         throw new Error("Model returned non-JSON task payload");
       }

@@ -6,190 +6,23 @@ import { useQuest } from '@/lib/QuestContext'
 import { getQuestPlant } from '@/data/quest-plants'
 import { PlantStatusCard } from '@/components/quest/PlantStatusCard'
 import { getAllTasksDueToday } from '@/lib/ruleEngine'
-import { Trash2, AlertCircle, CheckCircle2, X } from 'lucide-react'
+import { Trash2, AlertCircle, CheckCircle2, X, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react'
 
-interface ThemedModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  title: string
-  message: string
-  confirmText?: string
-  cancelText?: string
-  type?: 'danger' | 'success' | 'info'
-}
-
-function ThemedModal({
-  isOpen,
-  onClose,
-  onConfirm,
-  title,
-  message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
-  type = 'info'
-}: ThemedModalProps) {
-  const [isRendered, setIsRendered] = useState(false)
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsRendered(true)
-      document.body.style.overflow = 'hidden'
-    } else {
-      const timer = setTimeout(() => setIsRendered(false), 300)
-      document.body.style.overflow = 'unset'
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen])
-
-  if (!isRendered && !isOpen) return null
-
-  const typeConfig = {
-    danger: {
-      icon: <AlertCircle style={{ color: '#ef4444' }} size={32} />,
-      confirmBtnStyle: { background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' },
-      glowStyle: { boxShadow: '0 0 20px rgba(239, 68, 68, 0.15)' }
-    },
-    success: {
-      icon: <CheckCircle2 style={{ color: '#10b981' }} size={32} />,
-      confirmBtnStyle: { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' },
-      glowStyle: { boxShadow: '0 0 20px rgba(16, 185, 129, 0.15)' }
-    },
-    info: {
-      icon: <AlertCircle style={{ color: '#3b82f6' }} size={32} />,
-      confirmBtnStyle: { background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', borderColor: 'rgba(59, 130, 246, 0.3)' },
-      glowStyle: { boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)' }
-    }
-  }
-
-  const config = typeConfig[type]
-
-  return (
-    <div 
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem',
-        background: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(8px)',
-        opacity: isOpen ? 1 : 0,
-        transition: 'opacity 0.3s ease',
-        pointerEvents: isOpen ? 'auto' : 'none'
-      }}
-      onClick={onClose}
-    >
-      <div 
-        style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: '400px',
-          background: 'var(--glass-bg)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: '24px',
-          padding: '2.5rem 2rem',
-          transform: isOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
-          transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          ...config.glowStyle
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <X size={20} />
-        </button>
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ marginBottom: '1rem' }}>
-            {config.icon}
-          </div>
-          
-          <h3 style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: 700, 
-            color: 'var(--text-primary)', 
-            marginBottom: '0.5rem'
-          }}>
-            {title}
-          </h3>
-          
-          <p style={{ 
-            color: 'var(--text-secondary)', 
-            marginBottom: '2rem', 
-            fontSize: '0.95rem',
-            lineHeight: 1.5 
-          }}>
-            {message}
-          </p>
-
-          <div style={{ display: 'flex', width: '100%', gap: '12px' }}>
-            <button
-              onClick={onClose}
-              style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '12px',
-                border: '1px solid var(--glass-border)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: 'var(--text-secondary)',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              {cancelText}
-            </button>
-            <button
-              onClick={() => {
-                onConfirm()
-                onClose()
-              }}
-              style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '12px',
-                border: '1px solid transparent',
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                ...config.confirmBtnStyle
-              }}
-            >
-              {confirmText}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { ThemedModal } from '@/components/ui/ThemedModal'
 
 import { CalendarGrid } from '@/components/quest/CalendarGrid'
 
 function MultiPlantDashboard() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { userPlants, availablePlants, addPlant, setActivePlant, completeTask, deletePlant, calendarData, refreshCalendar } = useQuest()
+  const { userPlants, availablePlants, addPlant, setActivePlant, completeTask, deletePlant, calendarData, refreshCalendar, loading } = useQuest()
   const isAddingRef = useRef(false)
   const processedQueryRef = useRef<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [plantToDelete, setPlantToDelete] = useState<{ id: string, name: string } | null>(null)
   const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
 
   // Calendar State
   const now = new Date()
@@ -208,15 +41,16 @@ function MultiPlantDashboard() {
   const filteredPlants = useMemo(() => {
     return userPlants.filter((plant) => {
       const category = plant.source_category || 'chosen_plant'
+      if (category === 'posted_order' && !plant.is_accepted) return false
       return sourceFilter === 'all' ? true : category === sourceFilter
     })
   }, [userPlants, sourceFilter])
 
   const sourceCounts = useMemo(() => {
     return {
-      all: userPlants.length,
+      all: userPlants.filter(p => (p.source_category !== 'posted_order' || p.is_accepted)).length,
       chosen_plant: userPlants.filter((p) => (p.source_category || 'chosen_plant') === 'chosen_plant').length,
-      posted_order: userPlants.filter((p) => p.source_category === 'posted_order').length,
+      posted_order: userPlants.filter((p) => p.source_category === 'posted_order' && p.is_accepted).length,
       accepted_order: userPlants.filter((p) => p.source_category === 'accepted_order').length,
     }
   }, [userPlants])
@@ -231,15 +65,24 @@ function MultiPlantDashboard() {
     return 'chosen_plant'
   }
 
+  const [isProcessingQuery, setIsProcessingQuery] = useState(false)
+
   useEffect(() => {
+    // CRITICAL: Wait for user data and plant list to load before deciding to add a new plant!
+    if (loading) return
+
     const plantToAdd = searchParams.get('plant')
     const planToAdd = normalizePlanType(searchParams.get('plan'))
     const sourceCategory = normalizeSourceCategory(searchParams.get('source'))
     const orderId = searchParams.get('order')
     const sharedProgressKey = orderId ? `marketplace-order-${orderId}` : undefined
 
-    if (!plantToAdd) return
+    if (!plantToAdd) {
+      setIsProcessingQuery(false)
+      return
+    }
 
+    setIsProcessingQuery(true)
     const queryKey = `${plantToAdd}|${planToAdd}|${sourceCategory}|${orderId || ''}`
     if (processedQueryRef.current === queryKey) return
     processedQueryRef.current = queryKey
@@ -259,6 +102,7 @@ function MultiPlantDashboard() {
 
     const isValid = availablePlants.some((p) => p.plant_id === plantToAdd)
     if (!isValid) {
+      setIsProcessingQuery(false)
       router.replace('/quest')
       return
     }
@@ -269,6 +113,7 @@ function MultiPlantDashboard() {
         setActivePlant(newId)
         router.replace('/quest/quests')
       } else {
+        setIsProcessingQuery(false)
         router.replace('/quest')
       }
     }).finally(() => {
@@ -276,19 +121,60 @@ function MultiPlantDashboard() {
     })
   }, [searchParams, availablePlants, addPlant, router, setActivePlant, userPlants])
 
+  // Handle deletion notification
+  useEffect(() => {
+    if (searchParams.get('deleted') === 'true') {
+      setSuccessMessage('Plant has been successfully removed from your garden.')
+      setShowSuccessModal(true)
+      // Clear the query param
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('deleted')
+      router.replace(`/quest${params.toString() ? `?${params.toString()}` : ''}`)
+    }
+  }, [searchParams, router])
+
   const handleGoToDetail = (instanceId: string) => {
     setActivePlant(instanceId)
     router.push('/quest/quests')
   }
 
-  const canEditPlant = (plant: { source_category?: 'chosen_plant' | 'posted_order' | 'accepted_order' }) => {
-    return (plant.source_category || 'chosen_plant') !== 'posted_order'
+  const canEditPlant = (_plant: { source_category?: 'chosen_plant' | 'posted_order' | 'accepted_order' }) => {
+    return true // Allow removing any plant from the garden view
   }
 
-  // Unified task list across all plants
-  const allTasksWrapped = getAllTasksDueToday(userPlants, getQuestPlant)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 4
+
+  const totalPages = Math.ceil(filteredPlants.length / itemsPerPage)
+  const paginatedPlants = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return filteredPlants.slice(start, start + itemsPerPage)
+  }, [filteredPlants, currentPage])
+
+  // Reset to page 1 if filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [sourceFilter])
+
+  // Unified task list across plants ON THE CURRENT PAGE
+  const allTasksWrapped = useMemo(() => {
+    return getAllTasksDueToday(paginatedPlants, getQuestPlant)
+  }, [paginatedPlants])
+
   const calendarCompletedCount = useMemo(() => calendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => t.completed).length, 0), [calendarData])
   const calendarPendingCount = useMemo(() => calendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => !t.completed).length, 0), [calendarData])
+
+  if (isProcessingQuery) {
+    return (
+      <div className="quest-page" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div className="quest-hub-no-tasks" style={{ padding: '3rem 1rem', width: '100%' }}>
+          <div className="mp-badge-dot" style={{ margin: '0 auto 16px', width: 12, height: 12 }} />
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>Initializing Quest...</h3>
+          <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>Preparing your garden for the new plant.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="quest-page" style={{ 
@@ -324,9 +210,8 @@ function MultiPlantDashboard() {
             ) : (
               <>
                 {/* Active Plants Grid */}
-                <div className="quest-section-header" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '1.5rem', flexWrap: 'wrap' }}>
-                  <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>🌱 My Active Plants</h2>
-                  <div className="quest-source-tabs">
+                <div className="quest-section-header" style={{ marginBottom: '1.5rem' }}>
+                  <div className="quest-source-tabs" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {([
                       ['all', 'All'],
                       ['chosen_plant', '🌱 Self Planted'],
@@ -337,6 +222,7 @@ function MultiPlantDashboard() {
                         key={key}
                         className={`quest-source-tab ${sourceFilter === key ? 'active' : ''}`}
                         onClick={() => setSourceFilter(key)}
+                        style={{ padding: '6px 12px', fontSize: '0.75rem' }}
                       >
                         {label}
                         <span className="quest-source-tab-count">{sourceCounts[key]}</span>
@@ -344,13 +230,13 @@ function MultiPlantDashboard() {
                     ))}
                   </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '3rem' }}>
-                  {filteredPlants.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1rem', minHeight: 'auto' }}>
+                  {paginatedPlants.length === 0 ? (
                     <div className="quest-hub-no-tasks" style={{ padding: '2.5rem 1rem' }}>
                       <span>🌿</span>
                       <p>No plants in this category yet.</p>
                     </div>
-                  ) : filteredPlants.map(plant => {
+                  ) : paginatedPlants.map(plant => {
                     const pData = getQuestPlant(plant.plant_id)
                     if (!pData) return null
                     const isEditable = canEditPlant(plant)
@@ -406,12 +292,76 @@ function MultiPlantDashboard() {
                             }}
                             title="Remove Plant"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                           </button>
                         )}
                       </div>
                     )
                   })}
+
+                  {totalPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '0.75rem', marginBottom: '3.5rem' }}>
+                      <button 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="quest-page-btn"
+                        style={{ 
+                          background: 'rgba(255, 255, 255, 0.03)', 
+                          border: '1px solid var(--glass-border)', 
+                          padding: '10px', 
+                          borderRadius: '50%', 
+                          color: currentPage === 1 ? 'rgba(255, 255, 255, 0.1)' : 'var(--text-primary)',
+                          cursor: currentPage === 1 ? 'default' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: currentPage === 1 ? 'none' : '0 4px 12px rgba(0, 0, 0, 0.2)'
+                        }}
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      
+                      <div style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        padding: '6px 20px',
+                        borderRadius: '50px',
+                        border: '1px solid var(--glass-border)',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.05em',
+                        color: 'var(--text-secondary)'
+                      }}>
+                        <span style={{ color: 'var(--accent)' }}>{currentPage}</span>
+                        <span style={{ opacity: 0.3 }}>/</span>
+                        <span>{totalPages}</span>
+                      </div>
+
+                      <button 
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="quest-page-btn"
+                        style={{ 
+                          background: 'rgba(255, 255, 255, 0.03)', 
+                          border: '1px solid var(--glass-border)', 
+                          padding: '10px', 
+                          borderRadius: '50%', 
+                          color: currentPage === totalPages ? 'rgba(255, 255, 255, 0.1)' : 'var(--text-primary)',
+                          cursor: currentPage === totalPages ? 'default' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: currentPage === totalPages ? 'none' : '0 4px 12px rgba(0, 0, 0, 0.2)'
+                        }}
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Unified Daily Tasks */}
@@ -492,6 +442,16 @@ function MultiPlantDashboard() {
         message={`Are you sure you want to remove your ${plantToDelete?.name}? This action cannot be undone.`}
         confirmText="Remove"
         cancelText="Keep Plant"
+      />
+
+      <ThemedModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        onConfirm={() => setShowSuccessModal(false)}
+        type="success"
+        title="Plant Removed"
+        message={successMessage}
+        confirmText="Got it"
       />
     </div>
   )

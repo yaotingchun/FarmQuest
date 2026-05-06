@@ -356,10 +356,13 @@ function generateCheckpoints(plantId: string, deadlineDays: number): any[] {
 
 // Seed demo orders to Firestore if empty
 async function seedDemoOrdersToFirestore() {
-  const snapshot = await ordersRef.limit(1).get();
-  if (!snapshot.empty) {
-    console.log(`[Marketplace] Firestore already has orders. Skipping seed.`);
-    return;
+  // Clear existing orders to fix mismatched IDs/Names mapping from previous seeds
+  const existing = await ordersRef.get();
+  if (existing.size > 0) {
+    const batch = db.batch();
+    existing.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    console.log(`[Marketplace] Cleared ${existing.size} mismatched orders for re-seeding.`);
   }
 
   console.log(`[Marketplace] Seeding demo orders to Firestore...`);
@@ -369,28 +372,28 @@ async function seedDemoOrdersToFirestore() {
       requester_name: 'Sarah',
       requester_avatar: '👩',
       plant_id: 'P001',
-      plant_name: 'Lettuce',
-      plant_emoji: '🥬',
+      plant_name: 'Chili',
+      plant_emoji: '🌶️',
       quantity_kg: 5,
       reward_rm: 35,
-      deadline_days: 30,
+      deadline_days: 60,
       location: 'George Town, Penang',
       latitude: 5.4164,
       longitude: 100.3327,
       notes: 'Prefer organic methods. No pesticides please.',
-      difficulty: 'easy',
+      difficulty: 'medium',
       status: 'open',
     },
     {
       requester_uid: 'demo_user_002',
       requester_name: 'Daniel',
       requester_avatar: '🧑',
-      plant_id: 'P003',
-      plant_name: 'Tomato',
+      plant_id: 'P005',
+      plant_name: 'Cherry Tomato',
       plant_emoji: '🍅',
       quantity_kg: 3,
       reward_rm: 50,
-      deadline_days: 60,
+      deadline_days: 70,
       location: 'Johor Bahru, Johor',
       latitude: 1.4927,
       longitude: 103.7414,
@@ -402,7 +405,7 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_003',
       requester_name: 'Priya',
       requester_avatar: '👩',
-      plant_id: 'P005',
+      plant_id: 'P001',
       plant_name: 'Chili',
       plant_emoji: '🌶️',
       quantity_kg: 2,
@@ -419,12 +422,12 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_001',
       requester_name: 'Sarah',
       requester_avatar: '👩',
-      plant_id: 'P009',
+      plant_id: 'P004',
       plant_name: 'Basil',
-      plant_emoji: '🌿',
+      plant_emoji: '🍃',
       quantity_kg: 1,
       reward_rm: 20,
-      deadline_days: 25,
+      deadline_days: 30,
       location: 'Melaka City',
       latitude: 2.1896,
       longitude: 102.2501,
@@ -436,12 +439,12 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_004',
       requester_name: 'James',
       requester_avatar: '🧑',
-      plant_id: 'P002',
-      plant_name: 'Kangkung',
-      plant_emoji: '🥬',
+      plant_id: 'P006',
+      plant_name: 'Kangkung (Water Spinach)',
+      plant_emoji: '🥗',
       quantity_kg: 8,
       reward_rm: 45,
-      deadline_days: 20,
+      deadline_days: 21,
       location: 'Kuantan, Pahang',
       latitude: 3.8077,
       longitude: 103.3260,
@@ -457,12 +460,12 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_005',
       requester_name: 'Lisa',
       requester_avatar: '👩',
-      plant_id: 'P007',
+      plant_id: 'P002',
       plant_name: 'Mint',
       plant_emoji: '🌿',
       quantity_kg: 0.5,
       reward_rm: 15,
-      deadline_days: 20,
+      deadline_days: 30,
       location: 'Bangsar, KL',
       latitude: 3.1295,
       longitude: 101.6710,
@@ -479,29 +482,33 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_006',
       requester_name: 'Zul',
       requester_avatar: '🧑',
-      plant_id: 'P005',
+      plant_id: 'P001',
       plant_name: 'Chili',
       plant_emoji: '🌶️',
       quantity_kg: 4,
       reward_rm: 55,
-      deadline_days: 50,
+      deadline_days: 60,
       location: 'Kota Bharu, Kelantan',
       latitude: 6.1248,
       longitude: 102.2544,
       notes: 'Cili padi for sambal. Need fiery ones!',
       difficulty: 'hard',
-      status: 'open',
+      status: 'accepted',
+      farmer_uid: 'farmer_002',
+      farmer_name: 'Budi',
+      farmer_avatar: '🧑‍🌾',
+      accepted_at: new Date(Date.now() - 1 * 86400000).toISOString(),
     },
     {
       requester_uid: 'demo_user_007',
       requester_name: 'Christina',
       requester_avatar: '👩',
-      plant_id: 'P001',
+      plant_id: 'P003',
       plant_name: 'Lettuce',
       plant_emoji: '🥬',
       quantity_kg: 3,
       reward_rm: 30,
-      deadline_days: 28,
+      deadline_days: 45,
       location: 'Kuching, Sarawak',
       latitude: 1.5535,
       longitude: 110.3593,
@@ -513,12 +520,12 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_008',
       requester_name: 'Farid',
       requester_avatar: '🧑',
-      plant_id: 'P006',
-      plant_name: 'Lady Finger',
+      plant_id: 'P011',
+      plant_name: 'Lady Finger (Okra)',
       plant_emoji: '🥒',
       quantity_kg: 5,
       reward_rm: 40,
-      deadline_days: 35,
+      deadline_days: 55,
       location: 'Petaling Jaya, Selangor',
       latitude: 3.1279,
       longitude: 101.5945,
@@ -530,12 +537,12 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_009',
       requester_name: 'Ahmad',
       requester_avatar: '🧑',
-      plant_id: 'P003',
-      plant_name: 'Tomato',
+      plant_id: 'P005',
+      plant_name: 'Cherry Tomato',
       plant_emoji: '🍅',
       quantity_kg: 10,
       reward_rm: 80,
-      deadline_days: 60,
+      deadline_days: 70,
       location: 'Kota Kinabalu, Sabah',
       latitude: 5.9804,
       longitude: 116.0735,
@@ -547,9 +554,9 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_010',
       requester_name: 'Siti',
       requester_avatar: '👩',
-      plant_id: 'P009',
+      plant_id: 'P004',
       plant_name: 'Basil',
-      plant_emoji: '🌿',
+      plant_emoji: '🍃',
       quantity_kg: 2,
       reward_rm: 25,
       deadline_days: 30,
@@ -564,12 +571,12 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_011',
       requester_name: 'Muthu',
       requester_avatar: '🧑',
-      plant_id: 'P004',
-      plant_name: 'Eggplant',
+      plant_id: 'P016',
+      plant_name: 'Brinjal (Eggplant)',
       plant_emoji: '🍆',
       quantity_kg: 6,
       reward_rm: 45,
-      deadline_days: 50,
+      deadline_days: 70,
       location: 'Alor Setar, Kedah',
       latitude: 6.1210,
       longitude: 100.3601,
@@ -581,9 +588,9 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_012',
       requester_name: 'Mei Ling',
       requester_avatar: '👩',
-      plant_id: 'P002',
-      plant_name: 'Kangkung',
-      plant_emoji: '🥬',
+      plant_id: 'P006',
+      plant_name: 'Kangkung (Water Spinach)',
+      plant_emoji: '🥗',
       quantity_kg: 4,
       reward_rm: 20,
       deadline_days: 21,
@@ -1021,11 +1028,12 @@ app.post("/api/marketplace/orders/:orderId/shared-progress", async (req, res) =>
 
       const batch = db.batch();
       matches.forEach((docSnap) => {
+        const data = docSnap.data() as any;
         batch.update(docSnap.ref, {
           state,
           task_state,
           updated_at: admin.firestore.FieldValue.serverTimestamp(),
-          ai_tasks: ai_tasks || null,
+          ai_tasks: ai_tasks || data.ai_tasks || null,
         });
       });
       await batch.commit();
@@ -1038,6 +1046,95 @@ app.post("/api/marketplace/orders/:orderId/shared-progress", async (req, res) =>
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to sync shared progress" });
+  }
+});
+
+// DELETE /api/marketplace/orders/:orderId — Delete an open order
+app.delete("/api/marketplace/orders/:orderId", async (req, res) => {
+  try {
+    const docRef = ordersRef.doc(req.params.orderId);
+    const doc = await docRef.get();
+    
+    if (!doc.exists) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    const order = doc.data() as MarketplaceOrder;
+    if (order.status !== 'open') {
+      res.status(400).json({ error: "Only open orders can be deleted" });
+      return;
+    }
+
+    const orderId = req.params.orderId;
+    const sharedKey = `marketplace-order-${orderId}`;
+
+    // Function to clean up plant entries for a specific user
+    const cleanupUserPlants = async (uid?: string) => {
+      if (!uid) return;
+      const plantsRef = db.collection('users').doc(uid).collection('user_plants');
+      const snap = await plantsRef.where('shared_progress_key', '==', sharedKey).get();
+      const batch = db.batch();
+      snap.docs.forEach(docSnap => batch.delete(docSnap.ref));
+      await batch.commit();
+    };
+
+    // Clean up for both parties
+    await cleanupUserPlants(order.requester_uid);
+    await cleanupUserPlants(order.farmer_uid);
+
+    await docRef.delete();
+    console.log(`[Marketplace] Order ${orderId} and associated garden quests deleted`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete order and clean up garden" });
+  }
+});
+
+// DELETE /api/users/:uid/plants/:instanceId — Delete a plant from user's garden
+app.delete("/api/users/:uid/plants/:instanceId", async (req, res) => {
+  try {
+    const { uid, instanceId } = req.params;
+    const plantRef = db.collection('users').doc(uid).collection('user_plants').doc(instanceId);
+    const plantDoc = await plantRef.get();
+
+    if (!plantDoc.exists) {
+      res.status(404).json({ error: "Plant instance not found" });
+      return;
+    }
+
+    const plantData = plantDoc.data() as any;
+    const sharedKey = plantData.shared_progress_key;
+
+    // If it's an accepted marketplace order, we should release the order back to 'open'
+    if (plantData.source_category === 'accepted_order' && sharedKey?.startsWith('marketplace-order-')) {
+      const orderId = sharedKey.replace('marketplace-order-', '');
+      const orderRef = ordersRef.doc(orderId);
+      const orderDoc = await orderRef.get();
+
+      if (orderDoc.exists) {
+        console.log(`[Marketplace] Releasing order ${orderId} back to 'open' status due to farmer deletion`);
+        await orderRef.update({
+          status: 'open',
+          farmer_uid: admin.firestore.FieldValue.delete(),
+          farmer_name: admin.firestore.FieldValue.delete(),
+          farmer_avatar: admin.firestore.FieldValue.delete(),
+          accepted_at: admin.firestore.FieldValue.delete(),
+          // Clear shared progress fields too
+          shared_progress_state: admin.firestore.FieldValue.delete(),
+          shared_progress_task_state: admin.firestore.FieldValue.delete(),
+          shared_progress_updated_at: admin.firestore.FieldValue.delete(),
+        });
+      }
+    }
+
+    await plantRef.delete();
+    console.log(`[Garden] User ${uid} deleted plant ${instanceId} (${plantData.plant_name})`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete plant from garden" });
   }
 });
 

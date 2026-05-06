@@ -369,6 +369,7 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  margin-left: 4px;
 }
 
 .mp-card-details {
@@ -411,7 +412,7 @@
 }
 
 .mp-status-badge {
-  padding: 4px 12px;
+  padding: 2px 8px;
   border-radius: 50px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -825,7 +826,8 @@ textarea.mp-form-input {
 /* ═══ ORDER DETAIL PAGE ═══ */
 .mp-detail-page {
   padding: 100px 5% 60px;
-  max-width: 900px;
+  max-width: 850px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -884,6 +886,7 @@ textarea.mp-form-input {
   font-size: 0.7rem;
   color: var(--text-muted);
   text-transform: uppercase;
+  margin-left: 4px;
 }
 
 .mp-detail-meta {
@@ -1278,3 +1281,6 @@ textarea.mp-form-input {
     opacity: 0;
   }
 }
+@keyframes mp-skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.mp-action-danger { background: rgba(220, 38, 38, 0.1); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.2); } .mp-action-danger:hover { background: #ef4444; color: white; }

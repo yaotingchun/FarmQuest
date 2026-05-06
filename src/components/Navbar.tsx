@@ -13,8 +13,10 @@ export const Navbar = () => {
   const searchParams = useSearchParams()
   const [hash, setHash] = useState('')
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const syncHash = () => setHash(window.location.hash || '')
     syncHash()
     window.addEventListener('hashchange', syncHash)
@@ -41,11 +43,16 @@ export const Navbar = () => {
   )
 
   const visibleNavItems = useMemo(
-    () => navItems.filter((item: any) => 
-      (!item.requiresAuth || !!profile) && 
-      (!item.guestOnly || !profile)
-    ),
-    [navItems, profile]
+    () => {
+      // On first render/server, only show neutral items to avoid hydration mismatch
+      if (!mounted) return navItems.filter((item: any) => !item.requiresAuth && !item.guestOnly)
+      
+      return navItems.filter((item: any) => 
+        (!item.requiresAuth || !!profile) && 
+        (!item.guestOnly || !profile)
+      )
+    },
+    [navItems, profile, mounted]
   )
 
   const isActive = (href: string) => {
@@ -74,7 +81,7 @@ export const Navbar = () => {
               <Link href={item.href}>{item.label}</Link>
             </li>
           ))}
-          {profile ? (
+          {mounted && profile ? (
             <li>
               <Link href="/profile" className="nav-profile-link">
                 <div className="nav-profile-info">
@@ -85,7 +92,7 @@ export const Navbar = () => {
               </Link>
             </li>
           ) : (
-            !loading && (
+            mounted && !loading && (
               <li>
                 <button
                   onClick={() => setIsLoginModalOpen(true)}

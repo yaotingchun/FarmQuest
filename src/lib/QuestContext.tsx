@@ -1,13 +1,13 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from './firebase'
 import { useAuth } from '@/context/AuthContext'
 import type { UserPlant, QuestPlantData, QuestTask, CalendarEntry, DayStatus, PlantSourceCategory } from '@/types/quest'
 import { XP_VALUES } from '@/types/quest'
-import { derivePlantStatus, getTasksDueToday, getGrowthStage } from './ruleEngine'
+import { derivePlantStatus, getTasksDueOnDate, getGrowthStage } from './ruleEngine'
 import { getQuestPlant, QUEST_PLANTS } from '@/data/quest-plants'
 import { createCalendarEvent, deleteCalendarEvent, syncDailyTasksToGoogle } from '@/lib/googleCalendar'
 
@@ -51,9 +51,14 @@ export function QuestProvider({ children }: { children: ReactNode }) {
   const [calendarData, setCalendarData] = useState<CalendarEntry[]>([])
   const pendingActivePlantIdRef = React.useRef<string | null>(null)
 
-  const getDailyTasksForPlant = useCallback((plant: UserPlant): QuestTask[] => {
+  const getDailyTasksForPlant = useCallback((plant: UserPlant, targetDate: Date = new Date()): QuestTask[] => {
     const plantData = getQuestPlant(plant.plant_id)
     if (!plantData || plant.status === 'dead') return []
+
+    const now = new Date()
+    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const targetKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`
+    const isFuture = targetDate.getTime() > now.getTime() && targetKey !== todayKey
 
     const aiMainCount = plant.ai_tasks?.main?.length || 0
     const aiSetupDone = aiMainCount > 0 && Array.from({ length: aiMainCount }).every((_, i) => !!plant.task_state?.[`main-${i}`])
@@ -61,16 +66,20 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     const isDailyUnlocked = aiMainCount > 0 ? aiSetupDone : fallbackSetupDone
 
     if (isDailyUnlocked && (plant.ai_tasks?.daily?.length || 0) > 0) {
-      return plant.ai_tasks!.daily.map((label: string, i: number) => ({
-        id: `daily-${i}`,
-        label,
-        completed: !!plant.task_state?.[`daily-${i}`],
-        category: 'care',
-        xp_reward: 10,
-      }))
+      return plant.ai_tasks!.daily.map((label: string, i: number) => {
+        // For future dates, daily AI tasks are always pending
+        const isCompleted = isFuture ? false : !!plant.task_state?.[`daily-${i}`]
+        return {
+          id: `daily-${i}`,
+          label,
+          completed: isCompleted,
+          category: 'care',
+          xp_reward: 10,
+        }
+      })
     }
 
-    return getTasksDueToday(plant, plantData)
+    return getTasksDueOnDate(plant, plantData, targetDate)
   }, [])
 
   const resolveTaskLabel = useCallback((plant: UserPlant, taskId: string): string => {
@@ -102,12 +111,14 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     const entries: CalendarEntry[] = []
 
     for (let day = 1; day <= daysInMonth; day++) {
+      const targetDate = new Date(year, month, day)
       const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       const isToday = dateKey === todayKey
+      const isFuture = targetDate.getTime() > now.getTime() && !isToday
 
       const tasks: QuestTask[] = []
 
-      // 1. Add completed tasks from log for ALL days
+      // 1. Add completed tasks from log
       for (const plant of userPlants) {
         const completionLog = (plant.task_state?.completion_log || {}) as Record<string, Array<{ id: string; label?: string }>>
         const dayLog = completionLog[dateKey] || []
@@ -124,81 +135,38 @@ export function QuestProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // 3. Determine all applicable statuses for the day
-      const statuses: DayStatus[] = []
-      let milestoneLabel = ''
-
-      // Milestone check
-      const milestoneTask = tasks.find(t => t.id.includes('t_seed') || t.id.includes('t_sprout') || t.id.includes('t_mature'))
-      if (milestoneTask) {
-        statuses.push('milestone')
-        milestoneLabel = milestoneTask.label
-      }
-
-      // Completion status check (for past days, tasks only contains completed ones)
-      if (tasks.length > 0) {
-        statuses.push('completed')
-      }
-
-      if (isToday) {
-        const todayTasksFromSchedule: QuestTask[] = userPlants.flatMap((plant) =>
-          getDailyTasksForPlant(plant).map((task) => ({
+      // 2. Add predicted tasks for Today or Future
+      if (isToday || isFuture) {
+        const scheduledTasks: QuestTask[] = userPlants.flatMap((plant) =>
+          getDailyTasksForPlant(plant, targetDate).map((task) => ({
             ...task,
             plant_id: plant.plant_id,
             plant_name: plant.plant_name,
           }))
         )
 
-        const todayCompletedFromLog: QuestTask[] = []
-        for (const plant of userPlants) {
-          const completionLog = (plant.task_state?.completion_log || {}) as Record<string, Array<{ id: string; label?: string }>>
-          const dayLog = completionLog[dateKey] || []
-          for (const item of dayLog) {
-            todayCompletedFromLog.push({
-              id: `${plant.id}-${item.id}`,
-              label: item.label || resolveTaskLabel(plant, item.id),
-              completed: true,
-              category: 'care',
-              xp_reward: 0,
-              plant_id: plant.plant_id,
-              plant_name: plant.plant_name,
-            })
+        // Merge with existing tasks (avoid duplicates if task was already completed today)
+        for (const sTask of scheduledTasks) {
+          if (!tasks.some(t => t.plant_name === sTask.plant_name && t.label === sTask.label)) {
+            tasks.push(sTask)
           }
         }
-
-        const taskMap = new Map<string, QuestTask>()
-        for (const task of todayTasksFromSchedule) {
-          taskMap.set(`${task.plant_name || ''}|${task.label}`, task)
-        }
-        for (const task of todayCompletedFromLog) {
-          taskMap.set(`${task.plant_name || ''}|${task.label}`, { ...task, completed: true })
-        }
-
-        const todayTasks = Array.from(taskMap.values())
-
-        const todayStatuses: DayStatus[] = []
-        const anyMilestone = todayTasks.some(t => t.id.includes('t_seed') || t.id.includes('t_sprout') || t.id.includes('t_mature'))
-        const anyCompleted = todayTasks.some(t => t.completed)
-        const anyPending = todayTasks.some(t => !t.completed)
-
-        if (anyMilestone) todayStatuses.push('milestone')
-        if (anyCompleted) todayStatuses.push('completed')
-        if (anyPending) todayStatuses.push('pending')
-        
-        entries.push({
-          date: dateKey,
-          tasks: todayTasks,
-          statuses: todayStatuses,
-          milestone_label: milestoneLabel || (anyMilestone ? todayTasks.find(t => t.id.includes('t_'))?.label : undefined)
-        })
-
-        // Background sync to Google Calendar
-        if (isGoogleUser && accessToken && (todayTasks.length > 0 || anyCompleted)) {
-          syncDailyTasksToGoogle(accessToken, dateKey, todayTasks).catch(console.error)
-        }
-
-        continue
       }
+
+      // 3. Determine statuses
+      const statuses: DayStatus[] = []
+      let milestoneLabel = ''
+
+      const anyMilestone = tasks.some(t => t.id.includes('t_seed') || t.id.includes('t_sprout') || t.id.includes('t_mature'))
+      const anyCompleted = tasks.some(t => t.completed)
+      const anyPending = tasks.some(t => !t.completed)
+
+      if (anyMilestone) {
+        statuses.push('milestone')
+        milestoneLabel = tasks.find(t => t.id.includes('t_'))?.label || ''
+      }
+      if (anyCompleted) statuses.push('completed')
+      if (anyPending) statuses.push('pending')
 
       entries.push({
         date: dateKey,
@@ -206,6 +174,11 @@ export function QuestProvider({ children }: { children: ReactNode }) {
         statuses,
         milestone_label: milestoneLabel || undefined
       })
+
+      // Background sync to Google Calendar (Today only)
+      if (isToday && isGoogleUser && accessToken) {
+        syncDailyTasksToGoogle(accessToken, dateKey, tasks).catch(console.error)
+      }
     }
 
     setCalendarData(entries)
@@ -281,7 +254,10 @@ export function QuestProvider({ children }: { children: ReactNode }) {
           return pendingId
         }
 
-        if (!prev) return plants[0].id
+        if (!prev && plants.length > 0) {
+          // If it was previously empty, then it's fine to pick the first one
+          return plants[0].id
+        }
         
         // Ensure the active plant actually still exists in the list (e.g. not deleted)
         const activeExists = plants.some(p => p.id === prev)
@@ -297,181 +273,256 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe()
   }, [user, authLoading]) // activePlantId intentionally omitted
 
+
   // ── Methods ──
+  const inFlightAddsRef = useRef<Map<string, Promise<string | undefined>>>(new Map())
 
   const addPlant = useCallback(async (
     staticPlantId: string,
     planType: "Budget" | "Balanced" | "Premium" = "Budget",
     sourceCategory: PlantSourceCategory = 'chosen_plant',
-    options?: { sharedProgressKey?: string }
+    options?: { sharedProgressKey?: string; is_accepted?: boolean }
   ): Promise<string | undefined> => {
     if (!user) return undefined
+
+    // ── Prevent Duplicates for Shared Orders ──
+    if (options?.sharedProgressKey) {
+      const existing = userPlants.find(p => p.shared_progress_key === options.sharedProgressKey)
+      if (existing) return existing.id
+      
+      const inFlight = inFlightAddsRef.current.get(options.sharedProgressKey)
+      if (inFlight) return inFlight
+    }
+
     const staticData = getQuestPlant(staticPlantId)
     if (!staticData) return undefined
 
-    setIsGeneratingTasks(true)
-    const instanceId = uuidv4()
-    const newPlant: UserPlant = {
-      id: instanceId,
-      plant_id: staticData.plant_id,
-      plant_name: staticData.name,
-      status: 'healthy',
-      created_at: Timestamp.now(),
-      updated_at: Timestamp.now(),
-      last_checked_at: Timestamp.now(),
-      selected_plan_type: planType,
-      source_category: sourceCategory,
-      ...(options?.sharedProgressKey ? { shared_progress_key: options.sharedProgressKey } : {}),
-      state: {
-        growthStage: 0,
-        health: 100,
-        hydration: 70,
-        xp: 0
-      },
-      task_state: {}
-    }
-
-    // Try to pre-load tasks from shared order if applicable
-    let existingAiTasks = null
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
-    
-    if (options?.sharedProgressKey?.startsWith('marketplace-order-')) {
+    const performAdd = async (): Promise<string | undefined> => {
       try {
-        const orderId = options.sharedProgressKey.replace('marketplace-order-', '')
-        const orderRes = await fetch(`${API_URL}/api/marketplace/orders/${orderId}`)
-        if (orderRes.ok) {
-          const order = await orderRes.json()
-          if (order.ai_tasks) {
-            existingAiTasks = order.ai_tasks
-            newPlant.ai_tasks = existingAiTasks
+        setIsGeneratingTasks(true)
+        const instanceId = uuidv4()
+        const newPlant: UserPlant = {
+          id: instanceId,
+          plant_id: staticData.plant_id,
+          plant_name: staticData.name,
+          status: 'healthy',
+          created_at: Timestamp.now(),
+          updated_at: Timestamp.now(),
+          last_checked_at: Timestamp.now(),
+          selected_plan_type: planType,
+          source_category: sourceCategory,
+          is_accepted: options?.is_accepted ?? (sourceCategory !== 'posted_order'),
+          ...(options?.sharedProgressKey ? { shared_progress_key: options.sharedProgressKey } : {}),
+          state: {
+            growthStage: 0,
+            health: 100,
+            hydration: 70,
+            xp: 0
+          },
+          task_state: {}
+        }
+
+        // Try to pre-load tasks from shared order if applicable
+        let existingAiTasks = null
+        let API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+        if (!API_URL && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+          API_URL = 'http://localhost:3001'
+        }
+
+        if (options?.sharedProgressKey?.startsWith('marketplace-order-')) {
+          try {
+            const orderId = options.sharedProgressKey.replace('marketplace-order-', '')
+            const orderRes = await fetch(`${API_URL}/api/marketplace/orders/${orderId}`)
+            if (orderRes.ok) {
+              const order = await orderRes.json()
+              if (order.ai_tasks) {
+                existingAiTasks = order.ai_tasks
+                newPlant.ai_tasks = existingAiTasks
+              }
+            }
+          } catch (e) {
+            console.warn("[QuestContext] Failed to pre-fetch shared tasks:", e)
           }
         }
-      } catch (e) {
-        console.warn("[QuestContext] Failed to pre-fetch shared tasks:", e)
-      }
-    }
 
-    const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
-    pendingActivePlantIdRef.current = instanceId
-    await setDoc(docRef, {
-      ...newPlant,
-      created_at: serverTimestamp(),
-      updated_at: serverTimestamp(),
-      last_checked_at: serverTimestamp(),
-    })
-
-    // ── Google Calendar Integration ──
-    let calendarEventId: string | undefined = undefined
-    if (isGoogleUser && accessToken) {
-      try {
-        const totalDurationDays = (staticData.growth_stages.seed.duration_days || 7) +
-                                  (staticData.growth_stages.sprout.duration_days || 14) +
-                                  (staticData.growth_stages.mature.duration_days || 30)
-        
-        const startDate = new Date()
-        const endDate = new Date()
-        endDate.setDate(startDate.getDate() + totalDurationDays)
-
-        const eventId = await createCalendarEvent({
-          accessToken,
-          plantName: staticData.name,
-          description: `🌱 Starting my ${staticData.name} quest in FarmQuest! Track my progress: https://farmquest.app`,
-          startDate,
-          endDate
-        })
-
-        if (eventId) {
-          calendarEventId = eventId
-          // Update the Firestore doc with the event ID
-          await updateDoc(docRef, {
-            google_calendar_event_id: eventId
-          })
+        // ── 1. Check if this plant already exists in Firestore (Final Safety Check) ──
+        if (options?.sharedProgressKey) {
+           const existing = userPlants.find(p => p.shared_progress_key === options.sharedProgressKey)
+           if (existing) return existing.id
         }
-      } catch (err) {
-        console.error("Failed to sync with Google Calendar:", err)
-      }
-    }
 
-    // Optimistic local state so UI can open selected plant immediately.
-    setUserPlants((prev) => {
-      const exists = prev.some((p) => p.id === instanceId)
-      const plantWithEvent = calendarEventId ? { ...newPlant, google_calendar_event_id: calendarEventId } : newPlant
-      return exists ? prev : [plantWithEvent, ...prev]
-    })
-    setActivePlantId(instanceId)
+        const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
+        pendingActivePlantIdRef.current = instanceId
+        setActivePlantId(instanceId) 
+        await setDoc(docRef, newPlant)
 
-    // Generate AI quests in background (non-blocking for navigation).
-    if (existingAiTasks) {
-      setIsGeneratingTasks(false)
-      pendingActivePlantIdRef.current = null
-      return instanceId
-    }
-
-    ;(async () => {
-      try {
-        // 1. Get Plan Detail
-        const planRes = await fetch(`${API_URL}/api/plants/${staticPlantId}/ai-plans`)
-        if (planRes.ok) {
-          const plans = await planRes.json()
-          const plan = plans.find((p: any) => p.plan_type === planType) || plans[0]
-
-          // 2. Get AI Explanation
-          const expRes = await fetch(`${API_URL}/api/plants/${staticPlantId}/explain`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan })
-          })
-          if (expRes.ok) {
-            const { explanation } = await expRes.json()
-
-            // 3. Generate Tasks
-            const taskRes = await fetch(`${API_URL}/api/generate-ai-tasks`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                plantId: staticPlantId,
-                plantName: staticData.name,
-                planType: planType,
-                explanation: explanation
-              })
-            })
+        // ── Google Calendar Integration ──
+        if (isGoogleUser && accessToken) {
+          try {
+            const totalDurationDays = (staticData.growth_stages.seed.duration_days || 7) +
+                                      (staticData.growth_stages.sprout.duration_days || 14) +
+                                      (staticData.growth_stages.mature.duration_days || 30)
             
-            if (taskRes.ok) {
-              const aiTasks = await taskRes.json()
-              await updateDoc(docRef, {
-                ai_tasks: aiTasks,
-                updated_at: serverTimestamp()
-              })
+            const startDate = new Date()
+            const endDate = new Date()
+            endDate.setDate(startDate.getDate() + totalDurationDays)
 
-              // Sync these tasks to the marketplace order if this is an order-based plant
-              if (options?.sharedProgressKey?.startsWith('marketplace-order-')) {
-                const oId = options.sharedProgressKey.replace('marketplace-order-', '')
-                await fetch(`${API_URL}/api/marketplace/orders/${oId}/shared-progress`, {
+            const eventId = await createCalendarEvent({
+              accessToken,
+              plantName: staticData.name,
+              description: `🌱 Starting my ${staticData.name} quest in FarmQuest!`,
+              startDate,
+              endDate
+            })
+
+            if (eventId) {
+              await updateDoc(docRef, { google_calendar_event_id: eventId })
+            }
+          } catch (err) {
+            console.error("Failed to sync with Google Calendar:", err)
+          }
+        }
+
+        // ── Initial AI Task Generation ──
+        // CRITICAL: Requesters (posted_order) should NEVER trigger AI generation.
+        // They must wait for the Farmer to accept and generate the tasks.
+        if (!existingAiTasks && sourceCategory !== 'posted_order') {
+          try {
+            // 1. Get Plan Detail
+            const planRes = await fetch(`${API_URL}/api/plants/${staticData.plant_id}/ai-plans`)
+            if (planRes.ok) {
+              const plans = await planRes.json()
+              const plan = plans.find((p: any) => p.plan_type === planType) || plans[0]
+
+              // 2. Get AI Explanation
+              const expRes = await fetch(`${API_URL}/api/plants/${staticData.plant_id}/explain`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan })
+              })
+              if (expRes.ok) {
+                const { explanation } = await expRes.json()
+
+                // 3. Generate Tasks
+                const taskRes = await fetch(`${API_URL}/api/generate-ai-tasks`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    plant_id: staticPlantId,
-                    state: newPlant.state,
-                    task_state: newPlant.task_state,
-                    ai_tasks: aiTasks
+                    plantId: staticData.plant_id,
+                    plantName: staticData.name,
+                    planType: planType,
+                    explanation: explanation
                   })
-                }).catch(err => console.error("[QuestContext] Failed to sync tasks to order:", err))
-              }
+                })
+                
+                if (taskRes.ok) {
+                  const aiTasks = await taskRes.json()
+                  await updateDoc(docRef, {
+                    ai_tasks: aiTasks,
+                    updated_at: serverTimestamp()
+                  })
 
-              console.log(`[QuestContext] AI tasks ready for ${instanceId}`)
+                  // Sync tasks to order if applicable
+                  if (options?.sharedProgressKey?.startsWith('marketplace-order-')) {
+                    const oId = options.sharedProgressKey.replace('marketplace-order-', '')
+                    await fetch(`${API_URL}/api/marketplace/orders/${oId}/shared-progress`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        plant_id: staticData.plant_id,
+                        state: newPlant.state,
+                        task_state: newPlant.task_state,
+                        ai_tasks: aiTasks
+                      })
+                    })
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error in AI task generation flow:', error)
+          }
+        }
+
+        return instanceId
+      } finally {
+        setIsGeneratingTasks(false)
+        if (options?.sharedProgressKey) {
+          inFlightAddsRef.current.delete(options.sharedProgressKey)
+        }
+      }
+    }
+
+    if (options?.sharedProgressKey) {
+      const promise = performAdd()
+      inFlightAddsRef.current.set(options.sharedProgressKey, promise)
+      return promise
+    }
+
+    return performAdd()
+  }, [user, userPlants, isGoogleUser, accessToken, createCalendarEvent])
+
+  // ── Marketplace Order Sync ──
+  const syncedOrdersRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    if (!user || authLoading || loading) return
+
+    const syncMarketplaceOrders = async () => {
+      try {
+        let API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+        // Fallback for local development if not set
+        if (!API_URL && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+          API_URL = 'http://localhost:3001'
+        }
+
+        console.log(`[QuestContext] Syncing marketplace orders for ${user.uid} via ${API_URL}...`)
+        const res = await fetch(`${API_URL}/api/marketplace/my-orders?uid=${user.uid}`)
+        if (!res.ok) {
+           console.warn(`[QuestContext] Sync failed: ${res.status} ${res.statusText}`)
+           return
+        }
+        
+        const { as_requester, as_farmer } = (await res.json()) as { as_requester: any[], as_farmer: any[] }
+        const allOrders = [...(as_requester || []), ...(as_farmer || [])]
+        console.log(`[QuestContext] Found ${allOrders.length} potential orders to sync.`)
+        
+        for (const order of allOrders) {
+          // If order is accepted/in-progress, ensure it's in the garden for tracking
+          if (['accepted', 'in_progress', 'pending_review'].includes(order.status)) {
+            const sharedKey = `marketplace-order-${order.id}`
+            const existingPlant = userPlants.find(p => p.shared_progress_key === sharedKey)
+            
+            if (existingPlant) {
+              // If the plant exists but is hidden (is_accepted is false), make it visible
+              if (!existingPlant.is_accepted) {
+                console.log(`[QuestContext] Order ${order.id} is now accepted, revealing in garden...`)
+                const plantRef = doc(db, 'users', user.uid, 'user_plants', existingPlant.id)
+                updateDoc(plantRef, { is_accepted: true, updated_at: serverTimestamp() })
+              }
+            } else if (!syncedOrdersRef.current.has(order.id)) {
+              syncedOrdersRef.current.add(order.id)
+              console.log(`[QuestContext] Auto-syncing active order to garden: ${order.id} (${order.plant_name})`)
+              
+              const isRequester = order.requester_uid === user.uid
+              const sourceCategory = isRequester ? 'posted_order' : 'accepted_order'
+              
+              // addPlant is non-blocking and handles its own state updates
+              addPlant(order.plant_id, order.plan_type || 'Budget', sourceCategory, { 
+                sharedProgressKey: sharedKey,
+                is_accepted: true 
+              })
+                .then(id => console.log(`[QuestContext] Successfully synced ${order.id} as plant ${id}`))
+                .catch(e => console.error(`[QuestContext] Failed to sync order ${order.id}:`, e))
             }
           }
         }
-      } catch (err) {
-        console.error("Failed to generate AI tasks during creation:", err)
-      } finally {
-        setIsGeneratingTasks(false)
+      } catch (e) {
+        console.error("[QuestContext] Marketplace sync error:", e)
       }
-    })()
+    }
 
-    pendingActivePlantIdRef.current = null
-    return instanceId
-  }, [user])
+    syncMarketplaceOrders()
+  }, [user, authLoading, userPlants, addPlant])
 
   const deletePlant = useCallback(async (instanceId: string) => {
     if (!user) return
@@ -485,11 +536,23 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       )
     }
 
-    await deleteDoc(docRef)
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+      const res = await fetch(`${API_URL}/api/users/${user.uid}/plants/${instanceId}`, { method: 'DELETE' })
+      
+      if (!res.ok) {
+        console.warn("[QuestContext] Server delete failed, performing direct Firestore deletion fallback.")
+        await deleteDoc(docRef)
+      }
+    } catch (err) {
+      console.error("[QuestContext] Server delete error, performing direct Firestore deletion fallback:", err)
+      await deleteDoc(docRef)
+    }
+
     if (activePlantId === instanceId) {
        setActivePlantId(null)
     }
-  }, [user, activePlantId, userPlants, isGoogleUser, accessToken])
+  }, [user, activePlantId, isGoogleUser, accessToken])
 
   const completeTask = useCallback(async (instanceId: string, taskId: string) => {
     if (!user) return

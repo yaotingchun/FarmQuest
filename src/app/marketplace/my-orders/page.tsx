@@ -101,7 +101,7 @@ export default function MyOrdersPage() {
       ) : (
         <div className="mp-grid">
           {orders.map(order => (
-            <Link href={`/quest?plant=${encodeURIComponent(order.plant_id || '')}&plan=${encodeURIComponent(order.plan_type || 'Budget')}&source=${tab === 'posted' ? 'posted_order' : 'accepted_order'}&order=${encodeURIComponent(order.id)}`} key={order.id} className="mp-card">
+            <Link href={`/marketplace/${order.id}?from=my-orders`} key={order.id} className="mp-card">
               <div className="mp-card-top">
                 <div className="mp-card-plant">
                   <span className="mp-card-emoji">{order.plant_emoji}</span>
