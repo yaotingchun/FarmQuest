@@ -71,7 +71,6 @@ export interface UserPlant {
     daily: string[]
   }
   google_calendar_event_id?: string
-  order_status?: 'open' | 'accepted' | 'active' | 'completed' | 'cancelled'
 }
 
 

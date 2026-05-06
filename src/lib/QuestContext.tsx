@@ -27,7 +27,7 @@ interface QuestContextValue {
   ) => Promise<string | undefined>
   deletePlant: (instanceId: string) => Promise<void>
   completeTask: (instanceId: string, taskType: string) => Promise<void>
-
+  
   // Calendar (Placeholder for now)
   calendarData: any[]
   refreshCalendar: (year: number, month: number) => void
@@ -187,7 +187,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
         if (anyMilestone) todayStatuses.push('milestone')
         if (anyCompleted) todayStatuses.push('completed')
         if (anyPending) todayStatuses.push('pending')
-
+        
         entries.push({
           date: dateKey,
           tasks: todayTasks,
@@ -254,15 +254,15 @@ export function QuestProvider({ children }: { children: ReactNode }) {
             plant.state = decayResult.updatedState
             plant.status = decayResult.status || plant.status
             if (decayResult.newCheckedAt) {
-              plant.last_checked_at = decayResult.newCheckedAt
+               plant.last_checked_at = decayResult.newCheckedAt
             }
             requiresDecaySave = true
             // Save decay asynchronously, we still apply local derived state instantly
             updateDoc(docSnap.ref, {
-              state: plant.state,
-              status: plant.status,
-              last_checked_at: plant.last_checked_at,
-              updated_at: serverTimestamp(),
+               state: plant.state,
+               status: plant.status,
+               last_checked_at: plant.last_checked_at,
+               updated_at: serverTimestamp(),
             }).catch(e => console.error("Decay sync error:", e))
           }
           plants.push(plant)
@@ -270,7 +270,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       })
 
       setUserPlants(plants)
-
+      
       setActivePlantId((prev) => {
         if (plants.length === 0) return null
         const pendingId = pendingActivePlantIdRef.current
@@ -285,12 +285,12 @@ export function QuestProvider({ children }: { children: ReactNode }) {
         }
 
         if (!prev) return plants[0].id
-
+        
         // Ensure the active plant actually still exists in the list (e.g. not deleted)
         const activeExists = plants.some(p => p.id === prev)
         return activeExists ? prev : plants[0].id
       })
-
+      
       setLoading(false)
     }, (error) => {
       console.error("Error fetching quest plants:", error)
@@ -337,7 +337,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     // Try to pre-load tasks from shared order if applicable
     let existingAiTasks = null
     const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
-
+    
     if (options?.sharedProgressKey?.startsWith('marketplace-order-')) {
       try {
         const orderId = options.sharedProgressKey.replace('marketplace-order-', '')
@@ -347,9 +347,6 @@ export function QuestProvider({ children }: { children: ReactNode }) {
           if (order.ai_tasks) {
             existingAiTasks = order.ai_tasks
             newPlant.ai_tasks = existingAiTasks
-          }
-          if (order.status) {
-            newPlant.order_status = order.status
           }
         }
       } catch (e) {
@@ -371,9 +368,9 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     if (isGoogleUser && accessToken) {
       try {
         const totalDurationDays = (staticData.growth_stages.seed.duration_days || 7) +
-          (staticData.growth_stages.sprout.duration_days || 14) +
-          (staticData.growth_stages.mature.duration_days || 30)
-
+                                  (staticData.growth_stages.sprout.duration_days || 14) +
+                                  (staticData.growth_stages.mature.duration_days || 30)
+        
         const startDate = new Date()
         const endDate = new Date()
         endDate.setDate(startDate.getDate() + totalDurationDays)
@@ -413,7 +410,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       return instanceId
     }
 
-    ; (async () => {
+    ;(async () => {
       try {
         // 1. Get Plan Detail
         const planRes = await fetch(`${API_URL}/api/plants/${staticPlantId}/ai-plans`)
@@ -441,7 +438,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
                 explanation: explanation
               })
             })
-
+            
             if (taskRes.ok) {
               const aiTasks = await taskRes.json()
               await updateDoc(docRef, {
@@ -483,17 +480,17 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     if (!user) return
     const plant = userPlants.find(p => p.id === instanceId)
     const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
-
+    
     // ── Google Calendar Integration (Delete Event) ──
     if (isGoogleUser && accessToken && plant?.google_calendar_event_id) {
-      deleteCalendarEvent(accessToken, plant.google_calendar_event_id).catch(e =>
+      deleteCalendarEvent(accessToken, plant.google_calendar_event_id).catch(e => 
         console.error("Failed to delete calendar event:", e)
       )
     }
 
     await deleteDoc(docRef)
     if (activePlantId === instanceId) {
-      setActivePlantId(null)
+       setActivePlantId(null)
     }
   }, [user, activePlantId, userPlants, isGoogleUser, accessToken])
 
@@ -507,12 +504,12 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     const taskPrefix = taskId.split('-')[0]
     const taskType =
       taskId === 'intro' ||
-        taskId === 'intro-2' ||
-        taskId === 'intro-3' ||
-        taskPrefix === 'main'
+      taskId === 'intro-2' ||
+      taskId === 'intro-3' ||
+      taskPrefix === 'main'
         ? taskId
         : taskPrefix
-
+    
     // We update fields deterministically
     let { ...newState } = plant.state
     let { ...newTaskState } = plant.task_state
@@ -521,7 +518,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
     const nowTimestamp = Timestamp.now()
-
+    
     if (taskType.startsWith('main-')) {
       const mainIndex = parseInt(taskType.split('-')[1] || '0', 10)
       const mainQuest = plant.ai_tasks?.main?.[mainIndex]
@@ -597,9 +594,9 @@ export function QuestProvider({ children }: { children: ReactNode }) {
 
     // Apply deterministic growth stage recalculation
     newState.growthStage = getGrowthStage(newState.xp)
-
+    
     const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
-
+    
     try {
       await updateDoc(docRef, {
         state: newState,
@@ -623,9 +620,9 @@ export function QuestProvider({ children }: { children: ReactNode }) {
         })
       }
     } catch (e) {
-      console.error("Failed to complete task:", e)
+        console.error("Failed to complete task:", e)
     }
-  }, [user, userPlants, resolveTaskLabel])
+    }, [user, userPlants, resolveTaskLabel])
 
   return (
     <QuestContext.Provider value={{

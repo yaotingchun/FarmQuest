@@ -16,7 +16,6 @@ interface PlantStatusCardProps {
   stage: GrowthStage
   streak: number
   sourceCategory?: PlantSourceCategory
-  orderStatus?: 'open' | 'accepted' | 'active' | 'completed' | 'cancelled'
   sunlight?: string
   waterFrequency?: number
   startMethod?: string
@@ -31,50 +30,28 @@ const SOURCE_CONFIG: Record<PlantSourceCategory, { label: string; emoji: string;
   accepted_order: { label: 'Accepted Order', emoji: '🚜', className: 'source-accepted' },
 }
 
-export function PlantStatusCard({ 
-  plantName, 
-  plantEmoji, 
-  stage, 
-  streak, 
-  sourceCategory = 'chosen_plant', 
-  orderStatus,
-  sunlight, 
-  waterFrequency, 
-  startMethod 
-}: PlantStatusCardProps) {
+export function PlantStatusCard({ plantName, plantEmoji, stage, streak, sourceCategory = 'chosen_plant', sunlight, waterFrequency, startMethod }: PlantStatusCardProps) {
   const stageInfo = STAGE_CONFIG[stage]
   const displayLabel = (stage === 0 && startMethod) ? formatStartMethod(startMethod) : stageInfo.label
   const sourceInfo = SOURCE_CONFIG[sourceCategory]
 
-  const isSearching = sourceCategory === 'posted_order' && (!orderStatus || orderStatus === 'open')
-
   return (
-    <div className={`quest-plant-card ${isSearching ? 'is-searching' : ''}`}>
+    <div className="quest-plant-card">
       <div className="quest-plant-source-wrap">
         <span className={`quest-plant-source-badge ${sourceInfo.className}`}>
           {sourceInfo.emoji} {sourceInfo.label}
         </span>
-        {isSearching && (
-          <span className="quest-searching-badge">
-            🔍 Searching for Farmer...
-          </span>
-        )}
       </div>
 
       <div className="quest-plant-card-body">
         <div className="quest-plant-card-visual">
-          <div className="quest-plant-emoji-wrap" style={{ 
-            '--stage-color': isSearching ? '#94a3b8' : stageInfo.color,
-            filter: isSearching ? 'grayscale(1) opacity(0.6)' : 'none'
-          } as React.CSSProperties}>
+          <div className="quest-plant-emoji-wrap" style={{ '--stage-color': stageInfo.color } as React.CSSProperties}>
             <span className="quest-plant-emoji">{plantEmoji}</span>
             <div className="quest-plant-stage-ring" />
           </div>
-          {!isSearching && (
-            <div className="quest-plant-stage-badge" style={{ background: stageInfo.color }}>
-              {stageInfo.emoji} {displayLabel}
-            </div>
-          )}
+          <div className="quest-plant-stage-badge" style={{ background: stageInfo.color }}>
+            {stageInfo.emoji} {displayLabel}
+          </div>
         </div>
 
         <div className="quest-plant-info">

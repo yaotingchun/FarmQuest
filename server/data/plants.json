@@ -1,318 +1,9 @@
 {
   "schema_version": "1.0",
-  "last_updated": "2026-05-06",
+  "last_updated": "2026-04-20",
   "plants": [
     {
       "plant_id": "P001",
-      "name": "Kangkung (Water Spinach)",
-      "scientific_name": "Ipomoea aquatica",
-      "sunlight": "full_sun",
-      "water": "high",
-      "temp_min": 22,
-      "temp_max": 38,
-      "humidity_min": 60,
-      "humidity_max": 90,
-      "difficulty": "easy",
-      "growth_days": 21,
-      "type": "food",
-      "space": [
-        "balcony",
-        "garden"
-      ],
-      "description": "Fast-growing tropical leafy vegetable. A staple in Southeast Asian cuisine. Thrives in heat and moisture.",
-      "care_tips": "Can be grown in a container with a tray of water. Harvest frequently to stimulate regrowth.",
-      "weekly_time_minutes": 15,
-      "pot": {
-        "material": [
-          "plastic"
-        ],
-        "min_diameter_cm": 20,
-        "depth_cm": 20,
-        "drainage_required": false
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "compost",
-            "percentage": 40
-          },
-          {
-            "component": "sand",
-            "percentage": 10
-          }
-        ],
-        "ph_range": "5.5–7.0",
-        "moisture": "wet to waterlogged"
-      },
-      "seed": {
-        "method": "seed or cutting",
-        "germination_days": "3–7",
-        "planting_depth_cm": 1
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "seedling",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "15-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "harvest",
-            "npk": "10-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          }
-        ]
-      },
-      "emoji": "🥗"
-    },
-    {
-      "plant_id": "P002",
-      "name": "Lady Finger (Okra)",
-      "scientific_name": "Abelmoschus esculentus",
-      "sunlight": "full_sun",
-      "water": "medium",
-      "temp_min": 22,
-      "temp_max": 40,
-      "humidity_min": 50,
-      "humidity_max": 80,
-      "difficulty": "easy",
-      "growth_days": 55,
-      "type": "food",
-      "space": [
-        "garden",
-        "balcony"
-      ],
-      "description": "Heat-tolerant vegetable that thrives in tropical conditions. Produces abundantly through the year.",
-      "care_tips": "Harvest pods at 7–10 cm length for best tenderness. Larger pods become tough and fibrous.",
-      "weekly_time_minutes": 20,
-      "pot": {
-        "material": [
-          "plastic",
-          "fabric"
-        ],
-        "min_diameter_cm": 30,
-        "depth_cm": 35,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 60
-          },
-          {
-            "component": "compost",
-            "percentage": 25
-          },
-          {
-            "component": "perlite",
-            "percentage": 15
-          }
-        ],
-        "ph_range": "6.0–6.8",
-        "moisture": "moist but well-drained"
-      },
-      "seed": {
-        "method": "seed",
-        "germination_days": "5–10",
-        "planting_depth_cm": 2
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "seedling",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "15-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "fruiting",
-            "npk": "5-10-10",
-            "type": "granular fertilizer",
-            "frequency": "biweekly"
-          }
-        ]
-      },
-      "emoji": "🥒"
-    },
-    {
-      "plant_id": "P003",
-      "name": "Long Bean",
-      "scientific_name": "Vigna unguiculata subsp. sesquipedalis",
-      "sunlight": "full_sun",
-      "water": "medium",
-      "temp_min": 20,
-      "temp_max": 38,
-      "humidity_min": 50,
-      "humidity_max": 80,
-      "difficulty": "easy",
-      "growth_days": 50,
-      "type": "food",
-      "space": [
-        "garden",
-        "balcony"
-      ],
-      "description": "Fast-producing tropical bean with pods up to 60 cm long. A popular vegetable in Malaysian home cooking.",
-      "care_tips": "Provide a trellis or stakes for climbing. Harvest pods when young and tender before they become stringy.",
-      "weekly_time_minutes": 20,
-      "pot": {
-        "material": [
-          "plastic",
-          "fabric"
-        ],
-        "min_diameter_cm": 30,
-        "depth_cm": 35,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 60
-          },
-          {
-            "component": "compost",
-            "percentage": 25
-          },
-          {
-            "component": "perlite",
-            "percentage": 15
-          }
-        ],
-        "ph_range": "6.0–7.0",
-        "moisture": "moist but well-drained"
-      },
-      "seed": {
-        "method": "seed",
-        "germination_days": "5–8",
-        "planting_depth_cm": 2
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "seedling",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "flowering",
-            "npk": "5-15-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "fruiting",
-            "npk": "5-10-10",
-            "type": "granular fertilizer",
-            "frequency": "biweekly"
-          }
-        ]
-      },
-      "emoji": "🫛"
-    },
-    {
-      "plant_id": "P004",
-      "name": "Sweet Potato Leaves",
-      "scientific_name": "Ipomoea batatas",
-      "sunlight": "full_sun",
-      "water": "medium",
-      "temp_min": 21,
-      "temp_max": 38,
-      "humidity_min": 50,
-      "humidity_max": 85,
-      "difficulty": "easy",
-      "growth_days": 30,
-      "type": "food",
-      "space": [
-        "garden",
-        "balcony"
-      ],
-      "description": "Nutritious leafy vegetable widely eaten in Southeast Asia. Leaves and shoots are harvested young and stir-fried.",
-      "care_tips": "Harvest young shoot tips regularly to keep the plant bushy and productive. Very drought-tolerant once established.",
-      "weekly_time_minutes": 15,
-      "pot": {
-        "material": [
-          "plastic",
-          "fabric"
-        ],
-        "min_diameter_cm": 30,
-        "depth_cm": 30,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 60
-          },
-          {
-            "component": "compost",
-            "percentage": 25
-          },
-          {
-            "component": "sand",
-            "percentage": 15
-          }
-        ],
-        "ph_range": "5.5–6.5",
-        "moisture": "moist but well-drained"
-      },
-      "seed": {
-        "method": "stem cutting",
-        "germination_days": "7–10",
-        "planting_depth_cm": 2
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "establishment",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "14-7-7",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "harvest",
-            "npk": "10-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          }
-        ]
-      },
-      "emoji": "🍃"
-    },
-    {
-      "plant_id": "P005",
       "name": "Chili",
       "scientific_name": "Capsicum annuum",
       "sunlight": "full_sun",
@@ -388,7 +79,238 @@
       "emoji": "🌶️"
     },
     {
-      "plant_id": "P006",
+      "plant_id": "P002",
+      "name": "Mint",
+      "scientific_name": "Mentha spicata",
+      "sunlight": "partial",
+      "water": "high",
+      "temp_min": 15,
+      "temp_max": 30,
+      "humidity_min": 50,
+      "humidity_max": 80,
+      "difficulty": "easy",
+      "growth_days": 30,
+      "type": "herb",
+      "space": [
+        "balcony",
+        "windowsill",
+        "indoor"
+      ],
+      "description": "Fast-growing aromatic herb. Can grow invasively so container planting is recommended.",
+      "care_tips": "Keep soil consistently moist. Pinch flowers to encourage leaf growth.",
+      "weekly_time_minutes": 15,
+      "pot": {
+        "material": [
+          "plastic",
+          "ceramic"
+        ],
+        "min_diameter_cm": 15,
+        "depth_cm": 20,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 50
+          },
+          {
+            "component": "compost",
+            "percentage": 30
+          },
+          {
+            "component": "perlite",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "6.0–7.0",
+        "moisture": "consistently moist"
+      },
+      "seed": {
+        "method": "cutting or seed",
+        "germination_days": "10–16",
+        "planting_depth_cm": 0.3
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "10-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "mature",
+            "npk": "5-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🌿"
+    },
+    {
+      "plant_id": "P003",
+      "name": "Lettuce",
+      "scientific_name": "Lactuca sativa",
+      "sunlight": "low_light",
+      "water": "medium",
+      "temp_min": 10,
+      "temp_max": 25,
+      "humidity_min": 50,
+      "humidity_max": 70,
+      "difficulty": "easy",
+      "growth_days": 45,
+      "type": "food",
+      "space": [
+        "balcony",
+        "windowsill",
+        "indoor"
+      ],
+      "description": "Cool-season leafy green. Ideal for indoor hydroponic or container setups.",
+      "care_tips": "Avoid temperatures above 28°C or it will bolt. Harvest outer leaves regularly.",
+      "weekly_time_minutes": 20,
+      "pot": {
+        "material": [
+          "plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 20,
+        "depth_cm": 15,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 30
+          },
+          {
+            "component": "perlite",
+            "percentage": 10
+          }
+        ],
+        "ph_range": "6.0–7.0",
+        "moisture": "moist"
+      },
+      "seed": {
+        "method": "seed",
+        "germination_days": "7–10",
+        "planting_depth_cm": 0.3
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "14-7-7",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "harvest",
+            "npk": "5-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          }
+        ]
+      },
+      "emoji": "🥬"
+    },
+    {
+      "plant_id": "P004",
+      "name": "Basil",
+      "scientific_name": "Ocimum basilicum",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 18,
+      "temp_max": 35,
+      "humidity_min": 40,
+      "humidity_max": 70,
+      "difficulty": "easy",
+      "growth_days": 30,
+      "type": "herb",
+      "space": [
+        "balcony",
+        "windowsill",
+        "garden"
+      ],
+      "description": "Classic culinary herb with a sweet, peppery aroma. Perfect for cooking and companion planting.",
+      "care_tips": "Pinch off flower buds to extend leaf production. Loves 6+ hours of sun.",
+      "weekly_time_minutes": 20,
+      "pot": {
+        "material": [
+          "plastic",
+          "terracotta"
+        ],
+        "min_diameter_cm": 15,
+        "depth_cm": 20,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 25
+          },
+          {
+            "component": "perlite",
+            "percentage": 15
+          }
+        ],
+        "ph_range": "6.0–7.0",
+        "moisture": "moist but not soggy"
+      },
+      "seed": {
+        "method": "seed",
+        "germination_days": "5–10",
+        "planting_depth_cm": 0.3
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "10-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "mature",
+            "npk": "5-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🍃"
+    },
+    {
+      "plant_id": "P005",
       "name": "Cherry Tomato",
       "scientific_name": "Solanum lycopersicum var. cerasiforme",
       "sunlight": "full_sun",
@@ -470,32 +392,336 @@
       "emoji": "🍅"
     },
     {
-      "plant_id": "P007",
-      "name": "Ulam Raja",
-      "scientific_name": "Cosmos caudatus",
+      "plant_id": "P006",
+      "name": "Kangkung (Water Spinach)",
+      "scientific_name": "Ipomoea aquatica",
       "sunlight": "full_sun",
-      "water": "medium",
+      "water": "high",
       "temp_min": 22,
       "temp_max": 38,
-      "humidity_min": 55,
+      "humidity_min": 60,
       "humidity_max": 90,
       "difficulty": "easy",
       "growth_days": 21,
+      "type": "food",
+      "space": [
+        "balcony",
+        "garden"
+      ],
+      "description": "Fast-growing tropical leafy vegetable. A staple in Southeast Asian cuisine. Thrives in heat and moisture.",
+      "care_tips": "Can be grown in a container with a tray of water. Harvest frequently to stimulate regrowth.",
+      "weekly_time_minutes": 15,
+      "pot": {
+        "material": [
+          "plastic"
+        ],
+        "min_diameter_cm": 20,
+        "depth_cm": 20,
+        "drainage_required": false
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 50
+          },
+          {
+            "component": "compost",
+            "percentage": 40
+          },
+          {
+            "component": "sand",
+            "percentage": 10
+          }
+        ],
+        "ph_range": "5.5–7.0",
+        "moisture": "wet to waterlogged"
+      },
+      "seed": {
+        "method": "seed or cutting",
+        "germination_days": "3–7",
+        "planting_depth_cm": 1
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "harvest",
+            "npk": "10-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          }
+        ]
+      },
+      "emoji": "🥗"
+    },
+    {
+      "plant_id": "P007",
+      "name": "Pandan",
+      "scientific_name": "Pandanus amaryllifolius",
+      "sunlight": "partial",
+      "water": "medium",
+      "temp_min": 22,
+      "temp_max": 38,
+      "humidity_min": 60,
+      "humidity_max": 90,
+      "difficulty": "easy",
+      "growth_days": 60,
       "type": "herb",
       "space": [
-        "garden",
-        "balcony"
+        "balcony",
+        "garden"
       ],
-      "description": "Popular Malaysian salad herb eaten raw. Known for its antioxidant properties and rapid growth.",
-      "care_tips": "A true tropical plant — thrives with minimal care in Malaysian conditions. Self-seeds readily.",
-      "weekly_time_minutes": 10,
+      "description": "Fragrant tropical herb essential in Southeast Asian cooking. Used in rice, desserts, and drinks.",
+      "care_tips": "Keep soil moist but not soggy. Thrives in humid, tropical climates like Malaysia.",
+      "weekly_time_minutes": 15,
+      "pot": {
+        "material": [
+          "plastic",
+          "terracotta"
+        ],
+        "min_diameter_cm": 25,
+        "depth_cm": 30,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 50
+          },
+          {
+            "component": "compost",
+            "percentage": 30
+          },
+          {
+            "component": "sand",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "5.5–6.5",
+        "moisture": "moist"
+      },
+      "seed": {
+        "method": "offset division",
+        "germination_days": "N/A",
+        "planting_depth_cm": 0
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "establishment",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-5-10",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "mature",
+            "npk": "10-10-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🍃"
+    },
+    {
+      "plant_id": "P008",
+      "name": "Calamansi Lime",
+      "scientific_name": "Citrus × microcarpa",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 20,
+      "temp_max": 35,
+      "humidity_min": 50,
+      "humidity_max": 80,
+      "difficulty": "medium",
+      "growth_days": 180,
+      "type": "food",
+      "space": [
+        "balcony",
+        "garden"
+      ],
+      "description": "Miniature citrus fruit widely used in Southeast Asian cooking and drinks. Great for container growing.",
+      "care_tips": "Feed with citrus fertiliser monthly. Ensure good drainage. Prune after harvest season.",
+      "weekly_time_minutes": 30,
+      "pot": {
+        "material": [
+          "plastic",
+          "terracotta"
+        ],
+        "min_diameter_cm": 35,
+        "depth_cm": 40,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 50
+          },
+          {
+            "component": "compost",
+            "percentage": 30
+          },
+          {
+            "component": "perlite",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "5.5–6.5",
+        "moisture": "well-drained"
+      },
+      "seed": {
+        "method": "seed or grafted seedling",
+        "germination_days": "14–28",
+        "planting_depth_cm": 1
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "young",
+            "npk": "10-10-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "flowering",
+            "npk": "5-15-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "fruiting",
+            "npk": "5-10-15",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🍋"
+    },
+    {
+      "plant_id": "P009",
+      "name": "Rosemary",
+      "scientific_name": "Salvia rosmarinus",
+      "sunlight": "full_sun",
+      "water": "low",
+      "temp_min": 10,
+      "temp_max": 30,
+      "humidity_min": 20,
+      "humidity_max": 60,
+      "difficulty": "medium",
+      "growth_days": 90,
+      "type": "herb",
+      "space": [
+        "balcony",
+        "windowsill",
+        "garden"
+      ],
+      "description": "Fragrant Mediterranean herb used for cooking and aromatherapy. Attracts pollinators.",
+      "care_tips": "Needs excellent drainage and air circulation. Avoid overwatering — the main cause of death.",
+      "weekly_time_minutes": 15,
+      "pot": {
+        "material": [
+          "terracotta",
+          "clay"
+        ],
+        "min_diameter_cm": 20,
+        "depth_cm": 25,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 50
+          },
+          {
+            "component": "coarse sand",
+            "percentage": 30
+          },
+          {
+            "component": "perlite",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "6.0–7.0",
+        "moisture": "dry between waterings"
+      },
+      "seed": {
+        "method": "cutting or seed",
+        "germination_days": "14–21",
+        "planting_depth_cm": 0.5
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "10-5-5",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "mature",
+            "npk": "5-5-5",
+            "type": "granular fertilizer",
+            "frequency": "every 2 months"
+          }
+        ]
+      },
+      "emoji": "🌿"
+    },
+    {
+      "plant_id": "P010",
+      "name": "Butterfly Pea",
+      "scientific_name": "Clitoria ternatea",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 20,
+      "temp_max": 38,
+      "humidity_min": 50,
+      "humidity_max": 90,
+      "difficulty": "easy",
+      "growth_days": 45,
+      "type": "flower",
+      "space": [
+        "balcony",
+        "garden"
+      ],
+      "description": "Vibrant blue flowers used to make natural food colouring and tea. Fast-growing tropical vine.",
+      "care_tips": "Train along a trellis or fence. Harvest flowers regularly to encourage continuous blooming.",
+      "weekly_time_minutes": 20,
       "pot": {
         "material": [
           "plastic",
           "terracotta"
         ],
         "min_diameter_cm": 20,
-        "depth_cm": 20,
+        "depth_cm": 25,
         "drainage_required": true
       },
       "soil": {
@@ -506,20 +732,20 @@
           },
           {
             "component": "compost",
-            "percentage": 30
+            "percentage": 25
           },
           {
-            "component": "sand",
-            "percentage": 10
+            "component": "perlite",
+            "percentage": 15
           }
         ],
         "ph_range": "5.5–7.0",
-        "moisture": "moist"
+        "moisture": "moist but well-drained"
       },
       "seed": {
         "method": "seed",
-        "germination_days": "5–7",
-        "planting_depth_cm": 0.5
+        "germination_days": "5–10",
+        "planting_depth_cm": 1
       },
       "nutrition": {
         "stages": [
@@ -531,22 +757,250 @@
           },
           {
             "stage": "vegetative",
-            "npk": "14-7-7",
+            "npk": "15-10-10",
             "type": "liquid fertilizer",
             "frequency": "weekly"
           },
           {
-            "stage": "harvest",
-            "npk": "10-5-5",
+            "stage": "flowering",
+            "npk": "5-15-10",
             "type": "liquid fertilizer",
             "frequency": "weekly"
           }
         ]
       },
-      "emoji": "🥗"
+      "emoji": "🌸"
     },
     {
-      "plant_id": "P008",
+      "plant_id": "P011",
+      "name": "Lady Finger (Okra)",
+      "scientific_name": "Abelmoschus esculentus",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 22,
+      "temp_max": 40,
+      "humidity_min": 50,
+      "humidity_max": 80,
+      "difficulty": "easy",
+      "growth_days": 55,
+      "type": "food",
+      "space": [
+        "garden",
+        "balcony"
+      ],
+      "description": "Heat-tolerant vegetable that thrives in tropical conditions. Produces abundantly through the year.",
+      "care_tips": "Harvest pods at 7–10 cm length for best tenderness. Larger pods become tough and fibrous.",
+      "weekly_time_minutes": 20,
+      "pot": {
+        "material": [
+          "plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 30,
+        "depth_cm": 35,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 25
+          },
+          {
+            "component": "perlite",
+            "percentage": 15
+          }
+        ],
+        "ph_range": "6.0–6.8",
+        "moisture": "moist but well-drained"
+      },
+      "seed": {
+        "method": "seed",
+        "germination_days": "5–10",
+        "planting_depth_cm": 2
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "fruiting",
+            "npk": "5-10-10",
+            "type": "granular fertilizer",
+            "frequency": "biweekly"
+          }
+        ]
+      },
+      "emoji": "🥒"
+    },
+    {
+      "plant_id": "P012",
+      "name": "Curry Leaf",
+      "scientific_name": "Murraya koenigii",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 18,
+      "temp_max": 38,
+      "humidity_min": 40,
+      "humidity_max": 80,
+      "difficulty": "medium",
+      "growth_days": 120,
+      "type": "herb",
+      "space": [
+        "garden",
+        "balcony"
+      ],
+      "description": "Aromatic herb widely used in South and Southeast Asian cooking. Leaves release fragrance when touched.",
+      "care_tips": "Do not overwater. Apply iron-rich fertiliser if leaves yellow. Grows slowly initially.",
+      "weekly_time_minutes": 20,
+      "pot": {
+        "material": [
+          "plastic",
+          "terracotta"
+        ],
+        "min_diameter_cm": 30,
+        "depth_cm": 35,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 50
+          },
+          {
+            "component": "compost",
+            "percentage": 30
+          },
+          {
+            "component": "sand",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "6.0–7.0",
+        "moisture": "moist but well-drained"
+      },
+      "seed": {
+        "method": "seed or stem cutting",
+        "germination_days": "14–21",
+        "planting_depth_cm": 1
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-5-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "mature",
+            "npk": "10-5-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🍃"
+    },
+    {
+      "plant_id": "P013",
+      "name": "Sunflower",
+      "scientific_name": "Helianthus annuus",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 18,
+      "temp_max": 35,
+      "humidity_min": 30,
+      "humidity_max": 70,
+      "difficulty": "easy",
+      "growth_days": 70,
+      "type": "flower",
+      "space": [
+        "garden",
+        "balcony"
+      ],
+      "description": "Cheerful, uplifting flowers that attract bees and birds. Seeds are edible and nutritious.",
+      "care_tips": "Plant facing south or southwest. Stake taller varieties. Seeds can be harvested when the back turns brown.",
+      "weekly_time_minutes": 20,
+      "pot": {
+        "material": [
+          "plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 30,
+        "depth_cm": 35,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 25
+          },
+          {
+            "component": "perlite",
+            "percentage": 15
+          }
+        ],
+        "ph_range": "6.0–7.5",
+        "moisture": "moist but well-drained"
+      },
+      "seed": {
+        "method": "seed",
+        "germination_days": "7–10",
+        "planting_depth_cm": 2.5
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-5-5",
+            "type": "granular fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "flowering",
+            "npk": "5-10-10",
+            "type": "granular fertilizer",
+            "frequency": "biweekly"
+          }
+        ]
+      },
+      "emoji": "🌻"
+    },
+    {
+      "plant_id": "P014",
       "name": "Spring Onion",
       "scientific_name": "Allium fistulosum",
       "sunlight": "partial",
@@ -623,229 +1077,7 @@
       "emoji": "🧅"
     },
     {
-      "plant_id": "P009",
-      "name": "Lettuce",
-      "scientific_name": "Lactuca sativa",
-      "sunlight": "low_light",
-      "water": "medium",
-      "temp_min": 10,
-      "temp_max": 25,
-      "humidity_min": 50,
-      "humidity_max": 70,
-      "difficulty": "easy",
-      "growth_days": 45,
-      "type": "food",
-      "space": [
-        "balcony",
-        "windowsill",
-        "indoor"
-      ],
-      "description": "Cool-season leafy green. Ideal for indoor hydroponic or container setups. Best grown indoors in Malaysia to avoid heat.",
-      "care_tips": "Avoid temperatures above 28°C or it will bolt. Harvest outer leaves regularly. Grow indoors or in shaded balcony.",
-      "weekly_time_minutes": 20,
-      "pot": {
-        "material": [
-          "plastic",
-          "fabric"
-        ],
-        "min_diameter_cm": 20,
-        "depth_cm": 15,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 60
-          },
-          {
-            "component": "compost",
-            "percentage": 30
-          },
-          {
-            "component": "perlite",
-            "percentage": 10
-          }
-        ],
-        "ph_range": "6.0–7.0",
-        "moisture": "moist"
-      },
-      "seed": {
-        "method": "seed",
-        "germination_days": "7–10",
-        "planting_depth_cm": 0.3
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "seedling",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "14-7-7",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "harvest",
-            "npk": "5-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          }
-        ]
-      },
-      "emoji": "🥬"
-    },
-    {
-      "plant_id": "P010",
-      "name": "Microgreens",
-      "scientific_name": "Various species",
-      "sunlight": "low_light",
-      "water": "medium",
-      "temp_min": 18,
-      "temp_max": 28,
-      "humidity_min": 40,
-      "humidity_max": 70,
-      "difficulty": "easy",
-      "growth_days": 10,
-      "type": "food",
-      "space": [
-        "indoor",
-        "windowsill"
-      ],
-      "description": "Nutrient-dense seedlings harvested 7–14 days after germination. Ideal for windowsill growing year-round.",
-      "care_tips": "Mist twice daily. Harvest with scissors just above the soil line when first true leaves appear.",
-      "weekly_time_minutes": 15,
-      "pot": {
-        "material": [
-          "plastic tray"
-        ],
-        "min_diameter_cm": 20,
-        "depth_cm": 5,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "seed-raising mix",
-            "percentage": 70
-          },
-          {
-            "component": "compost",
-            "percentage": 20
-          },
-          {
-            "component": "vermiculite",
-            "percentage": 10
-          }
-        ],
-        "ph_range": "6.0–7.0",
-        "moisture": "moist"
-      },
-      "seed": {
-        "method": "seed (dense sowing)",
-        "germination_days": "2–5",
-        "planting_depth_cm": 0.2
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "germination",
-            "npk": "N/A",
-            "type": "none",
-            "frequency": "none"
-          },
-          {
-            "stage": "growth",
-            "npk": "5-5-5",
-            "type": "liquid fertilizer (diluted)",
-            "frequency": "once at day 5"
-          }
-        ]
-      },
-      "emoji": "🌱"
-    },
-    {
-      "plant_id": "P011",
-      "name": "Pandan",
-      "scientific_name": "Pandanus amaryllifolius",
-      "sunlight": "partial",
-      "water": "medium",
-      "temp_min": 22,
-      "temp_max": 38,
-      "humidity_min": 60,
-      "humidity_max": 90,
-      "difficulty": "easy",
-      "growth_days": 60,
-      "type": "herb",
-      "space": [
-        "balcony",
-        "garden"
-      ],
-      "description": "Fragrant tropical herb essential in Southeast Asian cooking. Used in rice, desserts, and drinks.",
-      "care_tips": "Keep soil moist but not soggy. Thrives in humid, tropical climates like Malaysia.",
-      "weekly_time_minutes": 15,
-      "pot": {
-        "material": [
-          "plastic",
-          "terracotta"
-        ],
-        "min_diameter_cm": 25,
-        "depth_cm": 30,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "compost",
-            "percentage": 30
-          },
-          {
-            "component": "sand",
-            "percentage": 20
-          }
-        ],
-        "ph_range": "5.5–6.5",
-        "moisture": "moist"
-      },
-      "seed": {
-        "method": "offset division",
-        "germination_days": "N/A",
-        "planting_depth_cm": 0
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "establishment",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "15-5-10",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "mature",
-            "npk": "10-10-10",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🍃"
-    },
-    {
-      "plant_id": "P012",
+      "plant_id": "P015",
       "name": "Lemon Grass",
       "scientific_name": "Cymbopogon citratus",
       "sunlight": "full_sun",
@@ -921,7 +1153,304 @@
       "emoji": "🌾"
     },
     {
-      "plant_id": "P013",
+      "plant_id": "P016",
+      "name": "Brinjal (Eggplant)",
+      "scientific_name": "Solanum melongena",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 22,
+      "temp_max": 35,
+      "humidity_min": 50,
+      "humidity_max": 75,
+      "difficulty": "medium",
+      "growth_days": 70,
+      "type": "food",
+      "space": [
+        "garden",
+        "balcony"
+      ],
+      "description": "Heat-loving vegetable with purple fruits. Widely used in Malaysian and Southeast Asian cooking.",
+      "care_tips": "Stake the plant when fruits develop. Keep soil consistently moist to prevent bitter fruits.",
+      "weekly_time_minutes": 35,
+      "pot": {
+        "material": [
+          "plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 30,
+        "depth_cm": 35,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 25
+          },
+          {
+            "component": "perlite",
+            "percentage": 15
+          }
+        ],
+        "ph_range": "5.5–6.8",
+        "moisture": "consistently moist"
+      },
+      "seed": {
+        "method": "seed",
+        "germination_days": "7–14",
+        "planting_depth_cm": 0.5
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "fruiting",
+            "npk": "5-10-15",
+            "type": "granular fertilizer",
+            "frequency": "biweekly"
+          }
+        ]
+      },
+      "emoji": "🍆"
+    },
+    {
+      "plant_id": "P017",
+      "name": "Ulam Raja",
+      "scientific_name": "Cosmos caudatus",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 22,
+      "temp_max": 38,
+      "humidity_min": 55,
+      "humidity_max": 90,
+      "difficulty": "easy",
+      "growth_days": 21,
+      "type": "herb",
+      "space": [
+        "garden",
+        "balcony"
+      ],
+      "description": "Popular Malaysian salad herb eaten raw. Known for its antioxidant properties and rapid growth.",
+      "care_tips": "A true tropical plant — thrives with minimal care in Malaysian conditions. Self-seeds readily.",
+      "weekly_time_minutes": 10,
+      "pot": {
+        "material": [
+          "plastic",
+          "terracotta"
+        ],
+        "min_diameter_cm": 20,
+        "depth_cm": 20,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 30
+          },
+          {
+            "component": "sand",
+            "percentage": 10
+          }
+        ],
+        "ph_range": "5.5–7.0",
+        "moisture": "moist"
+      },
+      "seed": {
+        "method": "seed",
+        "germination_days": "5–7",
+        "planting_depth_cm": 0.5
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "14-7-7",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "harvest",
+            "npk": "10-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          }
+        ]
+      },
+      "emoji": "🥗"
+    },
+    {
+      "plant_id": "P018",
+      "name": "Microgreens",
+      "scientific_name": "Various species",
+      "sunlight": "low_light",
+      "water": "medium",
+      "temp_min": 18,
+      "temp_max": 28,
+      "humidity_min": 40,
+      "humidity_max": 70,
+      "difficulty": "easy",
+      "growth_days": 10,
+      "type": "food",
+      "space": [
+        "indoor",
+        "windowsill"
+      ],
+      "description": "Nutrient-dense seedlings harvested 7–14 days after germination. Ideal for windowsill growing year-round.",
+      "care_tips": "Mist twice daily. Harvest with scissors just above the soil line when first true leaves appear.",
+      "weekly_time_minutes": 15,
+      "pot": {
+        "material": [
+          "plastic tray"
+        ],
+        "min_diameter_cm": 20,
+        "depth_cm": 5,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "seed-raising mix",
+            "percentage": 70
+          },
+          {
+            "component": "compost",
+            "percentage": 20
+          },
+          {
+            "component": "vermiculite",
+            "percentage": 10
+          }
+        ],
+        "ph_range": "6.0–7.0",
+        "moisture": "moist"
+      },
+      "seed": {
+        "method": "seed (dense sowing)",
+        "germination_days": "2–5",
+        "planting_depth_cm": 0.2
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "germination",
+            "npk": "N/A",
+            "type": "none",
+            "frequency": "none"
+          },
+          {
+            "stage": "growth",
+            "npk": "5-5-5",
+            "type": "liquid fertilizer (diluted)",
+            "frequency": "once at day 5"
+          }
+        ]
+      },
+      "emoji": "🌱"
+    },
+    {
+      "plant_id": "P019",
+      "name": "Sweet Potato Leaves",
+      "scientific_name": "Ipomoea batatas",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 21,
+      "temp_max": 38,
+      "humidity_min": 50,
+      "humidity_max": 85,
+      "difficulty": "easy",
+      "growth_days": 30,
+      "type": "food",
+      "space": [
+        "garden",
+        "balcony"
+      ],
+      "description": "Nutritious leafy vegetable widely eaten in Southeast Asia. Leaves and shoots are harvested young and stir-fried.",
+      "care_tips": "Harvest young shoot tips regularly to keep the plant bushy and productive. Very drought-tolerant once established.",
+      "weekly_time_minutes": 15,
+      "pot": {
+        "material": [
+          "plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 30,
+        "depth_cm": 30,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 25
+          },
+          {
+            "component": "sand",
+            "percentage": 15
+          }
+        ],
+        "ph_range": "5.5–6.5",
+        "moisture": "moist but well-drained"
+      },
+      "seed": {
+        "method": "stem cutting",
+        "germination_days": "7–10",
+        "planting_depth_cm": 2
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "establishment",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "14-7-7",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "harvest",
+            "npk": "10-5-5",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          }
+        ]
+      },
+      "emoji": "🍃"
+    },
+    {
+      "plant_id": "P020",
       "name": "Ginger",
       "scientific_name": "Zingiber officinale",
       "sunlight": "partial",
@@ -998,7 +1527,7 @@
       "emoji": "🫚"
     },
     {
-      "plant_id": "P014",
+      "plant_id": "P021",
       "name": "Turmeric",
       "scientific_name": "Curcuma longa",
       "sunlight": "partial",
@@ -1074,32 +1603,340 @@
       "emoji": "🫚"
     },
     {
-      "plant_id": "P015",
-      "name": "Curry Leaf",
-      "scientific_name": "Murraya koenigii",
+      "plant_id": "P022",
+      "name": "Long Bean",
+      "scientific_name": "Vigna unguiculata subsp. sesquipedalis",
       "sunlight": "full_sun",
       "water": "medium",
-      "temp_min": 18,
+      "temp_min": 20,
       "temp_max": 38,
-      "humidity_min": 40,
+      "humidity_min": 50,
       "humidity_max": 80,
-      "difficulty": "medium",
-      "growth_days": 120,
-      "type": "herb",
+      "difficulty": "easy",
+      "growth_days": 50,
+      "type": "food",
       "space": [
         "garden",
         "balcony"
       ],
-      "description": "Aromatic herb widely used in South and Southeast Asian cooking. Leaves release fragrance when touched.",
-      "care_tips": "Do not overwater. Apply iron-rich fertiliser if leaves yellow. Grows slowly initially.",
+      "description": "Fast-producing tropical bean with pods up to 60 cm long. A popular vegetable in Malaysian home cooking.",
+      "care_tips": "Provide a trellis or stakes for climbing. Harvest pods when young and tender before they become stringy.",
       "weekly_time_minutes": 20,
+      "pot": {
+        "material": [
+          "plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 30,
+        "depth_cm": 35,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 25
+          },
+          {
+            "component": "perlite",
+            "percentage": 15
+          }
+        ],
+        "ph_range": "6.0–7.0",
+        "moisture": "moist but well-drained"
+      },
+      "seed": {
+        "method": "seed",
+        "germination_days": "5–8",
+        "planting_depth_cm": 2
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "flowering",
+            "npk": "5-15-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "fruiting",
+            "npk": "5-10-10",
+            "type": "granular fertilizer",
+            "frequency": "biweekly"
+          }
+        ]
+      },
+      "emoji": "🫛"
+    },
+    {
+      "plant_id": "P023",
+      "name": "Bitter Gourd (Bitter Melon)",
+      "scientific_name": "Momordica charantia",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 24,
+      "temp_max": 38,
+      "humidity_min": 50,
+      "humidity_max": 85,
+      "difficulty": "medium",
+      "growth_days": 60,
+      "type": "food",
+      "space": [
+        "garden",
+        "balcony"
+      ],
+      "description": "Distinctive bitter-tasting vegetable prized in Malaysian and Chinese cuisine. Known for its blood sugar-regulating properties.",
+      "care_tips": "Train on a trellis. Harvest fruits when still green and firm for best flavour. Regular harvesting increases yield.",
+      "weekly_time_minutes": 30,
+      "pot": {
+        "material": [
+          "plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 35,
+        "depth_cm": 35,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 60
+          },
+          {
+            "component": "compost",
+            "percentage": 25
+          },
+          {
+            "component": "perlite",
+            "percentage": 15
+          }
+        ],
+        "ph_range": "6.0–6.8",
+        "moisture": "consistently moist"
+      },
+      "seed": {
+        "method": "seed",
+        "germination_days": "7–14",
+        "planting_depth_cm": 1.5
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "weekly"
+          },
+          {
+            "stage": "fruiting",
+            "npk": "5-10-15",
+            "type": "granular fertilizer",
+            "frequency": "biweekly"
+          }
+        ]
+      },
+      "emoji": "🥒"
+    },
+    {
+      "plant_id": "P024",
+      "name": "Banana",
+      "scientific_name": "Musa acuminata",
+      "sunlight": "full_sun",
+      "water": "high",
+      "temp_min": 22,
+      "temp_max": 38,
+      "humidity_min": 60,
+      "humidity_max": 90,
+      "difficulty": "easy",
+      "growth_days": 270,
+      "type": "food",
+      "space": [
+        "garden"
+      ],
+      "description": "Iconic tropical fruit that grows vigorously in Malaysian conditions. Young flowers (jantung pisang) and leaves are also edible.",
+      "care_tips": "Plant in a sunny spot with rich soil. Remove all but one or two suckers to focus energy on fruit production.",
+      "weekly_time_minutes": 25,
+      "pot": {
+        "material": [
+          "large plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 60,
+        "depth_cm": 50,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 40
+          },
+          {
+            "component": "compost",
+            "percentage": 40
+          },
+          {
+            "component": "sand",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "5.5–7.0",
+        "moisture": "consistently moist"
+      },
+      "seed": {
+        "method": "sucker division",
+        "germination_days": "N/A",
+        "planting_depth_cm": 0
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "establishment",
+            "npk": "15-5-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "20-10-20",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "fruiting",
+            "npk": "10-10-30",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🍌"
+    },
+    {
+      "plant_id": "P025",
+      "name": "Pineapple",
+      "scientific_name": "Ananas comosus",
+      "sunlight": "full_sun",
+      "water": "low",
+      "temp_min": 22,
+      "temp_max": 38,
+      "humidity_min": 50,
+      "humidity_max": 80,
+      "difficulty": "easy",
+      "growth_days": 540,
+      "type": "food",
+      "space": [
+        "garden",
+        "balcony"
+      ],
+      "description": "Tropical fruit grown from the crown of a store-bought pineapple. Drought-tolerant and surprisingly easy to grow.",
+      "care_tips": "Root the crown in water before planting. Allow soil to dry between waterings. Fruit production begins after 18 months.",
+      "weekly_time_minutes": 10,
       "pot": {
         "material": [
           "plastic",
           "terracotta"
         ],
         "min_diameter_cm": 30,
-        "depth_cm": 35,
+        "depth_cm": 30,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 50
+          },
+          {
+            "component": "coarse sand",
+            "percentage": 30
+          },
+          {
+            "component": "perlite",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "4.5–6.5",
+        "moisture": "dry between waterings"
+      },
+      "seed": {
+        "method": "crown cutting",
+        "germination_days": "21–28",
+        "planting_depth_cm": 3
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "establishment",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-5-15",
+            "type": "liquid fertilizer",
+            "frequency": "biweekly"
+          },
+          {
+            "stage": "fruiting",
+            "npk": "6-12-24",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🍍"
+    },
+    {
+      "plant_id": "P026",
+      "name": "Papaya",
+      "scientific_name": "Carica papaya",
+      "sunlight": "full_sun",
+      "water": "medium",
+      "temp_min": 22,
+      "temp_max": 38,
+      "humidity_min": 50,
+      "humidity_max": 85,
+      "difficulty": "easy",
+      "growth_days": 240,
+      "type": "food",
+      "space": [
+        "garden"
+      ],
+      "description": "Fast-growing tropical fruit tree that can produce fruit within 9 months. Young green papaya is also used in cooking.",
+      "care_tips": "Grows quickly from seed. Ensure excellent drainage — standing water kills the roots. Protect from strong winds.",
+      "weekly_time_minutes": 20,
+      "pot": {
+        "material": [
+          "large plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 50,
+        "depth_cm": 50,
         "drainage_required": true
       },
       "soil": {
@@ -1117,11 +1954,11 @@
             "percentage": 20
           }
         ],
-        "ph_range": "6.0–7.0",
+        "ph_range": "6.0–6.5",
         "moisture": "moist but well-drained"
       },
       "seed": {
-        "method": "seed or stem cutting",
+        "method": "seed",
         "germination_days": "14–21",
         "planting_depth_cm": 1
       },
@@ -1129,9 +1966,159 @@
         "stages": [
           {
             "stage": "seedling",
-            "npk": "10-10-10",
+            "npk": "15-15-15",
             "type": "liquid fertilizer",
             "frequency": "biweekly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "20-10-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "fruiting",
+            "npk": "10-10-20",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🍈"
+    },
+    {
+      "plant_id": "P027",
+      "name": "Torch Ginger (Bunga Kantan)",
+      "scientific_name": "Etlingera elatior",
+      "sunlight": "partial",
+      "water": "high",
+      "temp_min": 22,
+      "temp_max": 38,
+      "humidity_min": 65,
+      "humidity_max": 95,
+      "difficulty": "easy",
+      "growth_days": 180,
+      "type": "herb",
+      "space": [
+        "garden"
+      ],
+      "description": "Striking ornamental ginger with edible flower buds used in Malaysian cuisine, especially in laksa and rojak.",
+      "care_tips": "Loves moisture and partial shade. Harvest flower buds before they fully open for best flavour.",
+      "weekly_time_minutes": 20,
+      "pot": {
+        "material": [
+          "large plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 40,
+        "depth_cm": 40,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 40
+          },
+          {
+            "component": "compost",
+            "percentage": 40
+          },
+          {
+            "component": "sand",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "5.5–7.0",
+        "moisture": "consistently moist"
+      },
+      "seed": {
+        "method": "rhizome division",
+        "germination_days": "21–30",
+        "planting_depth_cm": 5
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "establishment",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "vegetative",
+            "npk": "15-5-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          },
+          {
+            "stage": "flowering",
+            "npk": "5-15-10",
+            "type": "granular fertilizer",
+            "frequency": "monthly"
+          }
+        ]
+      },
+      "emoji": "🌺"
+    },
+    {
+      "plant_id": "P028",
+      "name": "Moringa (Drumstick Tree)",
+      "scientific_name": "Moringa oleifera",
+      "sunlight": "full_sun",
+      "water": "low",
+      "temp_min": 22,
+      "temp_max": 40,
+      "humidity_min": 30,
+      "humidity_max": 80,
+      "difficulty": "easy",
+      "growth_days": 90,
+      "type": "food",
+      "space": [
+        "garden"
+      ],
+      "description": "Nutrient-dense superfood tree with edible leaves, pods, flowers, and seeds. Grows rapidly in tropical climates.",
+      "care_tips": "Extremely drought-tolerant once established. Prune regularly to keep it bushy and within reach for harvesting.",
+      "weekly_time_minutes": 15,
+      "pot": {
+        "material": [
+          "large plastic",
+          "fabric"
+        ],
+        "min_diameter_cm": 40,
+        "depth_cm": 45,
+        "drainage_required": true
+      },
+      "soil": {
+        "mix": [
+          {
+            "component": "potting mix",
+            "percentage": 50
+          },
+          {
+            "component": "coarse sand",
+            "percentage": 30
+          },
+          {
+            "component": "compost",
+            "percentage": 20
+          }
+        ],
+        "ph_range": "6.0–7.5",
+        "moisture": "dry between waterings"
+      },
+      "seed": {
+        "method": "seed or stem cutting",
+        "germination_days": "5–12",
+        "planting_depth_cm": 2
+      },
+      "nutrition": {
+        "stages": [
+          {
+            "stage": "seedling",
+            "npk": "10-10-10",
+            "type": "liquid fertilizer",
+            "frequency": "monthly"
           },
           {
             "stage": "vegetative",
@@ -1143,90 +2130,14 @@
             "stage": "mature",
             "npk": "10-5-10",
             "type": "granular fertilizer",
-            "frequency": "monthly"
+            "frequency": "every 2 months"
           }
         ]
       },
-      "emoji": "🍃"
+      "emoji": "🌳"
     },
     {
-      "plant_id": "P016",
-      "name": "Kaffir Lime",
-      "scientific_name": "Citrus hystrix",
-      "sunlight": "full_sun",
-      "water": "medium",
-      "temp_min": 20,
-      "temp_max": 35,
-      "humidity_min": 50,
-      "humidity_max": 80,
-      "difficulty": "medium",
-      "growth_days": 180,
-      "type": "herb",
-      "space": [
-        "garden",
-        "balcony"
-      ],
-      "description": "Citrus tree prized for its aromatic double leaves and zesty rind, both essential in Malaysian and Thai cooking.",
-      "care_tips": "Feed monthly with citrus fertiliser. Watch for leaf miners. Harvest leaves as needed — they regrow readily.",
-      "weekly_time_minutes": 25,
-      "pot": {
-        "material": [
-          "plastic",
-          "terracotta"
-        ],
-        "min_diameter_cm": 35,
-        "depth_cm": 40,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "compost",
-            "percentage": 30
-          },
-          {
-            "component": "perlite",
-            "percentage": 20
-          }
-        ],
-        "ph_range": "5.5–6.5",
-        "moisture": "well-drained"
-      },
-      "seed": {
-        "method": "seed or grafted seedling",
-        "germination_days": "14–28",
-        "planting_depth_cm": 1
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "young",
-            "npk": "10-10-10",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "15-5-10",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "fruiting",
-            "npk": "5-10-15",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🍋"
-    },
-    {
-      "plant_id": "P017",
+      "plant_id": "P029",
       "name": "Pegaga (Centella)",
       "scientific_name": "Centella asiatica",
       "sunlight": "partial",
@@ -1303,393 +2214,9 @@
       "emoji": "🍃"
     },
     {
-      "plant_id": "P018",
-      "name": "Daun Kesum (Vietnamese Mint)",
-      "scientific_name": "Persicaria odorata",
-      "sunlight": "partial",
-      "water": "high",
-      "temp_min": 22,
-      "temp_max": 38,
-      "humidity_min": 60,
-      "humidity_max": 90,
-      "difficulty": "easy",
-      "growth_days": 21,
-      "type": "herb",
-      "space": [
-        "balcony",
-        "garden",
-        "indoor"
-      ],
-      "description": "Pungent herb essential in Malaysian laksa and assam dishes. Grows rapidly in containers with consistent moisture.",
-      "care_tips": "Keep soil consistently moist. Pinch growing tips to encourage bushy growth. Thrives in partial shade.",
-      "weekly_time_minutes": 10,
-      "pot": {
-        "material": [
-          "plastic",
-          "ceramic"
-        ],
-        "min_diameter_cm": 15,
-        "depth_cm": 15,
-        "drainage_required": false
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "compost",
-            "percentage": 40
-          },
-          {
-            "component": "sand",
-            "percentage": 10
-          }
-        ],
-        "ph_range": "6.0–7.0",
-        "moisture": "wet to consistently moist"
-      },
-      "seed": {
-        "method": "stem cutting",
-        "germination_days": "7–10",
-        "planting_depth_cm": 1
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "establishment",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "14-7-7",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "harvest",
-            "npk": "10-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          }
-        ]
-      },
-      "emoji": "🌿"
-    },
-    {
-      "plant_id": "P019",
-      "name": "Basil",
-      "scientific_name": "Ocimum basilicum",
-      "sunlight": "full_sun",
-      "water": "medium",
-      "temp_min": 18,
-      "temp_max": 35,
-      "humidity_min": 40,
-      "humidity_max": 70,
-      "difficulty": "easy",
-      "growth_days": 30,
-      "type": "herb",
-      "space": [
-        "balcony",
-        "windowsill",
-        "garden"
-      ],
-      "description": "Classic culinary herb with a sweet, peppery aroma. Perfect for cooking and companion planting.",
-      "care_tips": "Pinch off flower buds to extend leaf production. Loves 6+ hours of sun.",
-      "weekly_time_minutes": 20,
-      "pot": {
-        "material": [
-          "plastic",
-          "terracotta"
-        ],
-        "min_diameter_cm": 15,
-        "depth_cm": 20,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 60
-          },
-          {
-            "component": "compost",
-            "percentage": 25
-          },
-          {
-            "component": "perlite",
-            "percentage": 15
-          }
-        ],
-        "ph_range": "6.0–7.0",
-        "moisture": "moist but not soggy"
-      },
-      "seed": {
-        "method": "seed",
-        "germination_days": "5–10",
-        "planting_depth_cm": 0.3
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "seedling",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "10-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "mature",
-            "npk": "5-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🍃"
-    },
-    {
-      "plant_id": "P020",
-      "name": "Mint",
-      "scientific_name": "Mentha spicata",
-      "sunlight": "partial",
-      "water": "high",
-      "temp_min": 15,
-      "temp_max": 30,
-      "humidity_min": 50,
-      "humidity_max": 80,
-      "difficulty": "easy",
-      "growth_days": 30,
-      "type": "herb",
-      "space": [
-        "balcony",
-        "windowsill",
-        "indoor"
-      ],
-      "description": "Fast-growing aromatic herb. Can grow invasively so container planting is recommended.",
-      "care_tips": "Keep soil consistently moist. Pinch flowers to encourage leaf growth.",
-      "weekly_time_minutes": 15,
-      "pot": {
-        "material": [
-          "plastic",
-          "ceramic"
-        ],
-        "min_diameter_cm": 15,
-        "depth_cm": 20,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "compost",
-            "percentage": 30
-          },
-          {
-            "component": "perlite",
-            "percentage": 20
-          }
-        ],
-        "ph_range": "6.0–7.0",
-        "moisture": "consistently moist"
-      },
-      "seed": {
-        "method": "cutting or seed",
-        "germination_days": "10–16",
-        "planting_depth_cm": 0.3
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "seedling",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "10-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "mature",
-            "npk": "5-5-5",
-            "type": "liquid fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🌿"
-    },
-    {
-      "plant_id": "P021",
-      "name": "Cekur (Sand Ginger)",
-      "scientific_name": "Kaempferia galanga",
-      "sunlight": "partial",
-      "water": "medium",
-      "temp_min": 22,
-      "temp_max": 38,
-      "humidity_min": 60,
-      "humidity_max": 90,
-      "difficulty": "easy",
-      "growth_days": 90,
-      "type": "herb",
-      "space": [
-        "balcony",
-        "garden",
-        "indoor"
-      ],
-      "description": "Low-growing aromatic rhizome used in Malaysian cooking and traditional medicine. Compact and ideal for container growing.",
-      "care_tips": "Grows well in shaded spots. Keep soil moist but not waterlogged. Harvest rhizomes after 3 months.",
-      "weekly_time_minutes": 10,
-      "pot": {
-        "material": [
-          "plastic",
-          "ceramic"
-        ],
-        "min_diameter_cm": 20,
-        "depth_cm": 15,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "compost",
-            "percentage": 35
-          },
-          {
-            "component": "sand",
-            "percentage": 15
-          }
-        ],
-        "ph_range": "5.5–7.0",
-        "moisture": "moist"
-      },
-      "seed": {
-        "method": "rhizome division",
-        "germination_days": "14–21",
-        "planting_depth_cm": 2
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "sprouting",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "14-7-7",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "mature",
-            "npk": "5-10-10",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🫚"
-    },
-    {
-      "plant_id": "P022",
-      "name": "Kunyit Hitam (Black Turmeric)",
-      "scientific_name": "Curcuma caesia",
-      "sunlight": "partial",
-      "water": "medium",
-      "temp_min": 22,
-      "temp_max": 38,
-      "humidity_min": 60,
-      "humidity_max": 90,
-      "difficulty": "easy",
-      "growth_days": 180,
-      "type": "herb",
-      "space": [
-        "garden",
-        "balcony"
-      ],
-      "description": "Rare medicinal rhizome with bluish-black flesh used in traditional Malay medicine and cooking. Highly valued for its therapeutic properties.",
-      "care_tips": "Plant in partial shade with rich, moist soil. Mulch to retain moisture. Harvest after foliage dies back.",
-      "weekly_time_minutes": 15,
-      "pot": {
-        "material": [
-          "plastic",
-          "fabric"
-        ],
-        "min_diameter_cm": 30,
-        "depth_cm": 30,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "compost",
-            "percentage": 35
-          },
-          {
-            "component": "sand",
-            "percentage": 15
-          }
-        ],
-        "ph_range": "5.5–7.0",
-        "moisture": "consistently moist"
-      },
-      "seed": {
-        "method": "rhizome division",
-        "germination_days": "21–30",
-        "planting_depth_cm": 5
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "sprouting",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "15-5-10",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "mature",
-            "npk": "5-10-15",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🫚"
-    },
-    {
-      "plant_id": "P023",
-      "name": "Calamansi Lime",
-      "scientific_name": "Citrus × microcarpa",
+      "plant_id": "P030",
+      "name": "Kaffir Lime",
+      "scientific_name": "Citrus hystrix",
       "sunlight": "full_sun",
       "water": "medium",
       "temp_min": 20,
@@ -1700,12 +2227,12 @@
       "growth_days": 180,
       "type": "food",
       "space": [
-        "balcony",
-        "garden"
+        "garden",
+        "balcony"
       ],
-      "description": "Miniature citrus fruit widely used in Southeast Asian cooking and drinks. Great for container growing.",
-      "care_tips": "Feed with citrus fertiliser monthly. Ensure good drainage. Prune after harvest season.",
-      "weekly_time_minutes": 30,
+      "description": "Citrus tree prized for its aromatic double leaves and zesty rind, both essential in Malaysian and Thai cooking.",
+      "care_tips": "Feed monthly with citrus fertiliser. Watch for leaf miners. Harvest leaves as needed — they regrow readily.",
+      "weekly_time_minutes": 25,
       "pot": {
         "material": [
           "plastic",
@@ -1747,8 +2274,8 @@
             "frequency": "monthly"
           },
           {
-            "stage": "flowering",
-            "npk": "5-15-10",
+            "stage": "vegetative",
+            "npk": "15-5-10",
             "type": "granular fertilizer",
             "frequency": "monthly"
           },
@@ -1761,519 +2288,6 @@
         ]
       },
       "emoji": "🍋"
-    },
-    {
-      "plant_id": "P024",
-      "name": "Pineapple",
-      "scientific_name": "Ananas comosus",
-      "sunlight": "full_sun",
-      "water": "low",
-      "temp_min": 22,
-      "temp_max": 38,
-      "humidity_min": 50,
-      "humidity_max": 80,
-      "difficulty": "easy",
-      "growth_days": 540,
-      "type": "food",
-      "space": [
-        "garden",
-        "balcony"
-      ],
-      "description": "Tropical fruit grown from the crown of a store-bought pineapple. Drought-tolerant and surprisingly easy to grow.",
-      "care_tips": "Root the crown in water before planting. Allow soil to dry between waterings. Fruit production begins after 18 months.",
-      "weekly_time_minutes": 10,
-      "pot": {
-        "material": [
-          "plastic",
-          "terracotta"
-        ],
-        "min_diameter_cm": 30,
-        "depth_cm": 30,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "coarse sand",
-            "percentage": 30
-          },
-          {
-            "component": "perlite",
-            "percentage": 20
-          }
-        ],
-        "ph_range": "4.5–6.5",
-        "moisture": "dry between waterings"
-      },
-      "seed": {
-        "method": "crown cutting",
-        "germination_days": "21–28",
-        "planting_depth_cm": 3
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "establishment",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "15-5-15",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "fruiting",
-            "npk": "6-12-24",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🍍"
-    },
-    {
-      "plant_id": "P025",
-      "name": "Banana (Dwarf)",
-      "scientific_name": "Musa acuminata (dwarf cultivar)",
-      "sunlight": "full_sun",
-      "water": "high",
-      "temp_min": 22,
-      "temp_max": 38,
-      "humidity_min": 60,
-      "humidity_max": 90,
-      "difficulty": "easy",
-      "growth_days": 270,
-      "type": "food",
-      "space": [
-        "garden",
-        "balcony"
-      ],
-      "description": "Compact dwarf variety of banana suited for container and balcony growing. Produces full-sized fruits on a smaller plant.",
-      "care_tips": "Choose dwarf varieties like Pisang Mas or Dwarf Cavendish. Remove excess suckers. Feed generously during vegetative growth.",
-      "weekly_time_minutes": 25,
-      "pot": {
-        "material": [
-          "large plastic",
-          "fabric"
-        ],
-        "min_diameter_cm": 50,
-        "depth_cm": 45,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 40
-          },
-          {
-            "component": "compost",
-            "percentage": 40
-          },
-          {
-            "component": "sand",
-            "percentage": 20
-          }
-        ],
-        "ph_range": "5.5–7.0",
-        "moisture": "consistently moist"
-      },
-      "seed": {
-        "method": "sucker division",
-        "germination_days": "N/A",
-        "planting_depth_cm": 0
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "establishment",
-            "npk": "15-5-10",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "20-10-20",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "fruiting",
-            "npk": "10-10-30",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🍌"
-    },
-    {
-      "plant_id": "P026",
-      "name": "Papaya (Dwarf)",
-      "scientific_name": "Carica papaya (dwarf cultivar)",
-      "sunlight": "full_sun",
-      "water": "medium",
-      "temp_min": 22,
-      "temp_max": 38,
-      "humidity_min": 50,
-      "humidity_max": 85,
-      "difficulty": "easy",
-      "growth_days": 240,
-      "type": "food",
-      "space": [
-        "garden",
-        "balcony"
-      ],
-      "description": "Compact dwarf papaya variety ideal for balconies and small gardens. Fruits within 9 months and stays manageable in height.",
-      "care_tips": "Choose dwarf varieties like Sekaki or Solo. Ensure excellent drainage — standing water kills roots. Protect from strong winds.",
-      "weekly_time_minutes": 20,
-      "pot": {
-        "material": [
-          "large plastic",
-          "fabric"
-        ],
-        "min_diameter_cm": 45,
-        "depth_cm": 45,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 50
-          },
-          {
-            "component": "compost",
-            "percentage": 30
-          },
-          {
-            "component": "sand",
-            "percentage": 20
-          }
-        ],
-        "ph_range": "6.0–6.5",
-        "moisture": "moist but well-drained"
-      },
-      "seed": {
-        "method": "seed",
-        "germination_days": "14–21",
-        "planting_depth_cm": 1
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "seedling",
-            "npk": "15-15-15",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "20-10-10",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          },
-          {
-            "stage": "fruiting",
-            "npk": "10-10-20",
-            "type": "granular fertilizer",
-            "frequency": "monthly"
-          }
-        ]
-      },
-      "emoji": "🍈"
-    },
-    {
-      "plant_id": "P027",
-      "name": "Butterfly Pea",
-      "scientific_name": "Clitoria ternatea",
-      "sunlight": "full_sun",
-      "water": "medium",
-      "temp_min": 20,
-      "temp_max": 38,
-      "humidity_min": 50,
-      "humidity_max": 90,
-      "difficulty": "easy",
-      "growth_days": 45,
-      "type": "food",
-      "space": [
-        "balcony",
-        "garden"
-      ],
-      "description": "Vibrant blue flowers used to make natural food colouring and herbal tea. Edible flowers and young leaves. Fast-growing tropical vine.",
-      "care_tips": "Train along a trellis or fence. Harvest flowers regularly to encourage continuous blooming. Young leaves are also edible.",
-      "weekly_time_minutes": 20,
-      "pot": {
-        "material": [
-          "plastic",
-          "terracotta"
-        ],
-        "min_diameter_cm": 20,
-        "depth_cm": 25,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "potting mix",
-            "percentage": 60
-          },
-          {
-            "component": "compost",
-            "percentage": 25
-          },
-          {
-            "component": "perlite",
-            "percentage": 15
-          }
-        ],
-        "ph_range": "5.5–7.0",
-        "moisture": "moist but well-drained"
-      },
-      "seed": {
-        "method": "seed",
-        "germination_days": "5–10",
-        "planting_depth_cm": 1
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "seedling",
-            "npk": "10-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "biweekly"
-          },
-          {
-            "stage": "vegetative",
-            "npk": "15-10-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          },
-          {
-            "stage": "flowering",
-            "npk": "5-15-10",
-            "type": "liquid fertilizer",
-            "frequency": "weekly"
-          }
-        ]
-      },
-      "emoji": "🌸"
-    },
-    {
-      "plant_id": "P028",
-      "name": "Sunflower Shoots",
-      "scientific_name": "Helianthus annuus",
-      "sunlight": "low_light",
-      "water": "medium",
-      "temp_min": 18,
-      "temp_max": 32,
-      "humidity_min": 40,
-      "humidity_max": 70,
-      "difficulty": "easy",
-      "growth_days": 10,
-      "type": "food",
-      "space": [
-        "indoor",
-        "windowsill"
-      ],
-      "description": "Tender sunflower sprouts harvested at 10–14 days. Nutty flavour and packed with nutrients. One of the most popular microgreen varieties.",
-      "care_tips": "Soak seeds overnight before sowing. Keep covered for first 3 days to aid germination. Harvest when 8–10 cm tall.",
-      "weekly_time_minutes": 10,
-      "pot": {
-        "material": [
-          "plastic tray"
-        ],
-        "min_diameter_cm": 20,
-        "depth_cm": 5,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "seed-raising mix",
-            "percentage": 70
-          },
-          {
-            "component": "compost",
-            "percentage": 20
-          },
-          {
-            "component": "vermiculite",
-            "percentage": 10
-          }
-        ],
-        "ph_range": "6.0–7.0",
-        "moisture": "moist"
-      },
-      "seed": {
-        "method": "seed (dense sowing)",
-        "germination_days": "2–4",
-        "planting_depth_cm": 1
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "germination",
-            "npk": "N/A",
-            "type": "none",
-            "frequency": "none"
-          },
-          {
-            "stage": "growth",
-            "npk": "5-5-5",
-            "type": "liquid fertilizer (diluted)",
-            "frequency": "once at day 5"
-          }
-        ]
-      },
-      "emoji": "🌻"
-    },
-    {
-      "plant_id": "P029",
-      "name": "Radish Sprouts",
-      "scientific_name": "Raphanus sativus",
-      "sunlight": "low_light",
-      "water": "medium",
-      "temp_min": 18,
-      "temp_max": 30,
-      "humidity_min": 40,
-      "humidity_max": 70,
-      "difficulty": "easy",
-      "growth_days": 7,
-      "type": "food",
-      "space": [
-        "indoor",
-        "windowsill"
-      ],
-      "description": "Spicy, peppery sprouts ready to harvest in just 5–7 days. High in vitamins C and E. Excellent for salads and garnishing.",
-      "care_tips": "Rinse twice daily if growing in water. Harvest just before first true leaves appear for best flavour.",
-      "weekly_time_minutes": 10,
-      "pot": {
-        "material": [
-          "plastic tray",
-          "sprouting jar"
-        ],
-        "min_diameter_cm": 15,
-        "depth_cm": 5,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "seed-raising mix",
-            "percentage": 70
-          },
-          {
-            "component": "compost",
-            "percentage": 20
-          },
-          {
-            "component": "vermiculite",
-            "percentage": 10
-          }
-        ],
-        "ph_range": "6.0–7.0",
-        "moisture": "moist"
-      },
-      "seed": {
-        "method": "seed (dense sowing)",
-        "germination_days": "2–3",
-        "planting_depth_cm": 0.2
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "germination",
-            "npk": "N/A",
-            "type": "none",
-            "frequency": "none"
-          },
-          {
-            "stage": "growth",
-            "npk": "N/A",
-            "type": "none — harvested before fertiliser needed",
-            "frequency": "none"
-          }
-        ]
-      },
-      "emoji": "🌱"
-    },
-    {
-      "plant_id": "P030",
-      "name": "Fenugreek (Halba) Sprouts",
-      "scientific_name": "Trigonella foenum-graecum",
-      "sunlight": "low_light",
-      "water": "medium",
-      "temp_min": 20,
-      "temp_max": 35,
-      "humidity_min": 40,
-      "humidity_max": 75,
-      "difficulty": "easy",
-      "growth_days": 7,
-      "type": "food",
-      "space": [
-        "indoor",
-        "windowsill"
-      ],
-      "description": "Slightly bitter, maple-scented sprouts used in Indian and Malay cooking. Rich in iron, protein, and fibre. Very fast to grow.",
-      "care_tips": "Soak seeds for 8 hours before sowing. Rinse twice daily. Harvest at 5–7 days when shoots are 3–5 cm tall.",
-      "weekly_time_minutes": 10,
-      "pot": {
-        "material": [
-          "plastic tray",
-          "sprouting jar"
-        ],
-        "min_diameter_cm": 15,
-        "depth_cm": 5,
-        "drainage_required": true
-      },
-      "soil": {
-        "mix": [
-          {
-            "component": "seed-raising mix",
-            "percentage": 70
-          },
-          {
-            "component": "compost",
-            "percentage": 20
-          },
-          {
-            "component": "vermiculite",
-            "percentage": 10
-          }
-        ],
-        "ph_range": "6.0–7.5",
-        "moisture": "moist"
-      },
-      "seed": {
-        "method": "seed (dense sowing)",
-        "germination_days": "2–3",
-        "planting_depth_cm": 0.2
-      },
-      "nutrition": {
-        "stages": [
-          {
-            "stage": "germination",
-            "npk": "N/A",
-            "type": "none",
-            "frequency": "none"
-          },
-          {
-            "stage": "growth",
-            "npk": "N/A",
-            "type": "none — harvested before fertiliser needed",
-            "frequency": "none"
-          }
-        ]
-      },
-      "emoji": "🌱"
     }
   ]
 }
