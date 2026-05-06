@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { Search, Droplet, Sun, Thermometer, Clock, CloudSun, Cloud } from 'lucide-react'
+import Link from 'next/link'
 import db from '@/data/plants.json'
 import './explore.css'
 
@@ -106,42 +107,45 @@ export default function ExplorePage() {
 
       <div className="cards-grid">
         {filteredPlants.map((plant, index) => (
-          <div 
+          <Link 
             key={plant.plant_id} 
-            className="plant-card fade-up"
+            href={`/plant/${plant.plant_id}`}
+            className="plant-card-link fade-up"
             style={{ animationDelay: `${0.3 + index * 0.05}s` }}
           >
-            <div className="card-header">
-              <h3 className="plant-name">{plant.name}</h3>
-              <span className="plant-id">{plant.plant_id}</span>
-            </div>
-            
-            <div className="tags-row">
-              <span className={`tag diff-${plant.difficulty}`}>{plant.difficulty}</span>
-              <span className="tag type-tag">{plant.type.replace('_', ' ')}</span>
-            </div>
-
-            <div className="metrics-row">
-              <div className="metric">
-                {getSunIcon(plant.sunlight)}
-                <span>{plant.sunlight.replace('_', ' ')}</span>
+            <div className="plant-card">
+              <div className="card-header">
+                <h3 className="plant-name">{plant.name}</h3>
+                <span className="plant-id">{plant.plant_id}</span>
               </div>
-              <div className="metric">
-                <div className="drops-wrap">
-                  {getWaterDrops(plant.water)}
+              
+              <div className="tags-row">
+                <span className={`tag diff-${plant.difficulty}`}>{plant.difficulty}</span>
+                <span className="tag type-tag">{plant.type.replace('_', ' ')}</span>
+              </div>
+
+              <div className="metrics-row">
+                <div className="metric">
+                  {getSunIcon(plant.sunlight)}
+                  <span>{plant.sunlight.replace('_', ' ')}</span>
+                </div>
+                <div className="metric">
+                  <div className="drops-wrap">
+                    {getWaterDrops(plant.water)}
+                  </div>
+                </div>
+                <div className="metric">
+                  <Thermometer size={16} className="temp-icon" />
+                  <span>{plant.temp_min}-{plant.temp_max}°C</span>
                 </div>
               </div>
-              <div className="metric">
-                <Thermometer size={16} className="temp-icon" />
-                <span>{plant.temp_min}-{plant.temp_max}°C</span>
+
+              <div className="time-row">
+                <Clock size={15} className="clock-icon" />
+                <span>{plant.growth_days} days to maturity</span>
               </div>
             </div>
-
-            <div className="time-row">
-              <Clock size={15} className="clock-icon" />
-              <span>{plant.growth_days} days to maturity</span>
-            </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

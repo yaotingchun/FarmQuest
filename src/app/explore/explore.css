@@ -141,6 +141,12 @@
   gap: 24px;
 }
 
+.plant-card-link {
+  text-decoration: none;
+  display: block;
+  color: inherit;
+}
+
 .plant-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
