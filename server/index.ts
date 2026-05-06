@@ -23,7 +23,11 @@ import express from "express";
 import cors from "cors";
 import admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
-import plantsData from "./data/plants.json" with { type: "json" };
+// ── Dynamic Data Loading ──
+function getPlantsData() {
+  const dataPath = path.resolve(__dirname, "./data/plants.json");
+  return JSON.parse(fs.readFileSync(dataPath, "utf8"));
+}
 import { generatePlantingPlans, generateSetupExplanation, generateQuestTasks, type AIPlan } from "./ai.js";
 import { calculateCost } from "./cost.js";
 import { ragManager } from "./rag.js";
@@ -98,7 +102,7 @@ const finalizePlansWithCosts = (plans: AIPlan[]): AIPlan[] => {
 
 // GET /api/plants — return all plants (summary only)
 app.get("/api/plants", (_req, res) => {
-  const summaries = (plantsData as any).plants.map((p: any) => ({
+  const summaries = (getPlantsData() as any).plants.map((p: any) => ({
     plant_id: p.plant_id,
     name: p.name,
     difficulty: p.difficulty,
@@ -111,7 +115,7 @@ app.get("/api/plants", (_req, res) => {
 
 // GET /api/plants/:plantId — return full plant setup data
 app.get("/api/plants/:plantId", (req, res) => {
-  const plant = (plantsData as any).plants.find((p: any) => p.plant_id === req.params.plantId);
+  const plant = (getPlantsData() as any).plants.find((p: any) => p.plant_id === req.params.plantId);
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
     return;
@@ -123,7 +127,7 @@ app.get("/api/plants/:plantId", (req, res) => {
 app.get("/api/plants/:plantId/ai-plans", async (req, res) => {
   const plantId = req.params.plantId;
   const refresh = req.query.refresh === "true";
-  const plant = (plantsData as any).plants.find((p: any) => p.plant_id === plantId);
+  const plant = (getPlantsData() as any).plants.find((p: any) => p.plant_id === plantId);
 
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
@@ -203,7 +207,7 @@ app.post("/api/plants/:plantId/explain", async (req, res) => {
     explanationsCache.delete(cacheKey);
   }
 
-  const plant = (plantsData as any).plants.find((p: any) => p.plant_id === plantId);
+  const plant = (getPlantsData() as any).plants.find((p: any) => p.plant_id === plantId);
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
     return;
@@ -294,7 +298,7 @@ const updatesRef = db.collection('marketplace_updates');
 
 // Helper: generate checkpoints based on plant growth data
 function generateCheckpoints(plantId: string, deadlineDays: number): any[] {
-  const plant = (plantsData as any).plants.find((p: any) => p.plant_id === plantId);
+  const plant = (getPlantsData() as any).plants.find((p: any) => p.plant_id === plantId);
   const totalDays = plant?.growth_days || deadlineDays;
 
   // Distribute checkpoints across the timeline
@@ -372,8 +376,8 @@ async function seedDemoOrdersToFirestore() {
       requester_name: 'Sarah',
       requester_avatar: '👩',
       plant_id: 'P001',
-      plant_name: 'Chili',
-      plant_emoji: '🌶️',
+      plant_name: 'Kangkung (Water Spinach)',
+      plant_emoji: '🍃',
       quantity_kg: 5,
       reward_rm: 35,
       deadline_days: 60,
@@ -388,9 +392,9 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_002',
       requester_name: 'Daniel',
       requester_avatar: '🧑',
-      plant_id: 'P005',
-      plant_name: 'Cherry Tomato',
-      plant_emoji: '🍅',
+      plant_id: 'P003',
+      plant_name: 'Long Bean',
+      plant_emoji: '🎋',
       quantity_kg: 3,
       reward_rm: 50,
       deadline_days: 70,
@@ -439,9 +443,9 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_004',
       requester_name: 'James',
       requester_avatar: '🧑',
-      plant_id: 'P006',
-      plant_name: 'Kangkung (Water Spinach)',
-      plant_emoji: '🥗',
+      plant_id: 'P002',
+      plant_name: 'Lady Finger (Okra)',
+      plant_emoji: '🥒',
       quantity_kg: 8,
       reward_rm: 45,
       deadline_days: 21,
@@ -503,9 +507,9 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_007',
       requester_name: 'Christina',
       requester_avatar: '👩',
-      plant_id: 'P003',
-      plant_name: 'Lettuce',
-      plant_emoji: '🥬',
+      plant_id: 'P001',
+      plant_name: 'Kangkung (Water Spinach)',
+      plant_emoji: '🍃',
       quantity_kg: 3,
       reward_rm: 30,
       deadline_days: 45,
@@ -537,9 +541,9 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_009',
       requester_name: 'Ahmad',
       requester_avatar: '🧑',
-      plant_id: 'P005',
-      plant_name: 'Cherry Tomato',
-      plant_emoji: '🍅',
+      plant_id: 'P003',
+      plant_name: 'Long Bean',
+      plant_emoji: '🎋',
       quantity_kg: 10,
       reward_rm: 80,
       deadline_days: 70,
@@ -588,9 +592,9 @@ async function seedDemoOrdersToFirestore() {
       requester_uid: 'demo_user_012',
       requester_name: 'Mei Ling',
       requester_avatar: '👩',
-      plant_id: 'P006',
-      plant_name: 'Kangkung (Water Spinach)',
-      plant_emoji: '🥗',
+      plant_id: 'P002',
+      plant_name: 'Lady Finger (Okra)',
+      plant_emoji: '🥒',
       quantity_kg: 4,
       reward_rm: 20,
       deadline_days: 21,
