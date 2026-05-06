@@ -285,10 +285,27 @@ function MultiPlantDashboard() {
     return (plant.source_category || 'chosen_plant') !== 'posted_order'
   }
 
-  // Unified task list across all plants
-  const allTasksWrapped = getAllTasksDueToday(userPlants, getQuestPlant)
-  const calendarCompletedCount = useMemo(() => calendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => t.completed).length, 0), [calendarData])
-  const calendarPendingCount = useMemo(() => calendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => !t.completed).length, 0), [calendarData])
+  // Unified task list across all plants (filtered by selected category)
+  const allTasksWrapped = useMemo(() => getAllTasksDueToday(filteredPlants, getQuestPlant), [filteredPlants])
+  
+  const filteredCalendarData = useMemo(() => {
+    if (sourceFilter === 'all') return calendarData
+    const filteredIds = new Set(filteredPlants.map(p => p.id))
+    return calendarData.map(day => {
+      const filteredTasks = (day.tasks || []).filter((task: any) => filteredIds.has(task.plant_instance_id))
+      const statuses: any[] = []
+      const anyMilestone = filteredTasks.some((t: any) => t.id.includes('t_seed') || t.id.includes('t_sprout') || t.id.includes('t_mature'))
+      const anyCompleted = filteredTasks.some((t: any) => t.completed)
+      const anyPending = filteredTasks.some((t: any) => !t.completed)
+      if (anyMilestone) statuses.push('milestone')
+      if (anyCompleted) statuses.push('completed')
+      if (anyPending) statuses.push('pending')
+      return { ...day, tasks: filteredTasks, statuses }
+    })
+  }, [calendarData, filteredPlants, sourceFilter])
+
+  const calendarCompletedCount = useMemo(() => filteredCalendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => t.completed).length, 0), [filteredCalendarData])
+  const calendarPendingCount = useMemo(() => filteredCalendarData.reduce((total: number, day: any) => total + (day.tasks || []).filter((t: any) => !t.completed).length, 0), [filteredCalendarData])
 
   return (
     <div className="quest-page" style={{ 
@@ -469,7 +486,7 @@ function MultiPlantDashboard() {
               </div>
             </div>
             <CalendarGrid
-              entries={calendarData}
+              entries={filteredCalendarData}
               year={year}
               month={month}
               onMonthChange={handleMonthChange}

@@ -120,6 +120,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
             xp_reward: 0,
             plant_id: plant.plant_id,
             plant_name: plant.plant_name,
+            plant_instance_id: plant.id,
           })
         }
       }
@@ -146,6 +147,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
             ...task,
             plant_id: plant.plant_id,
             plant_name: plant.plant_name,
+            plant_instance_id: plant.id,
           }))
         )
 
@@ -162,6 +164,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
               xp_reward: 0,
               plant_id: plant.plant_id,
               plant_name: plant.plant_name,
+              plant_instance_id: plant.id,
             })
           }
         }
