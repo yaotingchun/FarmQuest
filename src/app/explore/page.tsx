@@ -58,31 +58,36 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="page-wrapper explorer-page">
-      <div className="explorer-header">
-        <h1 className="section-title">Plant Database JSON</h1>
+    <div className="explorer-page">
+      <div className="explorer-header fade-up">
+        <h1 className="section-title">Plant Database</h1>
         <p className="section-desc">Interactive viewer to explore the FarmQuest plant dataset.</p>
       </div>
 
-      <div className="filters-container">
-        <div className="search-box">
-          <input 
-            type="text" 
-            placeholder="Search plants..." 
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="filter-input"
-          />
-          <Search className="search-icon" size={20} />
+      <div className="filters-grid fade-up" style={{ animationDelay: '0.1s' }}>
+        <div className="filter-bar search-bar">
+          <div className="search-box">
+            <input 
+              type="text" 
+              placeholder="Search plants..." 
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="filter-input"
+            />
+            <Search className="search-icon" size={20} />
+          </div>
         </div>
 
-        <div className="selects-grid">
+        <div className="filter-bar options-bar">
           <select className="filter-select" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
             {types.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           <select className="filter-select" value={diffFilter} onChange={e => setDiffFilter(e.target.value)}>
             {difficulties.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
+        </div>
+
+        <div className="filter-bar options-bar">
           <select className="filter-select" value={spaceFilter} onChange={e => setSpaceFilter(e.target.value)}>
             {spaces.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -92,7 +97,7 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      <div className="stats-row">
+      <div className="stats-row fade-up" style={{ animationDelay: '0.2s' }}>
         <div className="stat-pill"><span className="stat-pill-val">{filteredPlants.length}</span> plants</div>
         <div className="stat-pill"><span className="stat-pill-val">{totalEasy}</span> easy</div>
         <div className="stat-pill"><span className="stat-pill-val">{totalEdible}</span> edible</div>
@@ -100,8 +105,12 @@ export default function ExplorePage() {
       </div>
 
       <div className="cards-grid">
-        {filteredPlants.map(plant => (
-          <div key={plant.plant_id} className="plant-card">
+        {filteredPlants.map((plant, index) => (
+          <div 
+            key={plant.plant_id} 
+            className="plant-card fade-up"
+            style={{ animationDelay: `${0.3 + index * 0.05}s` }}
+          >
             <div className="card-header">
               <h3 className="plant-name">{plant.name}</h3>
               <span className="plant-id">{plant.plant_id}</span>
@@ -130,7 +139,7 @@ export default function ExplorePage() {
 
             <div className="time-row">
               <Clock size={15} className="clock-icon" />
-              <span>{plant.growth_days}d</span>
+              <span>{plant.growth_days} days to maturity</span>
             </div>
           </div>
         ))}
