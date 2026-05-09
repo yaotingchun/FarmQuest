@@ -13,6 +13,11 @@ export const Navbar = () => {
   const searchParams = useSearchParams()
   const [hash, setHash] = useState('')
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const syncHash = () => setHash(window.location.hash || '')
@@ -41,11 +46,16 @@ export const Navbar = () => {
   )
 
   const visibleNavItems = useMemo(
-    () => navItems.filter((item: any) => 
-      (!item.requiresAuth || !!profile) && 
-      (!item.guestOnly || !profile)
-    ),
-    [navItems, profile]
+    () => {
+      if (!mounted) {
+        return navItems.filter((item: any) => !item.requiresAuth)
+      }
+      return navItems.filter((item: any) => 
+        (!item.requiresAuth || !!profile) && 
+        (!item.guestOnly || !profile)
+      )
+    },
+    [navItems, profile, mounted]
   )
 
   const isActive = (href: string) => {
@@ -74,27 +84,29 @@ export const Navbar = () => {
               <Link href={item.href}>{item.label}</Link>
             </li>
           ))}
-          {profile ? (
-            <li>
-              <Link href="/profile" className="nav-profile-link">
-                <div className="nav-profile-info">
-                  <span className="nav-profile-name">{profile.username}</span>
-                  <span className="nav-profile-status">{profile.archetype || 'GROWER'}</span>
-                </div>
-                <div className="nav-profile-avatar">{profile.avatar}</div>
-              </Link>
-            </li>
-          ) : (
-            !loading && (
+          {mounted && (
+            profile ? (
               <li>
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="nav-cta"
-                  style={{ background: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Log In
-                </button>
+                <Link href="/profile" className="nav-profile-link">
+                  <div className="nav-profile-info">
+                    <span className="nav-profile-name">{profile.username}</span>
+                    <span className="nav-profile-status">{profile.archetype || 'GROWER'}</span>
+                  </div>
+                  <div className="nav-profile-avatar">{profile.avatar}</div>
+                </Link>
               </li>
+            ) : (
+              !loading && (
+                <li>
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="nav-cta"
+                    style={{ background: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Log In
+                  </button>
+                </li>
+              )
             )
           )}
         </ul>

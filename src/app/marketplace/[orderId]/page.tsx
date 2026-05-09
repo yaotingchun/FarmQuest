@@ -6,8 +6,10 @@ import { ArrowLeft, MapPin, Clock, Scale, Shield, ThumbsUp, CheckCircle } from '
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import MapView from '@/components/MapView'
+import LogisticsTracker from '@/components/LogisticsTracker'
+import ChatWindow from '@/components/ChatWindow'
 import '../marketplace.css'
- 
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface Checkpoint {
@@ -23,6 +25,7 @@ interface Order {
   location: string; latitude?: number; longitude?: number;
   notes: string; created_at: string; accepted_at?: string;
   completed_at?: string; checkpoints: Checkpoint[]; total_votes: number;
+  status_history: { status: string; timestamp: string }[];
 }
 
 export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
@@ -32,17 +35,40 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
+  const [currentStatus, setCurrentStatus] = useState<string>('')
+  const [submitting, setSubmitting] = useState(false)
 
   const fetchOrder = () => {
     fetch(`${API_URL}/api/marketplace/orders/${orderId}`)
       .then(r => r.json())
-      .then(data => { setOrder(data); setLoading(false) })
+      .then(data => {
+        setOrder(data);
+        setCurrentStatus(data.status);
+        setLoading(false);
+      })
       .catch(() => setLoading(false))
   }
 
-  useEffect(() => { fetchOrder() }, [orderId])
+  useEffect(() => {
+    fetchOrder()
+    const interval = setInterval(fetchOrder, 5000)
+    return () => clearInterval(interval)
+  }, [orderId])
+
+  useEffect(() => {
+    if (!loading && typeof window !== 'undefined' && window.location.hash === '#tracking') {
+      setTimeout(() => {
+        const el = document.getElementById('tracking');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [loading]);
 
   const handleAccept = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     const res = await fetch(`${API_URL}/api/marketplace/orders/${orderId}/accept`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -52,10 +78,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       }),
     })
     if (res.ok) {
-      setToast('✅ Order accepted!')
+      setToast('✅ Order accepted! Redirecting to planting tasks...')
       setTimeout(() => {
-        router.push(`/quest?plant=${encodeURIComponent(order?.plant_id || '')}&plan=${encodeURIComponent(order?.plan_type || 'Budget')}&source=accepted_order&order=${encodeURIComponent(orderId)}`)
-      }, 900)
+        router.push(`/quest/quests?plant=${encodeURIComponent(order?.plant_id || '')}&plan=${encodeURIComponent(order?.plan_type || 'Budget')}&source=accepted_order&order=${orderId}`)
+      }, 1500)
+    } else {
+      setSubmitting(false);
     }
   }
 
@@ -88,16 +116,33 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     setToast('👍 Vote recorded!'); fetchOrder()
   }
 
+  const handleAction = async (actionType: string, nextStatus: string) => {
+    try {
+      await fetch(`${API_URL}/api/marketplace/orders/${orderId}/status`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus, user_uid: user?.uid })
+      })
+      setCurrentStatus(nextStatus)
+      setToast(`🚩 Order marked as ${nextStatus}`)
+      fetchOrder()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (loading) return <div className="mp-detail-page"><p style={{ color: 'var(--text-muted)', textAlign: 'center', paddingTop: '20vh' }}>Loading order...</p></div>
   if (!order) return <div className="mp-detail-page"><p style={{ color: 'var(--text-muted)', textAlign: 'center', paddingTop: '20vh' }}>Order not found</p></div>
 
-  const completedCPs = order.checkpoints.filter(c => c.completed).length
-  const totalCPs = order.checkpoints.length
+  const completedCPs = (order.checkpoints || []).filter(c => c.completed).length
+  const totalCPs = (order.checkpoints || []).length
   const trustPct = totalCPs > 0 ? Math.round((completedCPs / totalCPs) * 100) : 0
-  const statusLabel = (s: string) => s.replace('_', ' ')
+  const statusLabel = (s: any) => (typeof s === 'string' ? s : String(s || '')).replace('_', ' ')
+
+  const isFarmer = user?.uid === order.farmer_uid
+  const isRequester = user?.uid === order.requester_uid
 
   // Determine which checkpoint is next
-  const nextCP = order.checkpoints.find(c => !c.completed)
+  const nextCP = (order.checkpoints || []).find(c => !c.completed)
 
   return (
     <div className="mp-detail-page">
@@ -105,51 +150,123 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       <Link href="/marketplace" className="mp-back"><ArrowLeft size={16} /> Back to Marketplace</Link>
 
       {/* Header Card */}
-      <div className="mp-detail-header">
-        <div className="mp-detail-top">
-          <div className="mp-detail-plant">
-            <span className="mp-detail-emoji">{order.plant_emoji}</span>
-            <div>
-              <h1>{order.plant_name}</h1>
-              <p>{order.id} · <span className={`mp-status-badge mp-status-${order.status}`}>{statusLabel(order.status)}</span></p>
+      {/* Header Card */}
+      <div className="mp-header-card-premium">
+        <div className="mp-header-top-content">
+          <div className="mp-header-main-info">
+            <div className="mp-header-title-row">
+              <span className="mp-header-emoji">{order.plant_emoji}</span>
+              <div>
+                <div className="mp-header-title-line">
+                  <h1>{order.plant_name}</h1>
+                </div>
+                <p className="mp-header-order-id">{order.id}</p>
+              </div>
+            </div>
+            
+            <div className="mp-header-meta-grid">
+              <div className="mp-meta-pill"><Scale size={14} /> <span>{order.quantity_kg} kg</span></div>
+              <div className="mp-meta-pill"><Clock size={14} /> <span>{order.deadline_days} days</span></div>
+              <div className={`mp-meta-pill mp-diff-${order.difficulty}`}><span>● {order.difficulty}</span></div>
+            </div>
+
+            {order.notes && <div className="mp-header-notes">&ldquo;{order.notes}&rdquo;</div>}
+          </div>
+
+          <div className="mp-header-side-info">
+            <div className="mp-price-container">
+              <span className="mp-price-value">RM{isFarmer ? (order.reward_rm * 0.95).toFixed(2) : order.reward_rm}</span>
+              <span className="mp-price-sub">{isFarmer ? 'Net Payout' : 'Reward'}</span>
             </div>
           </div>
-          <div className="mp-detail-reward">
-            <span className="mp-detail-reward-val">RM{order.reward_rm}</span>
-            <span className="mp-detail-reward-label">Reward</span>
-          </div>
         </div>
 
-        <div className="mp-detail-meta">
-          <span className="mp-detail-meta-item"><Scale size={15} /> {order.quantity_kg} kg</span>
-          <span className="mp-detail-meta-item"><Clock size={15} /> {order.deadline_days} days</span>
-          <span className={`mp-detail-meta-item mp-diff-${order.difficulty}`}>● {order.difficulty}</span>
-          {order.location && <span className="mp-detail-meta-item"><MapPin size={15} /> {order.location}</span>}
-        </div>
-
-        {order.notes && <div className="mp-detail-notes">&ldquo;{order.notes}&rdquo;</div>}
-
-        <div className="mp-detail-people">
-          <div className="mp-detail-person">
-            <span className="mp-detail-person-avatar">{order.requester_avatar}</span>
-            <div><span className="mp-detail-person-role">Requester</span><br /><span className="mp-detail-person-name">{order.requester_name}</span></div>
+        <div className="mp-header-people-footer">
+          <div className="mp-header-person">
+            <span className="mp-header-avatar">{order.requester_avatar === '🧑‍🌾' ? '👨🏻‍💼' : order.requester_avatar}</span>
+            <div>
+              <span className="mp-header-role">Requester</span>
+              <span className="mp-header-name">{order.requester_name}</span>
+            </div>
           </div>
           {order.farmer_name && (
-            <div className="mp-detail-person">
-              <span className="mp-detail-person-avatar">{order.farmer_avatar}</span>
-              <div><span className="mp-detail-person-role">Farmer</span><br /><span className="mp-detail-person-name">{order.farmer_name}</span></div>
+            <div className="mp-header-person">
+              <span className="mp-header-avatar">{order.farmer_avatar}</span>
+              <div>
+                <span className="mp-header-role">Farmer</span>
+                <span className="mp-header-name">{order.farmer_name}</span>
+              </div>
             </div>
+          )}
+          
+          {isFarmer && currentStatus !== 'open' && (
+            currentStatus === 'completed' ? (
+              <span className="mp-status-badge-new status-completed mp-header-view-tasks mp-completed-label">
+                Completed
+              </span>
+            ) : (
+              <Link
+                href={`/quest/quests?plant=${order.plant_id}&plan=${order.plan_type}&source=accepted_order&order=${orderId}`}
+                className="mp-action-link-btn mp-header-view-tasks"
+              >
+                View Tasks →
+              </Link>
+            )
           )}
         </div>
       </div>
 
-      {/* Location Map */}
-      {order.latitude && order.longitude && order.latitude !== 0 && (
+      {/* Tracking & Chat Section */}
+      {(isFarmer || isRequester) && currentStatus !== 'open' && (
+        <div className="mp-tracking-container" id="tracking">
+          <LogisticsTracker
+            status={currentStatus as any}
+            history={order.status_history || []}
+            isRequester={isRequester}
+          />
+          
+          <div className="mp-tracking-content">
+            <div className="mp-tracking-left">
+              {/* Location Map */}
+              {order.latitude && order.longitude && order.latitude !== 0 && (
+                <div className="mp-map-container">
+                  <MapView
+                    center={{ lat: order.latitude, lng: order.longitude }}
+                    zoom={14}
+                    height="350px"
+                    markers={[
+                      {
+                        lat: order.latitude,
+                        lng: order.longitude,
+                        label: order.plant_name,
+                        emoji: order.plant_emoji,
+                        color: 'green',
+                        popup: `${order.location} · RM${order.reward_rm}`,
+                      },
+                    ]}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="mp-tracking-right">
+              <ChatWindow
+                orderId={order.id}
+                isFarmer={isFarmer}
+                status={currentStatus}
+                onStatusUpdate={(s) => setCurrentStatus(s)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Public Location Map (For non-parties or open orders) */}
+      {(!isFarmer && !isRequester || currentStatus === 'open') && order.latitude && order.longitude && order.latitude !== 0 && (
         <div style={{ marginBottom: 20 }}>
           <MapView
             center={{ lat: order.latitude, lng: order.longitude }}
             zoom={14}
-            height="250px"
+            height="350px"
             markers={[
               {
                 lat: order.latitude,
@@ -166,16 +283,26 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
       {/* Action Buttons */}
       <div className="mp-actions">
-        {order.status === 'open' && order.requester_uid === user?.uid && (
+        {currentStatus === 'open' && isRequester && (
           <button className="mp-action-btn mp-action-secondary" disabled>Your Order</button>
         )}
-        {order.status === 'open' && order.requester_uid !== user?.uid && (
-          <button className="mp-action-btn mp-action-primary" onClick={handleAccept}>🚜 Accept This Order</button>
+        {currentStatus === 'open' && !isRequester && (
+          <button className="mp-action-btn mp-action-primary" onClick={handleAccept} disabled={submitting}>{submitting ? '🚜 Accepting...' : '🚜 Accept This Order'}</button>
         )}
-        {order.status === 'pending_review' && (
-          <button className="mp-action-btn mp-action-primary" onClick={handleComplete}>✅ Confirm & Release Payment</button>
+
+        {(isFarmer || isRequester) && currentStatus === 'disputed' && (
+          <button className="mp-action-btn mp-action-primary" onClick={() => handleAction('resolve', 'accepted')}>
+            🤝 Resolve Dispute
+          </button>
         )}
-        {order.status === 'completed' && (
+
+        {(isFarmer || isRequester) && currentStatus !== 'open' && currentStatus !== 'completed' && currentStatus !== 'cancelled' && currentStatus !== 'disputed' && (
+          <button className="mp-action-btn mp-action-secondary danger" onClick={() => handleAction('dispute', 'disputed')}>
+            🚩 Raise Dispute
+          </button>
+        )}
+
+        {currentStatus === 'completed' && (
           <button className="mp-action-btn mp-action-secondary" disabled>🎉 Order Completed</button>
         )}
       </div>
