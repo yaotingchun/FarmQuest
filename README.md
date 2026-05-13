@@ -9,7 +9,7 @@
 
 We are a team of four passionate developers building FarmQuest — an AI-powered agrotech platform designed to transform how Malaysians grow their own food. By combining RAG-grounded planting plans, computer vision disease detection, and a decentralized peer-to-peer marketplace, we aim to help anyone — from urban home growers to smallholder farmers — reduce yield losses and break free from food import dependency. FarmQuest puts smart, gamified agriculture into the hands of everyone, from city balconies to rural backyards.
 
-(public/images/FarmQuest.png)
+!(public/images/FarmQuest.png)
 | Name | Role | Responsibilities |
 | :--- | :--- | :--- |
 | **Chun Yao Ting** | Team Lead & AI Architect | Overall system architecture, AI orchestration (Genkit), and Gemini/Vertex AI integration. |
