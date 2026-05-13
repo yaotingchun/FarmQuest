@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore, initializeFirestore, type Firestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -31,4 +32,7 @@ try {
   db = initializeFirestore(app, { experimentalForceLongPolling: true }, 'farmquest');
 }
 
-export { app, auth, googleProvider, db };
+// Initialize Storage
+const storage = getStorage(app);
+
+export { app, auth, googleProvider, db, storage };

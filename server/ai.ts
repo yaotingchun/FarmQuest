@@ -536,10 +536,11 @@ export async function generateQuestTasks(
     const prompt = `Task: Generate quest steps for ${plantName} (${planType} setup).
 Schema:
 {
-  "main": [{"title": "Step", "description": "1 sentence", "task_label": "done msg", "xp": 50}],
+  "main": [{"title": "Step", "description": "1 sentence", "task_label": "done msg", "xp": 50, "requires_photo": true}],
   "daily": ["Routine task", "Stage 2 Milestone", "Stage 3 Milestone"]
 }
 Details: ${explanation}
+Set requires_photo: true for tasks where visual verification matters (e.g. "check for pests", "inspect leaf colour", "verify watering"). Set false for routine tasks like "add fertiliser" or "set reminder".
 Ground descriptions in the plan specifics. Generate 3-4 main steps and 5-7 daily items.`;
 
     let text = "";
@@ -610,9 +611,9 @@ Ground descriptions in the plan specifics. Generate 3-4 main steps and 5-7 daily
     // Fallback to generic tasks
     return {
       main: [
-        { title: "Workspace Prep", description: "Set up your pots and tools.", task_label: "Prepared area", xp: 30 },
-        { title: "Soil Mix", description: "Prepare the nutrient-rich base.", task_label: "Mixed soil", xp: 50 },
-        { title: "Planting", description: "Carefully sow your seeds.", task_label: "Sown seeds", xp: 100 }
+        { title: "Workspace Prep", description: "Set up your pots and tools.", task_label: "Prepared area", xp: 30, requires_photo: true },
+        { title: "Soil Mix", description: "Prepare the nutrient-rich base.", task_label: "Mixed soil", xp: 50, requires_photo: false },
+        { title: "Planting", description: "Carefully sow your seeds.", task_label: "Sown seeds", xp: 100, requires_photo: true }
       ],
       daily: [
         "Check moisture", "Monitor light", "Observe for Sprout (Stage 2)", "Track Growth (Stage 3)", "Prepare for Harvest (Stage 4)"

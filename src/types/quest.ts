@@ -21,6 +21,7 @@ export interface QuestTask {
   xp_reward: number
   plant_id?: string
   plant_name?: string
+  requires_photo?: boolean
 }
 
 // ── Quest ──
