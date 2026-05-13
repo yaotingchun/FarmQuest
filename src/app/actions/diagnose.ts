@@ -2,7 +2,7 @@
 
 import { DiagnosisResponse } from '@/types/diagnosis';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export async function diagnosePlant(formData: FormData): Promise<DiagnosisResponse> {
   console.log(`[Diagnosis] Routing request to Genkit Orchestrator at ${API_URL}`);

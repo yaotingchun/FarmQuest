@@ -1,4 +1,34 @@
 steps:
+  # --- BACKEND STEPS ---
+  # 1. Build backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'gcr.io/$PROJECT_ID/farmquest-backend',
+      './server'
+    ]
+    id: 'build-backend'
+
+  # 2. Push backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/farmquest-backend']
+    id: 'push-backend'
+
+  # 3. Deploy backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [
+      'run', 'deploy', 'farmquest-backend',
+      '--image', 'gcr.io/$PROJECT_ID/farmquest-backend',
+      '--region', 'us-central1',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--set-env-vars', 'FIREBASE_DATABASE_ID=farmquest,GOOGLE_VERTEX_LOCATION=us-central1,GOOGLE_VERTEX_PROJECT=$PROJECT_ID'
+    ]
+    id: 'deploy-backend'
+
+  # --- FRONTEND STEPS ---
+  # 4. Build frontend image
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
@@ -14,8 +44,15 @@ steps:
       '-t', 'gcr.io/$PROJECT_ID/farmquest-frontend',
       '.'
     ]
+    id: 'build-frontend'
+    waitFor: ['deploy-backend'] # Wait for backend to be deployed
+
+  # 5. Push frontend image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/farmquest-frontend']
+    id: 'push-frontend'
+
+  # 6. Deploy frontend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [
@@ -24,7 +61,19 @@ steps:
       '--region', 'us-central1',
       '--platform', 'managed',
       '--allow-unauthenticated',
-      '--set-env-vars', 'BACKEND_URL=${_BACKEND_URL}'
+      '--set-env-vars', 'BACKEND_URL=${_BACKEND_URL},GOOGLE_VERTEX_LOCATION=us-central1,GOOGLE_VERTEX_PROJECT=$PROJECT_ID'
     ]
+    id: 'deploy-frontend'
+
 options:
   machineType: 'E2_HIGHCPU_8'
+
+substitutions:
+  _BACKEND_URL: 'https://farmquest-backend-429572655157.us-central1.run.app'
+  _FIREBASE_API_KEY: 'AIzaSyDu2ihpG3SbUhDZ9Tg-oMvdjYftAbFEenM'
+  _FIREBASE_AUTH_DOMAIN: 'farmquest-493806.firebaseapp.com'
+  _FIREBASE_PROJECT_ID: 'farmquest-493806'
+  _FIREBASE_STORAGE_BUCKET: 'farmquest-493806.firebasestorage.app'
+  _FIREBASE_MESSAGING_SENDER_ID: '429572655157'
+  _FIREBASE_APP_ID: '1:429572655157:web:bb03543c58bc32533a497c'
+  _FIREBASE_MEASUREMENT_ID: 'G-TRGK5C4603'
