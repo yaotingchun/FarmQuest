@@ -1,8 +1,12 @@
-# 🌱 FarmQuest - Project 2030: MyAI Future Hackathon
+# 🌱 FarmQuest
+### 🏆 Project 2030: MyAI Future Hackathon
 
-**Track 1:** Padi & Plates (Agrotech & Food Security)  
-**Goal:** Advancing the Nation by Building Solutions with Google AI  
-**SDGs:** Goal 2 (Zero Hunger), Goal 9 (Industry, Innovation, & Infrastructure), Goal 12 (Responsible Consumption & Production)
+*   **Track:** Track 1: Padi & Plates (Agrotech & Food Security)
+*   **Goal:** Advancing the Nation by Building Solutions with Google AI
+*   **Live Demo:** 🚀 [View Application](https://farmquest-frontend-429572655157.us-central1.run.app/)
+
+#### 🎯 Target SDGs
+![Goal 2](https://img.shields.io/badge/Goal%202-Zero%20Hunger-D80A24?style=for-the-badge) ![Goal 9](https://img.shields.io/badge/Goal%209-Innovation%20%26%20Infrastructure-FD6925?style=for-the-badge) ![Goal 12](https://img.shields.io/badge/Goal%2012-Responsible%20Consumption-BF8B2E?style=for-the-badge)
 
 ---
 ## 👥 The Team: FarmQuest Pioneers
