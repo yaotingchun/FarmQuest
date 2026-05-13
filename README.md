@@ -89,6 +89,12 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # Open-Meteo API endpoint (No Auth Required)
 NEXT_PUBLIC_METEO_API_URL=https://api.open-meteo.com/v1/forecast
+
+# Optional Vertex AI Search config for RAG grounding
+GOOGLE_VERTEX_SEARCH_DATASTORE=your_datastore_id
+GOOGLE_VERTEX_SEARCH_COLLECTION=default_collection
+GOOGLE_VERTEX_SEARCH_SERVING_CONFIG=default_search
+GOOGLE_VERTEX_SEARCH_LOCATION=global
 ```
 
 ### 3. Local Development
@@ -100,6 +106,21 @@ npm run dev
 ```
 
 Navigate to `http://localhost:3000` to access the FarmQuest dashboard.
+
+### Vertex AI Search import files
+
+If you want to import FarmQuest data into Vertex AI Search, generate JSONL files with:
+
+```bash
+npm run reshape:vertex-search
+```
+
+This writes:
+
+- `server/data/vertex-search/plants.jsonl`
+- `server/data/vertex-search/prices.jsonl`
+
+The files contain flattened, document-id-based records that are easier to import into a structured Vertex AI Search data store.
 
 ---
 

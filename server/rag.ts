@@ -12,6 +12,13 @@ const getProjectConfig = () => ({
   location: process.env.GOOGLE_VERTEX_LOCATION || "us-central1"
 });
 
+const getSearchConfig = () => ({
+  collection: process.env.GOOGLE_VERTEX_SEARCH_COLLECTION || "default_collection",
+  dataStoreId: process.env.GOOGLE_VERTEX_SEARCH_DATASTORE || "",
+  servingConfig: process.env.GOOGLE_VERTEX_SEARCH_SERVING_CONFIG || "default_search",
+  location: process.env.GOOGLE_VERTEX_SEARCH_LOCATION || process.env.GOOGLE_VERTEX_LOCATION || "global",
+});
+
 // Normalize credentials path if relative
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !path.isAbsolute(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
   const absolutePath = path.resolve(__dirname, "..", process.env.GOOGLE_APPLICATION_CREDENTIALS);
@@ -28,6 +35,15 @@ interface PlantEmbedding {
   name: string;
   vector: number[];
   text: string;
+}
+
+interface VertexSearchDocument {
+  title?: string;
+  content?: string;
+  snippet?: string;
+  link?: string;
+  uri?: string;
+  [key: string]: unknown;
 }
 
 class RAGManager {
@@ -50,6 +66,101 @@ class RAGManager {
     return this.vertexAI;
   }
 
+  private getAccessToken(): Promise<string> {
+    const ai = this.getVertexAI();
+    return (ai.preview.getGenerativeModel({ model: 'gemini-1.5-flash' }) as any)['fetchToken']();
+  }
+
+  private getVertexAISearchUrl(): string | null {
+    const config = getSearchConfig();
+    if (!config.dataStoreId) return null;
+
+    const projectConfig = getProjectConfig();
+    return `https://discoveryengine.googleapis.com/v1beta/projects/${projectConfig.projectId}/locations/${config.location}/collections/${config.collection}/dataStores/${config.dataStoreId}/servingConfigs/${config.servingConfig}:search`;
+  }
+
+  private hasVertexAISearchConfig(): boolean {
+    return Boolean(this.getVertexAISearchUrl());
+  }
+
+  private extractSearchDocument(result: any): VertexSearchDocument | null {
+    const document = result?.document;
+    if (!document) return null;
+
+    const derived = document.derivedStructData || {};
+    const struct = document.structData || {};
+
+    return {
+      title: derived.title || struct.title || document.title || document.id,
+      content: derived.snippet || derived.content || struct.content || struct.description || document.id,
+      snippet: derived.snippet || struct.snippet,
+      link: derived.link || derived.uri || struct.link || document.uri,
+      uri: document.uri,
+      ...struct,
+      ...derived,
+    };
+  }
+
+  private formatSearchResults(results: any[]): string {
+    if (!results.length) return "No similar plant data available.";
+
+    return results
+      .map((result, index) => {
+        const document = this.extractSearchDocument(result);
+        if (!document) return null;
+
+        const title = document.title || `Result ${index + 1}`;
+        const content = document.snippet || document.content || "";
+        const link = document.link || document.uri ? ` (${document.link || document.uri})` : "";
+        return `- ${title}: ${content}${link}`.trim();
+      })
+      .filter((entry): entry is string => Boolean(entry))
+      .join("\n") || "No similar plant data available.";
+  }
+
+  private async getVertexAISimilarPlantsContext(targetPlantId: string, limit: number): Promise<string> {
+    const targetPlant = (plantsData as any).plants.find((p: any) => p.plant_id === targetPlantId);
+    if (!targetPlant) return "Target plant not found in database.";
+
+    const searchUrl = this.getVertexAISearchUrl();
+    if (!searchUrl) return "No similar plant data available.";
+
+    const query = [
+      targetPlant.name,
+      targetPlant.description,
+      targetPlant.difficulty ? `Difficulty: ${targetPlant.difficulty}` : "",
+      targetPlant.growth_days ? `Harvest in ${targetPlant.growth_days} days` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const token = await this.getAccessToken();
+    const response = await fetch(searchUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        pageSize: limit,
+        contentSearchSpec: {
+          snippetSpec: {
+            returnSnippet: true,
+          },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Vertex AI Search error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json() as any;
+    const results = Array.isArray(result?.results) ? result.results : [];
+    return this.formatSearchResults(results.slice(0, limit));
+  }
+
   /**
    * Initializes the knowledge base by generating embeddings for all plants.
    * This grounds the "Inspiration" block of the prompt.
@@ -58,8 +169,6 @@ class RAGManager {
     if (this.isInitialized) return;
 
     console.log("[RAG] Indexing plants for similar-plant retrieval...");
-    const project = process.env.GOOGLE_VERTEX_PROJECT;
-    const location = process.env.GOOGLE_VERTEX_LOCATION || 'us-central1';
 
     for (const plant of (plantsData as any).plants) {
       try {
@@ -117,6 +226,14 @@ class RAGManager {
    * Retrieves the top K similar plants based on vector similarity.
    */
   async getSimilarPlantsContext(targetPlantId: string, limit: number = 2): Promise<string> {
+    if (this.hasVertexAISearchConfig()) {
+      try {
+        return await this.getVertexAISimilarPlantsContext(targetPlantId, limit);
+      } catch (err) {
+        console.warn("[RAG] Vertex AI Search unavailable, falling back to local similarity:", err);
+      }
+    }
+
     const target = this.plantEmbeddings.find(p => p.plant_id === targetPlantId);
     if (!target || this.plantEmbeddings.length < 2) return "No similar plant data available.";
 
