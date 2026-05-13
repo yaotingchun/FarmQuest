@@ -39,6 +39,7 @@ if (!admin.apps.length) {
   });
 }
 const db = getFirestore(process.env.FIREBASE_DATABASE_ID || 'farmquest');
+db.settings({ ignoreUndefinedProperties: true });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -256,14 +257,18 @@ interface MarketplaceOrder {
   plant_emoji: string;
   plan_type?: 'Budget' | 'Balanced' | 'Premium';
   quantity_kg: number;
-  reward_rm: number;
+  reward_rm: number; // This is the BASE reward the requester pays
+  platform_fee_rm: number; // 5% fee
+  total_paid_rm: number; // reward_rm + platform_fee_rm
+  farmer_payout_rm: number; // reward_rm (the farmer gets the base reward)
   deadline_days: number;
   location: string;
   latitude: number;
   longitude: number;
   notes: string;
   difficulty: string;
-  status: string;
+  status: 'open' | 'accepted' | 'planting' | 'growing' | 'harvested' | 'delivering' | 'completed' | 'disputed' | 'cancelled';
+  payment_status: 'pending' | 'paid' | 'escrow' | 'released' | 'refunded';
   farmer_uid?: string;
   farmer_name?: string;
   farmer_avatar?: string;
@@ -272,10 +277,23 @@ interface MarketplaceOrder {
   completed_at?: string;
   checkpoints: any[];
   total_votes: number;
+  status_history: { status: string; timestamp: string }[];
   ai_tasks?: {
     main: any[];
     daily: string[];
   };
+}
+
+interface ChatMessage {
+  id: string;
+  order_id: string;
+  sender_uid: string;
+  sender_name: string;
+  text: string;
+  image_url?: string;
+  type: 'text' | 'system' | 'action';
+  action_type?: string;
+  timestamp: string;
 }
 
 interface MarketplaceUpdate {
@@ -295,6 +313,7 @@ interface MarketplaceUpdate {
 // Firestore Database Reference
 const ordersRef = db.collection('marketplace_orders');
 const updatesRef = db.collection('marketplace_updates');
+const messagesRef = db.collection('marketplace_messages');
 
 // Helper: generate checkpoints based on plant growth data
 function generateCheckpoints(plantId: string, deadlineDays: number): any[] {
@@ -629,6 +648,9 @@ async function seedDemoOrdersToFirestore() {
       });
     }
 
+    const reward = demo.reward_rm!;
+    const fee = Math.round(reward * 0.05 * 100) / 100;
+    
     const order: MarketplaceOrder = {
       id,
       requester_uid: demo.requester_uid!,
@@ -638,14 +660,18 @@ async function seedDemoOrdersToFirestore() {
       plant_name: demo.plant_name!,
       plant_emoji: demo.plant_emoji!,
       quantity_kg: demo.quantity_kg!,
-      reward_rm: demo.reward_rm!,
+      reward_rm: reward,
+      platform_fee_rm: fee,
+      total_paid_rm: reward + fee,
+      farmer_payout_rm: reward,
       deadline_days: demo.deadline_days!,
       location: demo.location || '',
       latitude: demo.latitude || 0,
       longitude: demo.longitude || 0,
       notes: demo.notes || '',
       difficulty: demo.difficulty || 'medium',
-      status: demo.status || 'open',
+      status: (demo.status as any) || 'open',
+      payment_status: demo.status === 'completed' ? 'released' : (demo.status === 'in_progress' ? 'escrow' : 'paid'),
       farmer_uid: demo.farmer_uid,
       farmer_name: demo.farmer_name,
       farmer_avatar: demo.farmer_avatar,
@@ -654,6 +680,9 @@ async function seedDemoOrdersToFirestore() {
       completed_at: demo.completed_at,
       checkpoints,
       total_votes: demo.status === 'completed' ? 12 : 0,
+      status_history: [
+        { status: 'open', timestamp: new Date(Date.now() - 10 * 86400000).toISOString() }
+      ],
     };
 
     const docRef = ordersRef.doc(id);
@@ -744,6 +773,9 @@ app.post("/api/marketplace/orders", async (req, res) => {
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     const id = `ORD-${Date.now().toString().slice(-4)}${randomSuffix}`;
     
+    const reward = Number(reward_rm);
+    const fee = Math.round(reward * 0.05 * 100) / 100;
+
     const order: MarketplaceOrder = {
       id,
       requester_uid: requester_uid || 'anonymous',
@@ -754,7 +786,10 @@ app.post("/api/marketplace/orders", async (req, res) => {
       plant_emoji: plant_emoji || '🌱',
       plan_type: plan_type || 'Budget',
       quantity_kg: Number(quantity_kg),
-      reward_rm: Number(reward_rm),
+      reward_rm: reward,
+      platform_fee_rm: fee,
+      total_paid_rm: reward,
+      farmer_payout_rm: Math.round((reward - fee) * 100) / 100,
       deadline_days: Number(deadline_days),
       location: location || '',
       latitude: Number(latitude) || 0,
@@ -762,9 +797,13 @@ app.post("/api/marketplace/orders", async (req, res) => {
       notes: notes || '',
       difficulty: difficulty || 'medium',
       status: 'open',
+      payment_status: 'paid', // For prototype, assume paid on creation
       created_at: new Date().toISOString(),
       checkpoints: generateCheckpoints(plant_id, Number(deadline_days)),
       total_votes: 0,
+      status_history: [
+        { status: 'open', timestamp: new Date().toISOString() }
+      ],
     };
 
     await ordersRef.doc(id).set(order);
@@ -805,13 +844,31 @@ app.post("/api/marketplace/orders/:orderId/accept", async (req, res) => {
     order.farmer_name = farmer_name || 'Farmer';
     order.farmer_avatar = farmer_avatar || '🧑‍🌾';
     order.accepted_at = new Date().toISOString();
+    order.payment_status = 'escrow';
 
     await docRef.update({
       status: order.status,
       farmer_uid: order.farmer_uid,
       farmer_name: order.farmer_name,
       farmer_avatar: order.farmer_avatar,
-      accepted_at: order.accepted_at
+      accepted_at: order.accepted_at,
+      payment_status: order.payment_status,
+      status_history: admin.firestore.FieldValue.arrayUnion({
+        status: 'accepted',
+        timestamp: order.accepted_at
+      })
+    });
+
+    // Add a system message to chat
+    const msgId = `MSG-${Date.now()}`;
+    await messagesRef.doc(msgId).set({
+      id: msgId,
+      order_id: req.params.orderId,
+      sender_uid: 'system',
+      sender_name: 'System',
+      text: `Order accepted by ${order.farmer_name}. Negotiation and tracking enabled!`,
+      type: 'system',
+      timestamp: new Date().toISOString()
     });
 
     console.log(`[Marketplace] Order ${order.id} accepted by ${order.farmer_name}`);
@@ -822,15 +879,152 @@ app.post("/api/marketplace/orders/:orderId/accept", async (req, res) => {
   }
 });
 
+// POST /api/marketplace/orders/:orderId/status — Update order status (Logistics)
+app.post("/api/marketplace/orders/:orderId/status", async (req, res) => {
+  const { status, user_uid } = req.body;
+  const validStatuses = ['planting', 'growing', 'harvested', 'delivering', 'completed', 'disputed', 'cancelled'];
+  
+  if (!validStatuses.includes(status)) {
+    res.status(400).json({ error: "Invalid status" });
+    return;
+  }
+
+  try {
+    const docRef = ordersRef.doc(req.params.orderId);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    const order = doc.data() as MarketplaceOrder;
+    
+    // ROLE ENFORCEMENT
+    const isFarmer = user_uid === order.farmer_uid;
+    const isRequester = user_uid === order.requester_uid;
+
+    if (!isFarmer && !isRequester) {
+      res.status(403).json({ error: "Unauthorized to update status" });
+      return;
+    }
+
+    // Farmer-only transitions
+    if (['planting', 'growing', 'harvested', 'delivering'].includes(status) && !isFarmer) {
+      res.status(403).json({ error: "Only the farmer can update logistics status" });
+      return;
+    }
+
+    // Requester-only transitions
+    if (status === 'completed' && !isRequester) {
+      res.status(403).json({ error: "Only the requester can confirm completion" });
+      return;
+    }
+
+    const oldStatus = order.status;
+    const timestamp = new Date().toISOString();
+    
+    const updateData: any = { 
+      status,
+      status_history: admin.firestore.FieldValue.arrayUnion({ status, timestamp })
+    };
+
+    if (status === 'completed' && oldStatus !== 'completed') {
+      updateData.completed_at = timestamp;
+      updateData.payment_status = 'released';
+      
+      // Credit the farmer
+      if (order.farmer_uid) {
+        const farmerRef = db.collection('users').doc(order.farmer_uid);
+        const payout = order.farmer_payout_rm || (order.reward_rm * 0.95);
+        await farmerRef.update({
+          total_earnings: admin.firestore.FieldValue.increment(payout),
+          completed_orders: admin.firestore.FieldValue.increment(1),
+          xp: admin.firestore.FieldValue.increment(100)
+        });
+        console.log(`[Marketplace] Status Change: Credited Farmer ${order.farmer_uid} with RM${payout.toFixed(2)}`);
+      }
+    } else if (status === 'cancelled') {
+      updateData.payment_status = 'refunded';
+    }
+
+    await docRef.update(updateData);
+
+    // Add system message
+    const msgId = `MSG-${Date.now()}`;
+    await messagesRef.doc(msgId).set({
+      id: msgId,
+      order_id: req.params.orderId,
+      sender_uid: 'system',
+      sender_name: 'System',
+      text: `Status updated from ${oldStatus} to ${status}.`,
+      type: 'system',
+      timestamp: new Date().toISOString()
+    });
+
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update status" });
+  }
+});
+
+// GET /api/marketplace/orders/:orderId/messages — Get chat history
+app.get("/api/marketplace/orders/:orderId/messages", async (req, res) => {
+  try {
+    const snapshot = await messagesRef
+      .where('order_id', '==', req.params.orderId)
+      .get();
+    
+    const messages = snapshot.docs.map(doc => doc.data() as ChatMessage);
+    // Sort in-memory to avoid index requirement
+    messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
+
+// POST /api/marketplace/orders/:orderId/messages — Send message
+app.post("/api/marketplace/orders/:orderId/messages", async (req, res) => {
+  const { sender_uid, sender_name, text, type, action_type } = req.body;
+  
+  if (!text && !action_type) {
+    res.status(400).json({ error: "Message content is required" });
+    return;
+  }
+
+  try {
+    const msgId = `MSG-${Date.now()}`;
+    const message: ChatMessage = {
+      id: msgId,
+      order_id: req.params.orderId,
+      sender_uid,
+      sender_name,
+      text: text || '',
+      type: type || 'text',
+      action_type,
+      timestamp: new Date().toISOString()
+    };
+
+    await messagesRef.doc(msgId).set(message);
+    res.status(201).json(message);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send message" });
+  }
+});
+
 // GET /api/marketplace/orders/:orderId/updates — Get progress updates
 app.get("/api/marketplace/orders/:orderId/updates", async (req, res) => {
   try {
     const snapshot = await updatesRef
       .where("order_id", "==", req.params.orderId)
-      .orderBy("timestamp", "desc")
       .get();
       
     const updates = snapshot.docs.map(doc => doc.data());
+    // Sort in-memory to avoid index requirement
+    updates.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     res.json(updates);
   } catch (err) {
     console.error(err);
@@ -928,6 +1122,18 @@ app.post("/api/marketplace/orders/:orderId/complete", async (req, res) => {
     order.status = 'completed';
     order.completed_at = completed_at;
 
+    // Credit the farmer
+    if (order.farmer_uid) {
+      const farmerRef = db.collection('users').doc(order.farmer_uid);
+      const payout = order.farmer_payout_rm || (order.reward_rm * 0.95);
+      await farmerRef.update({
+        total_earnings: admin.firestore.FieldValue.increment(payout),
+        completed_orders: admin.firestore.FieldValue.increment(1),
+        xp: admin.firestore.FieldValue.increment(100) // Bonus XP for completing an order
+      });
+      console.log(`[Marketplace] Credited Farmer ${order.farmer_uid} with RM${payout.toFixed(2)}`);
+    }
+
     console.log(`[Marketplace] Order ${order.id} completed! Farmer: ${order.farmer_name}, Reward: RM${order.reward_rm}`);
     res.json(order);
   } catch (err) {
@@ -1010,14 +1216,40 @@ app.post("/api/marketplace/orders/:orderId/shared-progress", async (req, res) =>
     const sharedKey = `marketplace-order-${order.id}`;
     const updatedAt = new Date().toISOString();
 
-    await orderRef.update({
+    const updates: any = {
       shared_progress_key: sharedKey,
       shared_progress_state: state,
       shared_progress_task_state: task_state,
       shared_progress_updated_at: admin.firestore.Timestamp.now(),
       shared_progress_source_category: source_category || 'chosen_plant',
       ai_tasks: ai_tasks || order.ai_tasks || null,
-    });
+    };
+
+    // Auto-transition logistics status based on quest progress
+    let statusChanged = false;
+    const currentStatus = order.status;
+
+    if (currentStatus === 'accepted') {
+      updates.status = 'planting';
+      statusChanged = true;
+    } else if (currentStatus === 'planting' && (task_state['intro-3'] || state.growthStage > 0)) {
+      updates.status = 'growing';
+      statusChanged = true;
+    } else if (currentStatus === 'growing' && state.growthStage >= 3) {
+       // Assuming stage 3 is harvest-ready
+       updates.status = 'harvested';
+       statusChanged = true;
+    }
+
+    if (statusChanged) {
+      updates.status_history = [
+        ...order.status_history,
+        { status: updates.status, timestamp: updatedAt }
+      ];
+      console.log(`[Marketplace] Order ${order.id} auto-transitioned to ${updates.status} via quest progress`);
+    }
+
+    await orderRef.update(updates);
 
     const updatePlantsForUser = async (uid?: string) => {
       if (!uid) return;

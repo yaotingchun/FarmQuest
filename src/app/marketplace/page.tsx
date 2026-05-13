@@ -110,6 +110,9 @@ export default function MarketplacePage() {
             <Link href="/marketplace/my-orders" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
               My Orders
             </Link>
+            <Link href="/marketplace/chat" className="btn-secondary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
+              Messages
+            </Link>
             <Link href="/recommendations" className="btn-primary" style={{ padding: '10px 20px', fontSize: '0.85rem' }}>
               + Post Order
             </Link>
@@ -234,7 +237,7 @@ export default function MarketplacePage() {
       ) : (
         <div className="mp-grid">
           {filtered.map(order => (
-            <Link href={`/marketplace/${order.id}`} key={order.id} className="mp-card">
+            <Link href={`/marketplace/${order.id}${order.status !== 'open' ? '#tracking' : ''}`} key={order.id} className="mp-card">
               <div className="mp-card-top">
                 <div className="mp-card-plant">
                   <span className="mp-card-emoji">{order.plant_emoji}</span>
@@ -244,8 +247,8 @@ export default function MarketplacePage() {
                   </div>
                 </div>
                 <div className="mp-card-reward">
-                  <span className="mp-card-reward-val">RM{order.reward_rm}</span>
-                  <span className="mp-card-reward-label">Reward</span>
+                  <span className="mp-card-reward-val">RM{(order.reward_rm * 0.95).toFixed(2)}</span>
+                  <span className="mp-card-reward-label">Payout</span>
                 </div>
               </div>
               <div className="mp-card-details">

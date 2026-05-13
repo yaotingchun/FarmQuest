@@ -2,6 +2,7 @@
 
 import type { GrowthStage } from '@/types/quest'
 import type { PlantSourceCategory } from '@/types/quest'
+import Link from 'next/link'
 
 const STAGE_CONFIG: Record<GrowthStage, { emoji: string; label: string; color: string }> = {
   0: { emoji: '🌰', label: 'Seed', color: '#a78bfa' },
@@ -19,6 +20,8 @@ interface PlantStatusCardProps {
   sunlight?: string
   waterFrequency?: number
   startMethod?: string
+  status?: 'in_progress' | 'completed'
+  trackingLink?: string
 }
 
 const formatSunlight = (s: string) => s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
@@ -30,17 +33,25 @@ const SOURCE_CONFIG: Record<PlantSourceCategory, { label: string; emoji: string;
   accepted_order: { label: 'Accepted Order', emoji: '🚜', className: 'source-accepted' },
 }
 
-export function PlantStatusCard({ plantName, plantEmoji, stage, streak, sourceCategory = 'chosen_plant', sunlight, waterFrequency, startMethod }: PlantStatusCardProps) {
+export function PlantStatusCard({ plantName, plantEmoji, stage, streak, sourceCategory = 'chosen_plant', sunlight, waterFrequency, startMethod, status: propStatus, trackingLink }: PlantStatusCardProps) {
   const stageInfo = STAGE_CONFIG[stage]
   const displayLabel = (stage === 0 && startMethod) ? formatStartMethod(startMethod) : stageInfo.label
   const sourceInfo = SOURCE_CONFIG[sourceCategory]
 
+  const isOrder = sourceCategory === 'posted_order' || sourceCategory === 'accepted_order'
+  const status = propStatus || (stage === 3 ? 'completed' : 'in_progress')
+
   return (
     <div className="quest-plant-card">
-      <div className="quest-plant-source-wrap">
+      <div className="quest-plant-source-wrap" style={{ gap: '8px' }}>
         <span className={`quest-plant-source-badge ${sourceInfo.className}`}>
           {sourceInfo.emoji} {sourceInfo.label}
         </span>
+        {isOrder && (
+          <span className={`quest-plant-status-badge ${status}`}>
+            {status === 'completed' ? '✓ Completed' : '⏳ In Progress'}
+          </span>
+        )}
       </div>
 
       <div className="quest-plant-card-body">
@@ -55,8 +66,9 @@ export function PlantStatusCard({ plantName, plantEmoji, stage, streak, sourceCa
         </div>
 
         <div className="quest-plant-info">
-          <div className="quest-plant-name-row">
+          <div className="quest-plant-name-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 className="quest-plant-name">{plantName}</h2>
+
           </div>
 
           {(sunlight || waterFrequency) && (

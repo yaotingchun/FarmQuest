@@ -17,6 +17,10 @@ export const Navbar = () => {
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    setMounted(true)
     const syncHash = () => setHash(window.location.hash || '')
     syncHash()
     window.addEventListener('hashchange', syncHash)
@@ -81,27 +85,29 @@ export const Navbar = () => {
               <Link href={item.href}>{item.label}</Link>
             </li>
           ))}
-          {mounted && profile ? (
-            <li>
-              <Link href="/profile" className="nav-profile-link">
-                <div className="nav-profile-info">
-                  <span className="nav-profile-name">{profile.username}</span>
-                  <span className="nav-profile-status">{profile.archetype || 'GROWER'}</span>
-                </div>
-                <div className="nav-profile-avatar">{profile.avatar}</div>
-              </Link>
-            </li>
-          ) : (
-            mounted && !loading && (
+          {mounted && (
+            profile ? (
               <li>
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="nav-cta"
-                  style={{ background: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Log In
-                </button>
+                <Link href="/profile" className="nav-profile-link">
+                  <div className="nav-profile-info">
+                    <span className="nav-profile-name">{profile.username}</span>
+                    <span className="nav-profile-status">{profile.archetype || 'GROWER'}</span>
+                  </div>
+                  <div className="nav-profile-avatar">{profile.avatar}</div>
+                </Link>
               </li>
+            ) : (
+              !loading && (
+                <li>
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="nav-cta"
+                    style={{ background: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Log In
+                  </button>
+                </li>
+              )
             )
           )}
         </ul>

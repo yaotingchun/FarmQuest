@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Scale, Clock, MapPin } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import ChatWindow from '@/components/ChatWindow'
 import '../marketplace.css'
  
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
@@ -18,10 +19,23 @@ interface Order {
 
 export default function MyOrdersPage() {
   const { user } = useAuth()
-  const [tab, setTab] = useState<'posted' | 'fulfilling'>('posted')
+  const [tab, setTab] = useState<'posted' | 'fulfilling' | 'chat'>('posted')
   const [posted, setPosted] = useState<Order[]>([])
   const [fulfilling, setFulfilling] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+
+  const fetchMyOrders = useCallback(() => {
+    if (!user) return
+    fetch(`${API_URL}/api/marketplace/my-orders?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(data => {
+        setPosted(data.as_requester || [])
+        setFulfilling(data.as_farmer || [])
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [user])
 
   useEffect(() => {
     if (!user) {
@@ -36,22 +50,20 @@ export default function MyOrdersPage() {
         .catch(() => setLoading(false))
       return
     }
-    fetch(`${API_URL}/api/marketplace/my-orders?uid=${user.uid}`)
-      .then(r => r.json())
-      .then(data => {
-        setPosted(data.as_requester || [])
-        setFulfilling(data.as_farmer || [])
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [user])
+    fetchMyOrders()
+  }, [user, fetchMyOrders])
+
+  const activeChats = useMemo(() => [
+    ...posted.filter(o => o.status !== 'open').map(o => ({ ...o, other_name: o.farmer_name, other_avatar: o.farmer_avatar })),
+    ...fulfilling.filter(o => o.status !== 'open').map(o => ({ ...o, other_name: o.requester_name, other_avatar: o.requester_avatar }))
+  ], [posted, fulfilling])
 
   const orders = tab === 'posted' ? posted : fulfilling
   const statusLabel = (s: string) => s.replace('_', ' ')
 
   const totalEarned = fulfilling
     .filter(o => o.status === 'completed')
-    .reduce((acc, o) => acc + o.reward_rm, 0)
+    .reduce((acc, o) => acc + (o.reward_rm * 0.95), 0)
 
   return (
     <div className="mp-my-page">
@@ -72,7 +84,7 @@ export default function MyOrdersPage() {
         </div>
         <div className="mp-stat">
           <div className="mp-stat-icon" style={{ background: 'rgba(251,191,36,0.15)' }}>💰</div>
-          <div><span className="mp-stat-val">RM{totalEarned}</span><span className="mp-stat-label">Total Earned</span></div>
+          <div><span className="mp-stat-val">RM{totalEarned.toFixed(2).replace('.00', '')}</span><span className="mp-stat-label">Total Earned</span></div>
         </div>
       </div>
 
@@ -101,7 +113,7 @@ export default function MyOrdersPage() {
       ) : (
         <div className="mp-grid">
           {orders.map(order => (
-            <Link href={`/marketplace/${order.id}?from=my-orders`} key={order.id} className="mp-card">
+            <Link href={`/marketplace/${order.id}${order.status !== 'open' ? '#tracking' : ''}`} key={order.id} className="mp-card">
               <div className="mp-card-top">
                 <div className="mp-card-plant">
                   <span className="mp-card-emoji">{order.plant_emoji}</span>
@@ -111,8 +123,10 @@ export default function MyOrdersPage() {
                   </div>
                 </div>
                 <div className="mp-card-reward">
-                  <span className="mp-card-reward-val">RM{order.reward_rm}</span>
-                  <span className="mp-card-reward-label">Reward</span>
+                  <span className="mp-card-reward-val">
+                    RM{tab === 'fulfilling' ? (order.reward_rm * 0.95).toFixed(2).replace('.00', '') : order.reward_rm}
+                  </span>
+                  <span className="mp-card-reward-label">{tab === 'fulfilling' ? 'Payout' : 'Reward'}</span>
                 </div>
               </div>
               <div className="mp-card-details">

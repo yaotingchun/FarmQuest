@@ -23,6 +23,32 @@ function MultiPlantDashboard() {
   const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [orderStatuses, setOrderStatuses] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+      const statuses: Record<string, string> = {}
+      for (const plant of userPlants) {
+        if (plant.shared_progress_key?.startsWith('marketplace-order-')) {
+          const orderId = plant.shared_progress_key.replace('marketplace-order-', '')
+          try {
+            const res = await fetch(`${API_URL}/api/marketplace/orders/${orderId}`)
+            if (res.ok) {
+              const order = await res.json()
+              statuses[plant.id] = order.status
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      }
+      setOrderStatuses(statuses)
+    }
+    if (userPlants.length > 0) {
+      fetchStatuses()
+    }
+  }, [userPlants])
 
   // Calendar State
   const now = new Date()
@@ -45,6 +71,18 @@ function MultiPlantDashboard() {
       return sourceFilter === 'all' ? true : category === sourceFilter
     })
   }, [userPlants, sourceFilter])
+
+  const sortedPlants = useMemo(() => {
+    return [...filteredPlants].sort((a, b) => {
+      const aStatus = orderStatuses[a.id]
+      const bStatus = orderStatuses[b.id]
+      const aCompleted = aStatus === 'COMPLETED' || aStatus === 'completed' || a.state.growthStage === 3
+      const bCompleted = bStatus === 'COMPLETED' || bStatus === 'completed' || b.state.growthStage === 3
+      if (aCompleted && !bCompleted) return 1
+      if (!aCompleted && bCompleted) return -1
+      return 0
+    })
+  }, [filteredPlants, orderStatuses])
 
   const sourceCounts = useMemo(() => {
     return {
@@ -148,8 +186,8 @@ function MultiPlantDashboard() {
   const totalPages = Math.ceil(filteredPlants.length / itemsPerPage)
   const paginatedPlants = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
-    return filteredPlants.slice(start, start + itemsPerPage)
-  }, [filteredPlants, currentPage])
+    return sortedPlants.slice(start, start + itemsPerPage)
+  }, [sortedPlants, currentPage])
 
   // Reset to page 1 if filter changes
   useEffect(() => {
@@ -231,7 +269,7 @@ function MultiPlantDashboard() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1rem', minHeight: 'auto' }}>
-                  {paginatedPlants.length === 0 ? (
+                  {sortedPlants.length === 0 ? (
                     <div className="quest-hub-no-tasks" style={{ padding: '2.5rem 1rem' }}>
                       <span>🌿</span>
                       <p>No plants in this category yet.</p>
@@ -240,6 +278,8 @@ function MultiPlantDashboard() {
                     const pData = getQuestPlant(plant.plant_id)
                     if (!pData) return null
                     const isEditable = canEditPlant(plant)
+                    const orderStatus = orderStatuses[plant.id]
+                    const isCompleted = orderStatus === 'COMPLETED' || orderStatus === 'completed' || plant.state.growthStage === 3
                     return (
                       <div key={plant.id} style={{ position: 'relative' }}>
                         <div style={{ cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => handleGoToDetail(plant.id)}>
@@ -252,6 +292,7 @@ function MultiPlantDashboard() {
                               sunlight={pData.sunlight_type}
                               waterFrequency={pData.water_frequency_days}
                               startMethod={pData.startMethod}
+                              status={isCompleted ? 'completed' : 'in_progress'}
                           />
                           <div style={{ position: 'absolute', bottom: '20px', right: '24px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, opacity: 0.6 }}>
                             View Quests →

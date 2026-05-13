@@ -18,7 +18,7 @@ import { ThemedModal } from '@/components/ui/ThemedModal'
 function QuestsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { userPlants, activePlantId, completeTask, deletePlant, setActivePlant, availablePlants, addPlant, calendarData, refreshCalendar, isGeneratingTasks } = useQuest()
+  const { userPlants, activePlantId, completeTask, deletePlant, setActivePlant, availablePlants, addPlant, calendarData, refreshCalendar, loading, isGeneratingTasks } = useQuest()
   const [activeTab, setActiveTab ] = useState<'main' | 'daily'>('main')
   const [viewMode, setViewMode] = useState<'list' | 'detail'>(activePlantId ? 'detail' : 'list')
   const isAddingRef = useRef(false)
@@ -27,6 +27,33 @@ function QuestsContent() {
   const selectedSource = searchParams.get('source') as 'chosen_plant' | 'posted_order' | 'accepted_order' | null
   const selectedOrderId = searchParams.get('order')
   const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
+
+  const [orderStatuses, setOrderStatuses] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+      const statuses: Record<string, string> = {}
+      for (const plant of userPlants) {
+        if (plant.shared_progress_key?.startsWith('marketplace-order-')) {
+          const orderId = plant.shared_progress_key.replace('marketplace-order-', '')
+          try {
+            const res = await fetch(`${API_URL}/api/marketplace/orders/${orderId}`)
+            if (res.ok) {
+              const order = await res.json()
+              statuses[plant.id] = order.status
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      }
+      setOrderStatuses(statuses)
+    }
+    if (userPlants.length > 0) {
+      fetchStatuses()
+    }
+  }, [userPlants])
 
 
   // Handle auto-activation from search params (e.g. after adding a plant)
@@ -38,7 +65,7 @@ function QuestsContent() {
 
   useEffect(() => {
     const plantToAdd = searchParams.get('plant')
-    if (plantToAdd && !isAddingRef.current) {
+    if (plantToAdd && !loading && !isAddingRef.current) {
       const planToAdd = selectedPlanType || 'Budget'
       const sourceCategory = selectedSource || 'chosen_plant'
       const sharedProgressKey = selectedOrderId ? `marketplace-order-${selectedOrderId}` : undefined
@@ -97,6 +124,18 @@ function QuestsContent() {
   const canEditPlant = (plant: { source_category?: 'chosen_plant' | 'posted_order' | 'accepted_order' }) => {
     return (plant.source_category || 'chosen_plant') !== 'posted_order'
   }
+
+  const sortedPlants = useMemo(() => {
+    return [...userPlants].sort((a, b) => {
+      const aStatus = orderStatuses[a.id]
+      const bStatus = orderStatuses[b.id]
+      const aCompleted = aStatus === 'COMPLETED' || aStatus === 'completed' || a.state.growthStage === 3
+      const bCompleted = bStatus === 'COMPLETED' || bStatus === 'completed' || b.state.growthStage === 3
+      if (aCompleted && !bCompleted) return 1
+      if (!aCompleted && bCompleted) return -1
+      return 0
+    })
+  }, [userPlants, orderStatuses])
 
 
   const isDailyUnlocked = useMemo(() => {
@@ -218,9 +257,11 @@ function QuestsContent() {
           >
              <ArrowLeft size={18} /> Back
           </button>
-          <div className="quest-ai-badge" style={{ fontSize: '0.65rem', background: 'rgba(167, 139, 250, 0.1)', color: '#a78bfa', padding: '4px 12px', borderRadius: '12px', border: '1px solid rgba(167, 139, 250, 0.2)', fontWeight: 700 }}>
-             ✨ AI OPTIMIZED
-          </div>
+          {activePlant.shared_progress_key?.startsWith('marketplace-order-') && (
+            <Link href={`/marketplace/${activePlant.shared_progress_key.replace('marketplace-order-', '')}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', background: 'rgba(94, 196, 130, 0.1)', border: '1px solid rgba(94, 196, 130, 0.2)', padding: '6px 12px', borderRadius: '10px' }}>
+              <span>💬</span> Tracking & Chat
+            </Link>
+          )}
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
@@ -233,6 +274,8 @@ function QuestsContent() {
               sunlight={plantData.sunlight_type}
               waterFrequency={plantData.water_frequency_days}
               startMethod={plantData.startMethod}
+              status={(orderStatuses[activePlant.id] === 'COMPLETED' || orderStatuses[activePlant.id] === 'completed' || activePlant.state.growthStage === 3) ? 'completed' : 'in_progress'}
+              trackingLink={activePlant.shared_progress_key?.startsWith('marketplace-order-') ? `/marketplace/${activePlant.shared_progress_key.replace('marketplace-order-', '')}` : undefined}
           />
           <div className="quest-xp-section">
              <div className="quest-xp-header-row">
@@ -250,6 +293,8 @@ function QuestsContent() {
             👁️ View only: This is your posted order. The farmer updates task progress.
           </div>
         )}
+
+
 
         {isDead ? (
           <div className="quest-daily-locked" style={{ textAlign: 'center', padding: '3rem 2rem', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>

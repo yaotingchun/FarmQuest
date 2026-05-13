@@ -634,12 +634,12 @@ export default function ProfilePage() {
           </div>
 
           <div className="profile-stat-pill">
-            <div className="stat-pill-icon" style={{ background: 'rgba(249,115,22,0.15)' }}>
-              <Flame size={15} color="#f97316" />
+            <div className="stat-pill-icon" style={{ background: 'rgba(52, 217, 95, 0.15)' }}>
+              <Zap size={15} color="var(--accent)" />
             </div>
             <div>
-              <span className="stat-pill-val">{USER.streak.current}</span>
-              <span className="stat-pill-label">Streak</span>
+              <span className="stat-pill-val">RM {(USER.total_earnings || 0).toFixed(2)}</span>
+              <span className="stat-pill-label">Earnings</span>
             </div>
           </div>
         </div>

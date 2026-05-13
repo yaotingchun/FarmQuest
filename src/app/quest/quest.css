@@ -404,6 +404,29 @@
   border: 1px solid rgba(96, 165, 250, 0.22);
 }
 
+.quest-plant-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.quest-plant-status-badge.in_progress {
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.quest-plant-status-badge.completed {
+  background: rgba(34, 197, 94, 0.14);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.22);
+}
+
 .quest-source-tabs {
   display: flex;
   flex-wrap: wrap;

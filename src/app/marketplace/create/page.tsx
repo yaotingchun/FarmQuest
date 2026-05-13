@@ -3,8 +3,9 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Sprout, MapPin } from 'lucide-react'
+import { ArrowLeft, Sprout, MapPin, Info } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import PaymentModal from '@/components/PaymentModal'
 import '../marketplace.css'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
@@ -44,6 +45,7 @@ function CreateOrderContent() {
   const [gpsPos, setGpsPos] = useState<{ lat: number; lng: number } | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState('')
+  const [showPayment, setShowPayment] = useState(false)
 
   const prefillPlantId = searchParams.get('plant')
   const prefillPlanType = (searchParams.get('plan') as 'Budget' | 'Balanced' | 'Premium' | null) || 'Budget'
@@ -112,6 +114,10 @@ function CreateOrderContent() {
 
   const canSubmit = selectedPlant && quantity && reward && deadline && !submitting
 
+  const totalAmount = Number(reward || 0)
+  const platformFee = Math.round(totalAmount * 0.05 * 100) / 100
+  const farmerPayout = Math.round((totalAmount - platformFee) * 100) / 100
+
   const handleSubmit = async () => {
     if (!canSubmit) return
     setSubmitting(true)
@@ -151,6 +157,18 @@ function CreateOrderContent() {
   return (
     <div className="mp-create-page">
       {toast && <div className="mp-toast">{toast}</div>}
+      {showPayment && (
+        <PaymentModal 
+          amount={totalAmount} 
+          fee={platformFee} 
+          payout={farmerPayout}
+          onConfirm={() => {
+            setShowPayment(false)
+            handleSubmit()
+          }}
+          onClose={() => setShowPayment(false)}
+        />
+      )}
 
       <Link href="/marketplace" className="mp-back"><ArrowLeft size={16} /> Back to Marketplace</Link>
 
@@ -288,25 +306,11 @@ function CreateOrderContent() {
             value={notes} onChange={e => setNotes(e.target.value)} />
         </div>
 
-        {/* Preview */}
-        {selectedPlant && quantity && reward && (
-          <>
-            <div className="mp-form-divider" />
-            <div className="mp-form-step-label">👀 Preview</div>
-            <div className="mp-preview-box">
-              <div className="mp-preview-row"><span>Plant</span><span>{selectedPlant.emoji} {selectedPlant.name}</span></div>
-              <div className="mp-preview-row"><span>Plan</span><span>{prefillPlanType}</span></div>
-              <div className="mp-preview-row"><span>Quantity</span><span>{quantity} kg</span></div>
-              <div className="mp-preview-row"><span>Reward</span><span>RM {reward}</span></div>
-              <div className="mp-preview-row"><span>Deadline</span><span>{deadline} days</span></div>
-              <div className="mp-preview-row"><span>Difficulty</span><span>{selectedPlant.difficulty}</span></div>
-              {location && <div className="mp-preview-row"><span>Location</span><span>{location}</span></div>}
-            </div>
-          </>
-        )}
+        {/* Actions handled by Post & Pay button */}
 
-        <button className="mp-form-submit" disabled={!canSubmit} onClick={handleSubmit}>
-          {submitting ? 'Posting...' : '🌱 Post Plant Order'}
+
+        <button className="mp-form-submit" disabled={!canSubmit} onClick={() => setShowPayment(true)}>
+          {submitting ? 'Posting...' : '🌱 Post & Pay RM ' + totalAmount.toFixed(2)}
         </button>
       </div>
     </div>

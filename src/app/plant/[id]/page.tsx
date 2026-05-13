@@ -27,76 +27,102 @@ const formatDifficulty = (d: string) => d.charAt(0).toUpperCase() + d.slice(1).t
 
 function normalizeExplanationText(text: string): string {
   return text
-    .replace(/(?:^|\n|\s)\*?P[tT]\b\s*:\*?\s*/g, "Pot: ")
-    .replace(/(?:^|\n|\s)\*?P[tT]\b\s*(?!\w)/g, "Pot ")
-    .replace(/(?:^|\n|\s)\*?potting\b\s*:\*?\s*/gi, "Pot: ")
-    .replace(/(?:^|\n|\s)\*?soil\b\s*:\*?\s*/gi, "Soil: ")
-    .replace(/(?:^|\n|\s)\*?seed\b\s*:\*?\s*/gi, "Seed: ")
-    .replace(/(?:^|\n|\s)\*?nutrition\b\s*:\*?\s*/gi, "Nutrition: ")
-    .replace(/(?:^|\n|\s)\*?nutri\w*\b\s*:\*?\s*/gi, "Nutrition: ");
+    .replace(/\bP[tT]\b\s*:\s*/g, "Pot: ")
+    .replace(/\bpotting\b\s*:\s*/gi, "Pot: ")
+    .replace(/\bsoil\b\s*:\s*/gi, "Soil: ")
+    .replace(/\bseed\b\s*:\s*/gi, "Seed: ")
+    .replace(/\bnutrition\b\s*:\s*/gi, "Nutrition: ")
+    .replace(/\bnutri\w*\b\s*:\s*/gi, "Nutrition: ");
+}
+
+function parseExplanation(text: string) {
+  const normalized = normalizeExplanationText(text);
+  const regex = /(Pot:|Soil:|Seed:|Nutrition:)/g;
+  const parts = normalized.split(regex);
+
+  if (parts.length === 1) {
+    return [{ title: "Analysis", content: parts[0] }];
+  }
+
+  const sections: { title: string; content: string }[] = [];
+  if (parts[0].trim()) {
+    sections.push({ title: "Analysis", content: parts[0].trim() });
+  }
+
+  for (let i = 1; i < parts.length; i += 2) {
+    const title = parts[i].replace(":", "");
+    const content = parts[i + 1] ? parts[i + 1].trim() : "";
+    sections.push({ title, content });
+  }
+
+  return sections;
 }
 
 // ── Typing Effect Component ──
 function TypingEffect({ text, speed = 10, onUpdate }: { text: string; speed?: number; onUpdate?: () => void }) {
   const [displayedText, setDisplayedText] = useState("");
-  const normalizedText = normalizeExplanationText(text);
 
   useEffect(() => {
     setDisplayedText("");
     let index = 0;
     const interval = setInterval(() => {
-      if (index < normalizedText.length) {
-        setDisplayedText((prev) => prev + normalizedText.charAt(index));
+      if (index < text.length) {
+        setDisplayedText((prev) => prev + text.charAt(index));
         index++;
       } else {
         clearInterval(interval);
       }
     }, speed);
     return () => clearInterval(interval);
-  }, [normalizedText, speed]);
+  }, [text, speed]);
 
-  // Notify parent when text updates (for auto-scroll)
   useEffect(() => {
     if (onUpdate) onUpdate();
   }, [displayedText, onUpdate]);
 
-  const paragraphs = displayedText
-    .split(/\n\s*\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const sections = parseExplanation(displayedText);
 
   return (
     <div className={styles['ai-text']}>
-      {paragraphs.length > 0 ? (
-        paragraphs.map((paragraph, index) => (
-          <p key={index} className={styles['ai-text-paragraph']}>
-            {paragraph}
+      {sections.map((section, index) => (
+        <div key={index} className={styles['ai-section']} style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ color: 'var(--accent)', fontSize: '1rem', fontWeight: 800, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {section.title === 'Pot'}
+            {section.title === 'Soil'}
+            {section.title === 'Seed'}
+            {section.title === 'Nutrition'}
+            {section.title === 'Analysis'}
+            {section.title}
+          </h4>
+          <p className={styles['ai-text-paragraph']} style={{ margin: 0, opacity: 0.9, lineHeight: 1.6 }}>
+            {section.content}
           </p>
-        ))
-      ) : (
-        <p className={styles['ai-text-paragraph']}>{displayedText}</p>
-      )}
+        </div>
+      ))}
     </div>
   );
 }
 
 function ExplanationText({ text }: { text: string }) {
-  const paragraphs = text
-    .split(/\n\s*\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const sections = parseExplanation(text);
 
   return (
     <div className={styles['ai-text']}>
-      {paragraphs.length > 0 ? (
-        paragraphs.map((paragraph, index) => (
-          <p key={index} className={styles['ai-text-paragraph']}>
-            {paragraph}
+      {sections.map((section, index) => (
+        <div key={index} className={styles['ai-section']} style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ color: 'var(--accent)', fontSize: '1rem', fontWeight: 800, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {section.title === 'Pot' && '🏺'}
+            {section.title === 'Soil' && '🌱'}
+            {section.title === 'Seed' && '🌰'}
+            {section.title === 'Nutrition' && '🧪'}
+            {section.title === 'Analysis' && '📊'}
+            {section.title}
+          </h4>
+          <p className={styles['ai-text-paragraph']} style={{ margin: 0, opacity: 0.9, lineHeight: 1.6 }}>
+            {section.content}
           </p>
-        ))
-      ) : (
-        <p className={styles['ai-text-paragraph']}>{text}</p>
-      )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -342,7 +368,7 @@ export default function PlantDetailPage({
               </span>
             </div>
           </div>
-          
+
           <div className="setup-hero-right">
             <p className="setup-hero-desc">{currentPlan.description}</p>
             <div className="setup-hero-meta">
@@ -496,7 +522,7 @@ export default function PlantDetailPage({
             </div>
 
             <div className={styles['ai-modal-footer']}>
-              <button className="setup-cta" style={{ minWidth: '140px', padding: '10px 24px', fontSize: '0.85rem', height: 'auto' }} onClick={() => setShowModal(false)}>
+              <button className={styles['ai-modal-btn']} onClick={() => setShowModal(false)}>
                 Got it, thanks!
               </button>
             </div>
