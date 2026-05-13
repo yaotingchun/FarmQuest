@@ -5,7 +5,7 @@ import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, serverTimest
 import { v4 as uuidv4 } from 'uuid'
 import { db } from './firebase'
 import { useAuth } from '@/context/AuthContext'
-import type { UserPlant, QuestPlantData, QuestTask, CalendarEntry, DayStatus, PlantSourceCategory } from '@/types/quest'
+import type { UserPlant, QuestPlantData, QuestTask, CalendarEntry, DayStatus, PlantSourceCategory, TreatmentQuest, PlantHealthReportMeta } from '@/types/quest'
 import { XP_VALUES } from '@/types/quest'
 import { derivePlantStatus, getTasksDueOnDate, getGrowthStage } from './ruleEngine'
 import { getQuestPlant, QUEST_PLANTS } from '@/data/quest-plants'
@@ -27,6 +27,7 @@ interface QuestContextValue {
   ) => Promise<string | undefined>
   deletePlant: (instanceId: string) => Promise<void>
   completeTask: (instanceId: string, taskType: string, photoUrl?: string) => Promise<void>
+  addTreatmentQuests: (instanceId: string, treatmentSteps: any[], healthReport: any) => Promise<void>
   
   // Calendar (Placeholder for now)
   calendarData: any[]
@@ -554,6 +555,54 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     }
   }, [user, activePlantId, isGoogleUser, accessToken])
 
+  const addTreatmentQuests = useCallback(async (instanceId: string, treatmentSteps: any[], healthReport: any) => {
+    if (!user) return
+    const plant = userPlants.find(p => p.id === instanceId)
+    if (!plant) return
+
+    const now = new Date().toISOString()
+    const reportId = uuidv4()
+
+    // Create treatment quest entries
+    const treatmentQuests: TreatmentQuest[] = treatmentSteps.map((step: any, i: number) => ({
+      id: `treatment-${reportId.slice(0, 8)}-${i}`,
+      step: step.step,
+      day: step.day,
+      duration: step.duration,
+      category: step.category || 'other',
+      xp_reward: XP_VALUES.TREATMENT_STEP,
+      completed: false,
+      created_at: now,
+    }))
+
+    // Create health report metadata
+    const reportMeta: PlantHealthReportMeta = {
+      id: reportId,
+      healthScore: healthReport.healthScore,
+      diseaseDetected: healthReport.diseaseDetected,
+      diseaseName: healthReport.diseaseName,
+      severity: healthReport.severity,
+      date: now,
+      treatmentQuestIds: treatmentQuests.map(q => q.id),
+      expectedBenefits: healthReport.expectedBenefits,
+    }
+
+    // Merge with existing treatment quests
+    const existingTreatment = plant.ai_tasks?.treatment || []
+    const existingReports = plant.health_reports || []
+
+    const docRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
+    try {
+      await updateDoc(docRef, {
+        'ai_tasks.treatment': [...existingTreatment, ...treatmentQuests],
+        'health_reports': [...existingReports, reportMeta],
+        updated_at: serverTimestamp(),
+      })
+    } catch (e) {
+      console.error('[QuestContext] Failed to add treatment quests:', e)
+    }
+  }, [user, userPlants])
+
   const completeTask = useCallback(async (instanceId: string, taskId: string, photoUrl?: string) => {
     if (!user) return
     const plant = userPlants.find(p => p.id === instanceId)
@@ -640,7 +689,28 @@ export function QuestProvider({ children }: { children: ReactNode }) {
         newState.xp += 10
         break
       default:
-        console.warn(`Unknown task type: ${taskType}`)
+        // Check for treatment task
+        if (taskType.startsWith('treatment-') || taskId.startsWith('treatment-')) {
+          newTaskState[taskId] = true
+          newState.xp += XP_VALUES.TREATMENT_STEP
+          newState.health = Math.min(100, newState.health + 3)
+          // Mark treatment quest as completed in ai_tasks.treatment array
+          const treatmentQuests = plant.ai_tasks?.treatment || []
+          const updatedTreatment = treatmentQuests.map((tq: TreatmentQuest) =>
+            tq.id === taskId ? { ...tq, completed: true } : tq
+          )
+          // Check if all treatment quests are now complete for bonus XP
+          const allTreatmentDone = updatedTreatment.every((tq: TreatmentQuest) => tq.completed)
+          if (allTreatmentDone && updatedTreatment.length > 0) {
+            newState.xp += XP_VALUES.TREATMENT_COMPLETE
+            newState.health = Math.min(100, newState.health + 15)
+          }
+          // We'll save the updated treatment array separately
+          const treatmentDocRef = doc(db, 'users', user.uid, 'user_plants', instanceId)
+          updateDoc(treatmentDocRef, { 'ai_tasks.treatment': updatedTreatment }).catch(e => console.error('Treatment update error:', e))
+        } else {
+          console.warn(`Unknown task type: ${taskType}`)
+        }
     }
 
     // Persist completion log for calendar history.
@@ -697,6 +767,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       addPlant,
       deletePlant,
       completeTask,
+      addTreatmentQuests,
       calendarData,
       refreshCalendar,
       hasActivePlant: userPlants.length > 0,

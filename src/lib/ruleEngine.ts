@@ -218,6 +218,21 @@ export function getTasksDueOnDate(plant: UserPlant, plantData: QuestPlantData, t
     requires_photo: true,
   })
 
+  // Treatment Tasks (from AI health analysis)
+  const treatmentQuests = (plant as any).ai_tasks?.treatment || []
+  for (const tq of treatmentQuests) {
+    if (!tq.completed) {
+      const isTreatmentDone = doneOnDate(tq.id)
+      tasks.push({
+        id: tq.id,
+        label: `🩺 ${tq.step}`,
+        completed: isTreatmentDone,
+        category: 'treatment' as any,
+        xp_reward: tq.xp_reward || 15,
+      })
+    }
+  }
+
   return tasks
 }
 

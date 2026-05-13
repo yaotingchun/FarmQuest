@@ -18,12 +18,15 @@ import { PhotoUploadModal } from '@/components/quest/PhotoUploadModal'
 import { useAuth } from '@/context/AuthContext'
 import { completeQuest } from '@/lib/userProgress'
 import { CompletionModal } from '@/components/quest/CompletionModal'
+import { PlantHealthModal } from '@/components/quest/PlantHealthModal'
+import { TreatmentQuestCard, TreatmentProgressCard } from '@/components/quest/TreatmentQuestCard'
+import type { PlantHealthReport } from '@/types/diagnosis'
 
 function QuestsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { userPlants, activePlantId, completeTask, deletePlant, setActivePlant, availablePlants, addPlant, calendarData, refreshCalendar, loading, isGeneratingTasks } = useQuest()
-  const [activeTab, setActiveTab ] = useState<'main' | 'daily'>('main')
+  const { userPlants, activePlantId, completeTask, deletePlant, setActivePlant, availablePlants, addPlant, calendarData, refreshCalendar, loading, isGeneratingTasks, addTreatmentQuests } = useQuest()
+  const [activeTab, setActiveTab ] = useState<'main' | 'daily' | 'treatment'>('main')
   const [viewMode, setViewMode] = useState<'list' | 'detail'>(activePlantId ? 'detail' : 'list')
   const isAddingRef = useRef(false)
   const [isResolvingDirectOpen, setIsResolvingDirectOpen] = useState(!!searchParams.get('plant'))
@@ -62,6 +65,10 @@ function QuestsContent() {
   const [uploadTask, setUploadTask] = useState<{ id: string, name: string, xpGained: number } | null>(null)
   const [completionModalOpen, setCompletionModalOpen] = useState(false)
   const [modalData, setModalData] = useState<any>(null)
+  const [healthReport, setHealthReport] = useState<PlantHealthReport | null>(null)
+  const [healthImagePreview, setHealthImagePreview] = useState<string>('')
+  const [showHealthModal, setShowHealthModal] = useState(false)
+  const [isCreatingTreatment, setIsCreatingTreatment] = useState(false)
 
   const handleUploadSuccess = async (photoUrl: string) => {
     if (activePlant && uploadTask) {
@@ -111,13 +118,22 @@ function QuestsContent() {
 
   const dailyTasks: any[] = useMemo(() => {
     if (!activePlant || !plantData) return []
-    return activePlant.ai_tasks?.daily?.map((label: string, i: number) => ({
+    const aiDailyTasks = activePlant.ai_tasks?.daily?.map((label: string, i: number) => ({
       id: `daily-${i}`,
       label,
       completed: activePlant.task_state?.[`daily-${i}`] || false,
       category: 'care',
       xp_reward: 10
-    })) || getTasksDueToday(activePlant, plantData)
+    }))
+    
+    if (aiDailyTasks && aiDailyTasks.length > 0) {
+      // Always include the observation task (photo + AI health check) even with AI daily tasks
+      const ruleEngineTasks = getTasksDueToday(activePlant, plantData)
+      const observeTask = ruleEngineTasks.find(t => t.id.startsWith('observe'))
+      return observeTask ? [...aiDailyTasks, observeTask] : aiDailyTasks
+    }
+    
+    return getTasksDueToday(activePlant, plantData)
   }, [activePlant, plantData])
 
   const isDead = activePlant?.status === 'dead'
@@ -155,8 +171,8 @@ function QuestsContent() {
       nextQuestTitle
     })
     
-    // Only show modal for daily tasks
-    if (activeTab === 'daily') {
+    // Only show modal for daily/treatment tasks
+    if (activeTab === 'daily' || activeTab === 'treatment') {
       setCompletionModalOpen(true)
     }
   }
@@ -171,6 +187,36 @@ function QuestsContent() {
       }
     }
   }
+
+  const handleHealthAnalysisComplete = (report: PlantHealthReport, imagePreview: string) => {
+    setHealthReport(report)
+    setHealthImagePreview(imagePreview)
+    setShowHealthModal(true)
+  }
+
+  const handleCreateTreatmentQuests = async () => {
+    if (!activePlant || !healthReport || !healthReport.diseaseDetected) return
+    setIsCreatingTreatment(true)
+    try {
+      await addTreatmentQuests(activePlant.id, healthReport.treatmentSteps, healthReport)
+      setShowHealthModal(false)
+      setActiveTab('treatment')
+    } catch (e) {
+      console.error('Failed to create treatment quests:', e)
+    } finally {
+      setIsCreatingTreatment(false)
+    }
+  }
+
+  const treatmentQuests = useMemo(() => {
+    if (!activePlant) return []
+    return activePlant.ai_tasks?.treatment || []
+  }, [activePlant])
+
+  const latestHealthReport = useMemo(() => {
+    if (!activePlant?.health_reports?.length) return null
+    return activePlant.health_reports[activePlant.health_reports.length - 1]
+  }, [activePlant])
 
 
 
@@ -394,6 +440,14 @@ function QuestsContent() {
             <div className="quest-tabs" style={{ marginBottom: '1.5rem' }}>
               <button className={`quest-tab ${activeTab === 'main' ? 'active' : ''}`} onClick={() => setActiveTab('main')}>Main</button>
               <button className={`quest-tab ${activeTab === 'daily' ? 'active' : ''}`} onClick={() => setActiveTab('daily')}>Daily {!isDailyUnlocked && '🔒'}</button>
+              {treatmentQuests.length > 0 && (
+                <button className={`quest-tab ${activeTab === 'treatment' ? 'active' : ''}`} onClick={() => setActiveTab('treatment')} style={{ position: 'relative' }}>
+                  🩺 Treatment
+                  {treatmentQuests.filter(q => !q.completed).length > 0 && (
+                    <span style={{ position: 'absolute', top: '-4px', right: '-4px', width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
+                  )}
+                </button>
+              )}
             </div>
             <div className="quest-daily-quest-section">
               {activeTab === 'main' ? (
@@ -409,7 +463,7 @@ function QuestsContent() {
                      />
                    ))}
                  </div>
-              ) : (
+              ) : activeTab === 'daily' ? (
                  <div className="quest-daily-view">
                    {isDailyUnlocked ? (
                      <TaskList 
@@ -428,7 +482,35 @@ function QuestsContent() {
                      </div>
                    )}
                  </div>
-              )}
+              ) : activeTab === 'treatment' ? (
+                <div className="quest-daily-view">
+                  {latestHealthReport && (
+                    <TreatmentProgressCard
+                      quests={treatmentQuests}
+                      diseaseName={latestHealthReport.diseaseName}
+                      severity={latestHealthReport.severity}
+                      expectedBenefits={latestHealthReport.expectedBenefits}
+                    />
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {treatmentQuests.map((tq, i) => (
+                      <TreatmentQuestCard
+                        key={tq.id}
+                        quest={tq}
+                        index={i}
+                        total={treatmentQuests.length}
+                        readOnly={!canEditActivePlant}
+                        onComplete={(questId) => {
+                          if (activePlant && canEditActivePlant) {
+                            completeTask(activePlant.id, questId)
+                            onQuestSuccess(questId, tq.step, tq.xp_reward)
+                          }
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </>
         )}
@@ -469,8 +551,25 @@ function QuestsContent() {
           onUploadSuccess={handleUploadSuccess}
           userId={user.uid}
           taskName={uploadTask?.name}
+          plantName={activePlant?.plant_name}
+          plantEmoji={plantData?.emoji}
+          plantId={activePlant?.plant_id}
+          instanceId={activePlant?.id}
+          isCareTask={uploadTask?.id?.startsWith('observe') || false}
+          onHealthAnalysisComplete={handleHealthAnalysisComplete}
         />
       )}
+
+      <PlantHealthModal
+        isOpen={showHealthModal}
+        onClose={() => setShowHealthModal(false)}
+        report={healthReport}
+        plantName={activePlant?.plant_name || ''}
+        plantEmoji={plantData?.emoji || '🌱'}
+        imagePreview={healthImagePreview}
+        onCreateTreatmentQuests={handleCreateTreatmentQuests}
+        isCreatingQuests={isCreatingTreatment}
+      />
 
       {modalData && (
         <CompletionModal

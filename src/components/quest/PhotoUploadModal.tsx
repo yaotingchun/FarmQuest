@@ -2,10 +2,13 @@
 
 import React, { useState, useRef } from 'react'
 import { ThemedModal } from '@/components/ui/ThemedModal'
-import { Upload, X, Loader2 } from 'lucide-react'
+import { Upload, X, Loader2, Scan } from 'lucide-react'
 import { storage } from '@/lib/firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { v4 as uuidv4 } from 'uuid'
+import { diagnoseQuestPlant } from '@/app/actions/diagnose-quest'
+import { PlantHealthModal } from './PlantHealthModal'
+import type { PlantHealthReport } from '@/types/diagnosis'
 
 interface PhotoUploadModalProps {
   isOpen: boolean
@@ -13,12 +16,24 @@ interface PhotoUploadModalProps {
   onUploadSuccess: (photoUrl: string) => void
   userId: string
   taskName?: string
+  // New props for quest health integration
+  plantName?: string
+  plantEmoji?: string
+  plantId?: string
+  instanceId?: string
+  isCareTask?: boolean
+  onHealthAnalysisComplete?: (report: PlantHealthReport, imagePreview: string) => void
 }
 
-export function PhotoUploadModal({ isOpen, onClose, onUploadSuccess, userId, taskName }: PhotoUploadModalProps) {
+export function PhotoUploadModal({
+  isOpen, onClose, onUploadSuccess, userId, taskName,
+  plantName, plantEmoji, plantId, instanceId, isCareTask = false,
+  onHealthAnalysisComplete
+}: PhotoUploadModalProps) {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -61,7 +76,36 @@ export function PhotoUploadModal({ isOpen, onClose, onUploadSuccess, userId, tas
       // Get the permanent download URL (includes auth token)
       const downloadUrl = await getDownloadURL(snapshot.ref)
 
-      onUploadSuccess(downloadUrl)
+      // If this is a care task, run AI health analysis
+      if (isCareTask && onHealthAnalysisComplete) {
+        setIsUploading(false)
+        setIsAnalyzing(true)
+
+        try {
+          const formData = new FormData()
+          formData.append('image', file)
+          const result = await diagnoseQuestPlant(formData, plantName, plantId)
+
+          if (result.success && result.data) {
+            // Pass the report back and keep preview for the health modal
+            onHealthAnalysisComplete(result.data, preview || '')
+            // Complete the upload (task) after analysis
+            onUploadSuccess(downloadUrl)
+          } else {
+            // Analysis failed, but photo uploaded OK — still complete the task
+            console.warn('[PhotoUpload] Health analysis failed:', result.error)
+            onUploadSuccess(downloadUrl)
+          }
+        } catch (analysisError) {
+          console.error('[PhotoUpload] Analysis error:', analysisError)
+          // Still complete the task even if analysis fails
+          onUploadSuccess(downloadUrl)
+        } finally {
+          setIsAnalyzing(false)
+        }
+      } else {
+        onUploadSuccess(downloadUrl)
+      }
     } catch (err: any) {
       console.error('Upload error:', err)
       setError(err.message || 'Failed to upload photo. Please try again.')
@@ -74,15 +118,79 @@ export function PhotoUploadModal({ isOpen, onClose, onUploadSuccess, userId, tas
     setFile(null)
     setPreview(null)
     setError(null)
+    setIsAnalyzing(false)
     onClose()
+  }
+
+  // Scanning state
+  if (isAnalyzing) {
+    return (
+      <ThemedModal
+        isOpen={isOpen}
+        onClose={() => {}}
+        title="Analyzing Plant Health"
+        message="AI is scanning your plant for diseases, growth state, and vitality..."
+        type="success"
+        hideButtons={true}
+      >
+        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+          {preview && (
+            <div style={{
+              position: 'relative', width: '200px', height: '200px',
+              borderRadius: '20px', overflow: 'hidden',
+              border: '2px solid var(--accent)'
+            }}>
+              <img src={preview} alt="Scanning" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {/* Scan line animation */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0,
+                height: '3px',
+                background: 'linear-gradient(90deg, transparent, #10b981, transparent)',
+                boxShadow: '0 0 15px #10b981, 0 0 30px rgba(16,185,129,0.3)',
+                animation: 'healthScanLine 2s ease-in-out infinite'
+              }} />
+              {/* Corner markers */}
+              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '20px', height: '20px', borderTop: '2px solid #10b981', borderLeft: '2px solid #10b981', borderRadius: '4px 0 0 0' }} />
+              <div style={{ position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px', borderTop: '2px solid #10b981', borderRight: '2px solid #10b981', borderRadius: '0 4px 0 0' }} />
+              <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '20px', height: '20px', borderBottom: '2px solid #10b981', borderLeft: '2px solid #10b981', borderRadius: '0 0 0 4px' }} />
+              <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '20px', height: '20px', borderBottom: '2px solid #10b981', borderRight: '2px solid #10b981', borderRadius: '0 0 4px 0' }} />
+            </div>
+          )}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+              <Scan size={18} className="animate-pulse" style={{ color: '#10b981' }} />
+              <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.9rem', letterSpacing: '0.05em' }}>
+                SCANNING...
+              </span>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              Detecting diseases · Analyzing growth state · Measuring vitality
+            </p>
+          </div>
+          <style>{`
+            @keyframes healthScanLine {
+              0% { top: 0; }
+              50% { top: calc(100% - 3px); }
+              100% { top: 0; }
+            }
+          `}</style>
+        </div>
+      </ThemedModal>
+    )
   }
 
   return (
     <ThemedModal
       isOpen={isOpen}
       onClose={handleCancel}
-      title="Upload Photo Required"
-      message={taskName ? `The task "${taskName}" requires a photo verification.` : "This task requires a photo verification."}
+      title={isCareTask ? "📸 Plant Health Check" : "Upload Photo Required"}
+      message={
+        isCareTask
+          ? `Upload a photo of your ${plantName || 'plant'} for AI health analysis and task verification.`
+          : taskName
+            ? `The task "${taskName}" requires a photo verification.`
+            : "This task requires a photo verification."
+      }
       type="success"
       hideButtons={true}
     >
@@ -114,6 +222,15 @@ export function PhotoUploadModal({ isOpen, onClose, onUploadSuccess, userId, tas
             <Upload size={32} style={{ color: 'var(--accent)', marginBottom: '0.5rem' }} />
             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Click to Upload</span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Max 5MB (JPEG, PNG, WebP)</span>
+            {isCareTask && (
+              <span style={{
+                fontSize: '0.72rem', color: '#10b981', marginTop: '0.5rem',
+                background: 'rgba(16,185,129,0.08)', padding: '4px 10px',
+                borderRadius: '8px', fontWeight: 600
+              }}>
+                🤖 AI will analyze plant health after upload
+              </span>
+            )}
             <input
               type="file"
               ref={fileInputRef}
@@ -178,7 +295,7 @@ export function PhotoUploadModal({ isOpen, onClose, onUploadSuccess, userId, tas
               cursor: (!file || isUploading) ? 'not-allowed' : 'pointer',
             }}
           >
-            {isUploading ? <><Loader2 className="animate-spin" size={18} /> Uploading...</> : 'Submit Photo'}
+            {isUploading ? <><Loader2 className="animate-spin" size={18} /> Uploading...</> : isCareTask ? '🔬 Upload & Analyze' : 'Submit Photo'}
           </button>
         </div>
       </div>

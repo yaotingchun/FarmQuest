@@ -2682,3 +2682,81 @@
     margin-bottom: 40px;
   }
 }
+
+/* ══════════════════════════════════════
+   PLANT HEALTH & TREATMENT STYLES
+   ══════════════════════════════════════ */
+
+/* Health Modal */
+.health-modal-card {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.health-modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.health-modal-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.health-modal-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.health-vital-bar {
+  padding: 2px 0;
+}
+
+/* Treatment Quest Card */
+.treatment-quest-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.treatment-quest-card:hover:not(.completed) {
+  background: rgba(249, 115, 22, 0.06) !important;
+  border-color: rgba(249, 115, 22, 0.25) !important;
+  transform: translateX(2px);
+}
+
+.treatment-quest-card.completed {
+  opacity: 0.55;
+}
+
+.treatment-quest-card.completed:hover {
+  transform: none;
+}
+
+/* Treatment tab indicator */
+.quest-tab {
+  position: relative;
+}
+
+/* Health scan animation (used in PhotoUploadModal) */
+@keyframes healthScanLine {
+  0% { top: 0; }
+  50% { top: calc(100% - 3px); }
+  100% { top: 0; }
+}
+
+/* Pulse animation for scanning indicator */
+@keyframes healthPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse {
+  animation: healthPulse 1.5s ease-in-out infinite;
+}
+
+/* Animate-spin for loader */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
