@@ -16,6 +16,8 @@ import { Suspense } from 'react'
 import { ThemedModal } from '@/components/ui/ThemedModal'
 import { PhotoUploadModal } from '@/components/quest/PhotoUploadModal'
 import { useAuth } from '@/context/AuthContext'
+import { completeQuest } from '@/lib/userProgress'
+import { CompletionModal } from '@/components/quest/CompletionModal'
 
 function QuestsContent() {
   const router = useRouter()
@@ -31,19 +33,56 @@ function QuestsContent() {
   const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
 
   const { user } = useAuth()
-  const [uploadTask, setUploadTask] = useState<{ id: string, name: string } | null>(null)
+  const [uploadTask, setUploadTask] = useState<{ id: string, name: string, xpGained: number } | null>(null)
+  const [completionModalOpen, setCompletionModalOpen] = useState(false)
+  const [modalData, setModalData] = useState<any>(null)
 
-  const handleTaskComplete = (taskId: string, requiresPhoto: boolean | undefined, taskName: string) => {
-    if (requiresPhoto) {
-      setUploadTask({ id: taskId, name: taskName })
+  const onQuestSuccess = async (taskId: string, taskName: string, xpGained: number) => {
+    if (!user || !activePlant) return
+    
+    const result = await completeQuest(user.uid, taskId, xpGained)
+    
+    let nextQuestTitle = undefined
+    if (activeTab === 'main') {
+      const currentIndex = mainQuests.findIndex(q => q.id === taskId)
+      if (currentIndex !== -1 && currentIndex < mainQuests.length - 1) {
+        nextQuestTitle = mainQuests[currentIndex + 1].title
+      }
     } else {
-      if (activePlant) completeTask(activePlant.id, taskId)
+      const currentIndex = dailyTasks.findIndex(t => t.id === taskId)
+      if (currentIndex !== -1 && currentIndex < dailyTasks.length - 1) {
+        nextQuestTitle = dailyTasks[currentIndex + 1].label
+      }
+    }
+
+    setModalData({
+      taskLabel: taskName,
+      xpGained,
+      newXP: result.newXP,
+      newStreak: result.newStreak,
+      leveledUp: result.leveledUp,
+      newLevel: result.newLevel,
+      plantGrowthPercent: Math.min(100, (activePlant.state.xp / 1000) * 100),
+      nextQuestTitle
+    })
+    setCompletionModalOpen(true)
+  }
+
+  const handleTaskComplete = async (taskId: string, requiresPhoto: boolean | undefined, taskName: string, xpGained: number = 10) => {
+    if (requiresPhoto) {
+      setUploadTask({ id: taskId, name: taskName, xpGained })
+    } else {
+      if (activePlant) {
+        await completeTask(activePlant.id, taskId)
+        await onQuestSuccess(taskId, taskName, xpGained)
+      }
     }
   }
 
-  const handleUploadSuccess = (photoUrl: string) => {
+  const handleUploadSuccess = async (photoUrl: string) => {
     if (activePlant && uploadTask) {
-      completeTask(activePlant.id, uploadTask.id, photoUrl)
+      await completeTask(activePlant.id, uploadTask.id, photoUrl)
+      await onQuestSuccess(uploadTask.id, uploadTask.name, uploadTask.xpGained)
     }
     setUploadTask(null)
   }
@@ -307,7 +346,7 @@ function QuestsContent() {
                        index={idx} 
                        isLast={idx === mainQuests.length - 1} 
                        readOnly={!canEditActivePlant} 
-                       onComplete={(quest) => canEditActivePlant && handleTaskComplete(quest.id, quest.tasks[0]?.requires_photo, quest.title)} 
+                       onComplete={(quest) => canEditActivePlant && handleTaskComplete(quest.id, quest.tasks[0]?.requires_photo, quest.title, quest.xp_reward || 30)} 
                      />
                    ))}
                  </div>
@@ -319,7 +358,7 @@ function QuestsContent() {
                        readOnly={!canEditActivePlant} 
                        onComplete={(taskId) => {
                          const t = dailyTasks.find(dt => dt.id === taskId)
-                         canEditActivePlant && handleTaskComplete(taskId, t?.requires_photo, t?.label || 'Task')
+                         canEditActivePlant && handleTaskComplete(taskId, t?.requires_photo, t?.label || 'Task', t?.xp_reward || 10)
                        }} 
                      />
                    ) : (
@@ -371,6 +410,14 @@ function QuestsContent() {
           onUploadSuccess={handleUploadSuccess}
           userId={user.uid}
           taskName={uploadTask?.name}
+        />
+      )}
+
+      {modalData && (
+        <CompletionModal
+          isOpen={completionModalOpen}
+          onClose={() => setCompletionModalOpen(false)}
+          {...modalData}
         />
       )}
     </div>

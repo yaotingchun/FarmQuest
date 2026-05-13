@@ -11,6 +11,8 @@ import { useAuth } from '@/context/AuthContext'
 
 import { ThemedModal } from '@/components/ui/ThemedModal'
 import { PhotoUploadModal } from '@/components/quest/PhotoUploadModal'
+import { completeQuest } from '@/lib/userProgress'
+import { CompletionModal } from '@/components/quest/CompletionModal'
 
 import { CalendarGrid } from '@/components/quest/CalendarGrid'
 
@@ -26,19 +28,39 @@ function MultiPlantDashboard() {
   const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
-  const [uploadTask, setUploadTask] = useState<{ plantId: string, taskId: string, taskName: string } | null>(null)
+  const [uploadTask, setUploadTask] = useState<{ plantId: string, taskId: string, taskName: string, xpGained: number, plant: any } | null>(null)
+  const [completionModalOpen, setCompletionModalOpen] = useState(false)
+  const [modalData, setModalData] = useState<any>(null)
 
-  const handleTaskComplete = (plantId: string, taskId: string, requiresPhoto: boolean | undefined, taskName: string) => {
+  const onQuestSuccess = async (taskId: string, taskName: string, xpGained: number, plant: any) => {
+    if (!user) return
+    const result = await completeQuest(user.uid, taskId, xpGained)
+    
+    setModalData({
+      taskLabel: taskName,
+      xpGained,
+      newXP: result.newXP,
+      newStreak: result.newStreak,
+      leveledUp: result.leveledUp,
+      newLevel: result.newLevel,
+      plantGrowthPercent: Math.min(100, (plant.state.xp / 1000) * 100),
+    })
+    setCompletionModalOpen(true)
+  }
+
+  const handleTaskComplete = async (plant: any, taskId: string, requiresPhoto: boolean | undefined, taskName: string, xpGained: number = 10) => {
     if (requiresPhoto) {
-      setUploadTask({ plantId, taskId, taskName })
+      setUploadTask({ plantId: plant.id, taskId, taskName, xpGained, plant })
     } else {
-      completeTask(plantId, taskId)
+      await completeTask(plant.id, taskId)
+      await onQuestSuccess(taskId, taskName, xpGained, plant)
     }
   }
 
-  const handleUploadSuccess = (photoUrl: string) => {
+  const handleUploadSuccess = async (photoUrl: string) => {
     if (uploadTask) {
-      completeTask(uploadTask.plantId, uploadTask.taskId, photoUrl)
+      await completeTask(uploadTask.plantId, uploadTask.taskId, photoUrl)
+      await onQuestSuccess(uploadTask.taskId, uploadTask.taskName, uploadTask.xpGained, uploadTask.plant)
     }
     setUploadTask(null)
   }
@@ -397,7 +419,7 @@ function MultiPlantDashboard() {
                           <div 
                               key={task.id} 
                               className={`quest-task-item ${task.completed ? 'completed' : ''}`}
-                              onClick={() => !task.completed && isEditable && handleTaskComplete(plant.id, task.id, task.requires_photo, task.label)}
+                              onClick={() => !task.completed && isEditable && handleTaskComplete(plant, task.id, task.requires_photo, task.label, task.xp_reward || 10)}
                               style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', cursor: task.completed || !isEditable ? 'default' : 'pointer', opacity: !isEditable && !task.completed ? 0.78 : 1 }}
                           >
                             <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
@@ -480,6 +502,14 @@ function MultiPlantDashboard() {
           onUploadSuccess={handleUploadSuccess}
           userId={user.uid}
           taskName={uploadTask?.taskName}
+        />
+      )}
+
+      {modalData && (
+        <CompletionModal
+          isOpen={completionModalOpen}
+          onClose={() => setCompletionModalOpen(false)}
+          {...modalData}
         />
       )}
     </div>
