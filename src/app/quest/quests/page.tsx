@@ -20,6 +20,7 @@ import { completeQuest } from '@/lib/userProgress'
 import { CompletionModal } from '@/components/quest/CompletionModal'
 import { PlantHealthModal } from '@/components/quest/PlantHealthModal'
 import { TreatmentQuestCard, TreatmentProgressCard } from '@/components/quest/TreatmentQuestCard'
+import { GrowthCurveChart } from '@/components/quest/GrowthCurveChart'
 import type { PlantHealthReport } from '@/types/diagnosis'
 
 function QuestsContent() {
@@ -405,6 +406,14 @@ function QuestsContent() {
                 <div className="quest-xp-bar-fill" style={{ width: `${xpInfo.progress}%` }} />
              </div>
           </div>
+
+          {/* Growth Curve Chart */}
+          <GrowthCurveChart
+            plantData={plantData}
+            createdAt={activePlant.created_at}
+            currentStage={activePlant.state.growthStage}
+            currentXP={activePlant.state.xp}
+          />
         </div>
 
         {!canEditActivePlant && (
