@@ -1400,7 +1400,7 @@ app.get("/api/marketplace/my-orders", async (req, res) => {
 
 // GET /api/marketplace/plant-options — Get plant options for order creation
 app.get("/api/marketplace/plant-options", (_req, res) => {
-  const options = (plantsData as any).plants.map((p: any) => ({
+  const options = (getPlantsData() as any).plants.map((p: any) => ({
     plant_id: p.plant_id,
     name: p.name,
     emoji: p.emoji || '🌱',
@@ -1432,7 +1432,7 @@ app.listen(PORT, async () => {
   // Pre-warm the cache in the background
   console.log("[Cache] Starting background pre-warming of AI plans...");
   (async () => {
-    for (const plant of (plantsData as any).plants) {
+    for (const plant of (getPlantsData() as any).plants) {
       if (!plansCache.has(plant.plant_id)) {
         try {
           console.log(`[Cache Pre-warm] Generating plans for ${plant.plant_id}...`);
