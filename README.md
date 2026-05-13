@@ -19,6 +19,20 @@ Moving from passive technology consumption to active creation, FarmQuest introdu
 
 ---
 
+## 🏗️ Technical Architecture
+
+![FarmQuest Technical Architecture](public/images/architecture.png)
+
+FarmQuest is built on a modern, AI-first stack powered by **Google Cloud Platform** and **Firebase**. The architecture is organized into five specialized layers:
+
+*   **Unified Frontend**: A high-performance **Next.js 16.2.4** and **React 19** interface providing a seamless experience across web and mobile.
+*   **AI Orchestration Layer**: Powered by **Firebase Genkit**, this layer manages agentic workflows (Genkit Flows) for complex tasks like RAG-grounded planting plans and multi-modal disease diagnosis.
+*   **Intelligent Data & Services**: Leverages **Vertex AI** for industry-leading LLM capabilities (Gemini 2.5 Flash), vector embeddings, and discovery engines.
+*   **Scalable Infrastructure**: A robust serverless backend using **Cloud Run** and **Firebase Services** (Firestore, Auth, Storage) for real-time data and high availability.
+*   **External Integrations**: Direct connections to **Open-Meteo** (weather), **Perenual** (botanical data), and **Google Calendar** (automated task scheduling) to bridge the digital-physical gap.
+
+---
+
 ## 🌟 Key Features & AI Integration
 
 FarmQuest leverages the **Google AI Ecosystem Stack** to power its logic and autonomy:
