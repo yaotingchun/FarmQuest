@@ -5,7 +5,19 @@
 **SDGs:** Goal 2 (Zero Hunger), Goal 9 (Industry, Innovation, & Infrastructure), Goal 12 (Responsible Consumption & Production)
 
 ---
+## 👥 The Team: FarmQuest Pioneers
 
+We are a team of four passionate developers building FarmQuest — an AI-powered agrotech platform designed to transform how Malaysians grow their own food. By combining RAG-grounded planting plans, computer vision disease detection, and a decentralized peer-to-peer marketplace, we aim to help anyone — from urban home growers to smallholder farmers — reduce yield losses and break free from food import dependency. FarmQuest puts smart, gamified agriculture into the hands of everyone, from city balconies to rural backyards.
+
+(public/images/FarmQuest.png)
+| Name | Role | Responsibilities |
+| :--- | :--- | :--- |
+| **Chun Yao Ting** | Team Lead & AI Architect | Overall system architecture, AI orchestration (Genkit), and Gemini/Vertex AI integration. |
+| **Angela Ngu Xin Yi** | Frontend Engineer | Next.js 16 dashboard development, UI/UX design (Tailwind v4), and responsive user experience. |
+| **Evelyn Ang** | Backend & Cloud Lead | Express.js API development, Firebase services (Firestore/Auth), and GCP infrastructure. |
+| **Teoh Xin Yee** | AI Data Specialist | RAG grounding strategies, Vertex AI Search optimization, and botanical data management. |
+
+---
 ## 📖 Overview
 
 **FarmQuest** is a hybrid, decentralized agrotech platform designed to solve Malaysia’s multi-billion ringgit food import dependency and the 30-40% yield losses faced by local smallholders. By expanding food production beyond large-scale farms, FarmQuest enables **anyone**—regardless of their agricultural background—to grow their own food right at home. 
@@ -52,18 +64,6 @@ FarmQuest targets the market gap of **demand-first farming** and **decentralized
 2. **B2C (Business-to-Consumer)**: A freemium subscription model. Basic features are free, while premium users get advanced insights, predictive analytics, and enhanced AI guidance.
 3. **B2B (Business-to-Business)**: Partnerships with seed suppliers, fertilizer companies, and food businesses. Revenue is generated via product sales commissions and service fees.
 4. **B2G (Business-to-Government)**: Providing national crop data, demand trends, and food supply analytics to support policy-making and national food security planning.
-
----
-
-## 🏗️ Architectural Overview & Tech Stack
-
-FarmQuest is built on a modern, high-performance web stack:
-
-- **Frontend Interface**: Next.js 15 (React 19), Tailwind CSS 4, deployed via Google Cloud Run.
-- **Backend**: Node.js in TypeScript.
-- **Database & Persistence**: Google Firebase Firestore.
-- **The Intelligence (Brain)**: **Vertex AI** (Gemini-2.5-Flash for diagnostics, text-embedding-004 for vector search).
-- **The Orchestrator**: **Vertex AI Agent Builder** & **Firebase Genkit** for driving Agentic AI workflows.
 
 ---
 
@@ -157,6 +157,8 @@ To satisfy the hackathon's technical mandate, FarmQuest is fully containerized a
    ```
 
 ---
+
+
 
 ## 🤝 Contribution & License
 
