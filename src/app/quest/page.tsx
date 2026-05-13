@@ -35,7 +35,7 @@ function MultiPlantDashboard() {
   const onQuestSuccess = async (taskId: string, taskName: string, xpGained: number, plant: any) => {
     if (!user) return
     const result = await completeQuest(user.uid, taskId, xpGained)
-    
+
     setModalData({
       taskLabel: taskName,
       xpGained,
@@ -45,7 +45,15 @@ function MultiPlantDashboard() {
       newLevel: result.newLevel,
       plantGrowthPercent: Math.min(100, (plant.state.xp / 1000) * 100),
     })
-    setCompletionModalOpen(true)
+
+    // Only show modal for care tasks (daily/recurring)
+    const isCareTask = taskId.startsWith('daily-') ||
+      taskId.startsWith('fertilize-') ||
+      taskId.startsWith('prune-')
+
+    if (isCareTask) {
+      setCompletionModalOpen(true)
+    }
   }
 
   const handleTaskComplete = async (plant: any, taskId: string, requiresPhoto: boolean | undefined, taskName: string, xpGained: number = 10) => {
@@ -218,11 +226,11 @@ function MultiPlantDashboard() {
   }
 
   return (
-    <div className="quest-page" style={{ 
-      width: '100%', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
+    <div className="quest-page" style={{
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
       paddingTop: '1rem',
       paddingBottom: '4rem'
     }}>
@@ -240,8 +248,8 @@ function MultiPlantDashboard() {
               <div className="quest-hub-no-tasks" style={{ padding: '4rem 1rem' }}>
                 <span>🌱</span>
                 <p>Your garden is empty.</p>
-                <button 
-                  className="btn-primary" 
+                <button
+                  className="btn-primary"
                   onClick={() => router.push('/recommendations')}
                   style={{ marginTop: '1.5rem' }}
                 >
@@ -285,21 +293,21 @@ function MultiPlantDashboard() {
                       <div key={plant.id} style={{ position: 'relative' }}>
                         <div style={{ cursor: 'pointer', transition: 'transform 0.2s' }} onClick={() => handleGoToDetail(plant.id)}>
                           <PlantStatusCard
-                              plantName={plant.plant_name}
-                              plantEmoji={pData.emoji}
-                              stage={plant.state.growthStage as any}
-                              streak={0} 
-                              sourceCategory={plant.source_category || 'chosen_plant'}
-                              sunlight={pData.sunlight_type}
-                              waterFrequency={pData.water_frequency_days}
-                              startMethod={pData.startMethod}
+                            plantName={plant.plant_name}
+                            plantEmoji={pData.emoji}
+                            stage={plant.state.growthStage as any}
+                            streak={0}
+                            sourceCategory={plant.source_category || 'chosen_plant'}
+                            sunlight={pData.sunlight_type}
+                            waterFrequency={pData.water_frequency_days}
+                            startMethod={pData.startMethod}
                           />
                           <div style={{ position: 'absolute', bottom: '20px', right: '24px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, opacity: 0.6 }}>
                             View Quests →
                           </div>
                         </div>
                         {isEditable && (
-                          <button 
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setPlantToDelete({ id: plant.id, name: plant.plant_name });
@@ -342,15 +350,15 @@ function MultiPlantDashboard() {
 
                   {totalPages > 1 && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '0.75rem', marginBottom: '3.5rem' }}>
-                      <button 
+                      <button
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
                         className="quest-page-btn"
-                        style={{ 
-                          background: 'rgba(255, 255, 255, 0.03)', 
-                          border: '1px solid var(--glass-border)', 
-                          padding: '10px', 
-                          borderRadius: '50%', 
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid var(--glass-border)',
+                          padding: '10px',
+                          borderRadius: '50%',
                           color: currentPage === 1 ? 'rgba(255, 255, 255, 0.1)' : 'var(--text-primary)',
                           cursor: currentPage === 1 ? 'default' : 'pointer',
                           display: 'flex',
@@ -362,8 +370,8 @@ function MultiPlantDashboard() {
                       >
                         <ChevronLeft size={20} />
                       </button>
-                      
-                      <div style={{ 
+
+                      <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
@@ -381,15 +389,15 @@ function MultiPlantDashboard() {
                         <span>{totalPages}</span>
                       </div>
 
-                      <button 
+                      <button
                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
                         className="quest-page-btn"
-                        style={{ 
-                          background: 'rgba(255, 255, 255, 0.03)', 
-                          border: '1px solid var(--glass-border)', 
-                          padding: '10px', 
-                          borderRadius: '50%', 
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid var(--glass-border)',
+                          padding: '10px',
+                          borderRadius: '50%',
                           color: currentPage === totalPages ? 'rgba(255, 255, 255, 0.1)' : 'var(--text-primary)',
                           cursor: currentPage === totalPages ? 'default' : 'pointer',
                           display: 'flex',
@@ -410,17 +418,17 @@ function MultiPlantDashboard() {
                   <div className="quest-hub-tasks-header" style={{ marginBottom: '1.25rem' }}>
                     <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>⚡ Today&apos;s Actions Needed</h2>
                   </div>
-                  
+
                   {allTasksWrapped.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       {allTasksWrapped.map(({ plant, task, plantData }) => {
                         const isEditable = canEditPlant(plant)
                         return (
-                          <div 
-                              key={task.id} 
-                              className={`quest-task-item ${task.completed ? 'completed' : ''}`}
-                              onClick={() => !task.completed && isEditable && handleTaskComplete(plant, task.id, task.requires_photo, task.label, task.xp_reward || 10)}
-                              style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', cursor: task.completed || !isEditable ? 'default' : 'pointer', opacity: !isEditable && !task.completed ? 0.78 : 1 }}
+                          <div
+                            key={task.id}
+                            className={`quest-task-item ${task.completed ? 'completed' : ''}`}
+                            onClick={() => !task.completed && isEditable && handleTaskComplete(plant, task.id, task.requires_photo, task.label, task.xp_reward || 10)}
+                            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', cursor: task.completed || !isEditable ? 'default' : 'pointer', opacity: !isEditable && !task.completed ? 0.78 : 1 }}
                           >
                             <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
                               {task.completed && <span>✓</span>}

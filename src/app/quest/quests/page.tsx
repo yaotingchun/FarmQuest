@@ -37,6 +37,69 @@ function QuestsContent() {
   const [completionModalOpen, setCompletionModalOpen] = useState(false)
   const [modalData, setModalData] = useState<any>(null)
 
+  const handleUploadSuccess = async (photoUrl: string) => {
+    if (activePlant && uploadTask) {
+      await completeTask(activePlant.id, uploadTask.id, photoUrl)
+      await onQuestSuccess(uploadTask.id, uploadTask.name, uploadTask.xpGained)
+    }
+    setUploadTask(null)
+  }
+
+  const activePlant = userPlants.find(p => p.id === activePlantId)
+  const plantData = activePlant ? getQuestPlant(activePlant.plant_id) : null
+
+  const mainQuests: Quest[] = useMemo(() => {
+    if (!activePlant || !plantData) return []
+    const rawMainQuests = activePlant.ai_tasks?.main || []
+    const isLegacyData = rawMainQuests.some((q: any) => q.title === 'Dashboard Setup' || q.title === 'Seedling Care')
+    const mainQuestsFromAI = isLegacyData ? [] : rawMainQuests
+
+    if (mainQuestsFromAI.length > 0) {
+      return mainQuestsFromAI.map((q: any, i: number) => {
+        const taskKey = `main-${i}`
+        const prevCompleted = i === 0 || mainQuestsFromAI.slice(0, i).every((_, prevIndex) => activePlant.task_state?.[`main-${prevIndex}`])
+        return {
+          id: taskKey,
+          type: 'main',
+          title: q.title,
+          description: q.description,
+          xp_reward: q.xp,
+          status: activePlant.task_state?.[taskKey] ? 'completed' : (prevCompleted ? 'active' : 'locked'),
+          isActionable: true,
+          tasks: [{ id: taskKey, label: q.task_label, completed: !!activePlant.task_state?.[taskKey], category: 'setup', xp_reward: q.xp }],
+        } as Quest
+      })
+    } else {
+      return [{
+        id: 'intro',
+        type: 'main',
+        title: 'Workspace Prep',
+        description: `Set up your pots for your ${activePlant.plant_name}.`,
+        xp_reward: 30,
+        status: activePlant.task_state?.intro ? 'completed' : 'active',
+        isActionable: true,
+        tasks: [{ id: 'intro-t1', label: 'Prepared area', completed: !!activePlant.task_state?.intro, category: 'setup', xp_reward: 30 }],
+      }]
+    }
+  }, [activePlant, plantData])
+
+  const dailyTasks: any[] = useMemo(() => {
+    if (!activePlant || !plantData) return []
+    return activePlant.ai_tasks?.daily?.map((label: string, i: number) => ({
+      id: `daily-${i}`,
+      label,
+      completed: activePlant.task_state?.[`daily-${i}`] || false,
+      category: 'care',
+      xp_reward: 10
+    })) || getTasksDueToday(activePlant, plantData)
+  }, [activePlant, plantData])
+
+  const isDead = activePlant?.status === 'dead'
+  const canEditActivePlant = activePlant ? (activePlant.source_category || 'chosen_plant') !== 'posted_order' : false
+  const xpInfo = activePlant ? xpForNextLevel(activePlant.state.xp) : { current: 0, needed: 500, progress: 0 }
+  const level = activePlant ? calculateLevel(activePlant.state.xp) : 1
+
+
   const onQuestSuccess = async (taskId: string, taskName: string, xpGained: number) => {
     if (!user || !activePlant) return
     
@@ -65,7 +128,11 @@ function QuestsContent() {
       plantGrowthPercent: Math.min(100, (activePlant.state.xp / 1000) * 100),
       nextQuestTitle
     })
-    setCompletionModalOpen(true)
+    
+    // Only show modal for daily tasks
+    if (activeTab === 'daily') {
+      setCompletionModalOpen(true)
+    }
   }
 
   const handleTaskComplete = async (taskId: string, requiresPhoto: boolean | undefined, taskName: string, xpGained: number = 10) => {
@@ -79,13 +146,6 @@ function QuestsContent() {
     }
   }
 
-  const handleUploadSuccess = async (photoUrl: string) => {
-    if (activePlant && uploadTask) {
-      await completeTask(activePlant.id, uploadTask.id, photoUrl)
-      await onQuestSuccess(uploadTask.id, uploadTask.name, uploadTask.xpGained)
-    }
-    setUploadTask(null)
-  }
 
 
   // Handle auto-activation from search params (e.g. after adding a plant)
@@ -139,8 +199,6 @@ function QuestsContent() {
       setIsResolvingDirectOpen(false)
     }
   }, [activePlantId, searchParams])
-
-  const activePlant = userPlants.find(p => p.id === activePlantId)
 
   useEffect(() => {
     if (activePlant) {
@@ -208,50 +266,7 @@ function QuestsContent() {
     }
 
     // ── VIEW: PLANT DETAIL (QUESTS) ──
-    const plantData = getQuestPlant(activePlant.plant_id)
     if (!plantData) return null
-    const isDead = activePlant.status === 'dead'
-    const canEditActivePlant = canEditPlant(activePlant)
-    const xpInfo = xpForNextLevel(activePlant.state.xp)
-    const level = calculateLevel(activePlant.state.xp)
-    const rawMainQuests = activePlant.ai_tasks?.main || []
-    const isLegacyData = rawMainQuests.some((q: any) => q.title === 'Dashboard Setup' || q.title === 'Seedling Care')
-    const mainQuestsFromAI = isLegacyData ? [] : rawMainQuests
-
-    const mainQuests: Quest[] = mainQuestsFromAI.length > 0
-      ? mainQuestsFromAI.map((q: any, i: number) => {
-          const taskKey = `main-${i}`
-          const prevCompleted = i === 0 || mainQuestsFromAI.slice(0, i).every((_, prevIndex) => activePlant.task_state?.[`main-${prevIndex}`])
-          return {
-            id: taskKey,
-            type: 'main',
-            title: q.title,
-            description: q.description,
-            xp_reward: q.xp,
-            status: activePlant.task_state?.[taskKey] ? 'completed' : (prevCompleted ? 'active' : 'locked'),
-            isActionable: true,
-            tasks: [{ id: taskKey, label: q.task_label, completed: !!activePlant.task_state?.[taskKey], category: 'setup', xp_reward: q.xp }],
-          } as Quest
-        })
-      : [{
-          id: 'intro',
-          type: 'main',
-          title: 'Workspace Prep',
-          description: `Set up your pots for your ${activePlant.plant_name}.`,
-          xp_reward: 30,
-          status: activePlant.task_state?.intro ? 'completed' : 'active',
-          isActionable: true,
-          tasks: [{ id: 'intro-t1', label: 'Prepared area', completed: !!activePlant.task_state?.intro, category: 'setup', xp_reward: 30 }],
-        }]
-
-    const isDailyUnlocked = mainQuests.every((q) => q.status === 'completed')
-    const dailyTasks: any[] = activePlant.ai_tasks?.daily?.map((label: string, i: number) => ({
-      id: `daily-${i}`,
-      label,
-      completed: activePlant.task_state?.[`daily-${i}`] || false,
-      category: 'care',
-      xp_reward: 10
-    })) || getTasksDueToday(activePlant, plantData)
 
     return (
       <div className="quest-main-content" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
