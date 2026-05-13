@@ -1,0 +1,10 @@
+{"id":"plastic pot","item":"plastic pot","min_price":4,"max_price":6,"price_range":"4-6","source_type":"price_catalog","source_file":"prices.json","content":"plastic pot price range RM4 to RM6"}
+{"id":"terracotta pot","item":"terracotta pot","min_price":12,"max_price":18,"price_range":"12-18","source_type":"price_catalog","source_file":"prices.json","content":"terracotta pot price range RM12 to RM18"}
+{"id":"fabric pot","item":"fabric pot","min_price":10,"max_price":14,"price_range":"10-14","source_type":"price_catalog","source_file":"prices.json","content":"fabric pot price range RM10 to RM14"}
+{"id":"glazed ceramic pot","item":"glazed ceramic pot","min_price":25,"max_price":40,"price_range":"25-40","source_type":"price_catalog","source_file":"prices.json","content":"glazed ceramic pot price range RM25 to RM40"}
+{"id":"potting mix","item":"potting mix","min_price":8,"max_price":12,"price_range":"8-12","source_type":"price_catalog","source_file":"prices.json","content":"potting mix price range RM8 to RM12"}
+{"id":"perlite","item":"perlite","min_price":6,"max_price":10,"price_range":"6-10","source_type":"price_catalog","source_file":"prices.json","content":"perlite price range RM6 to RM10"}
+{"id":"compost","item":"compost","min_price":5,"max_price":8,"price_range":"5-8","source_type":"price_catalog","source_file":"prices.json","content":"compost price range RM5 to RM8"}
+{"id":"liquid fertilizer","item":"liquid fertilizer","min_price":10,"max_price":15,"price_range":"10-15","source_type":"price_catalog","source_file":"prices.json","content":"liquid fertilizer price range RM10 to RM15"}
+{"id":"granular fertilizer","item":"granular fertilizer","min_price":8,"max_price":12,"price_range":"8-12","source_type":"price_catalog","source_file":"prices.json","content":"granular fertilizer price range RM8 to RM12"}
+{"id":"seeds","item":"seeds","min_price":2,"max_price":4,"price_range":"2-4","source_type":"price_catalog","source_file":"prices.json","content":"seeds price range RM2 to RM4"}

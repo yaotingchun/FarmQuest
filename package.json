@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "reshape:vertex-search": "node scripts/reshape-vertex-search-data.js"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.12.0",

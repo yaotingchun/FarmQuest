@@ -2682,3 +2682,252 @@
     margin-bottom: 40px;
   }
 }
+
+/* ══════════════════════════════════════
+   PLANT HEALTH & TREATMENT STYLES
+   ══════════════════════════════════════ */
+
+/* Health Modal */
+.health-modal-card {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.health-modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.health-modal-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.health-modal-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.health-vital-bar {
+  padding: 2px 0;
+}
+
+/* Treatment Quest Card */
+.treatment-quest-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.treatment-quest-card:hover:not(.completed) {
+  background: rgba(249, 115, 22, 0.06) !important;
+  border-color: rgba(249, 115, 22, 0.25) !important;
+  transform: translateX(2px);
+}
+
+.treatment-quest-card.completed {
+  opacity: 0.55;
+}
+
+.treatment-quest-card.completed:hover {
+  transform: none;
+}
+
+/* Treatment tab indicator */
+.quest-tab {
+  position: relative;
+}
+
+/* Health scan animation (used in PhotoUploadModal) */
+@keyframes healthScanLine {
+  0% { top: 0; }
+  50% { top: calc(100% - 3px); }
+  100% { top: 0; }
+}
+
+/* Pulse animation for scanning indicator */
+@keyframes healthPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse {
+  animation: healthPulse 1.5s ease-in-out infinite;
+}
+
+/* Animate-spin for loader */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════
+   GROWTH CURVE CHART
+   ══════════════════════════════════════ */
+.growth-curve-section {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.growth-curve-header {
+  margin-bottom: 16px;
+}
+
+.growth-curve-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.growth-curve-title {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.growth-curve-stage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.growth-curve-harvest-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+
+.growth-curve-harvest-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 80px;
+}
+
+.growth-curve-harvest-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.growth-curve-harvest-value {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'Cabinet Grotesk', sans-serif;
+}
+
+.growth-curve-harvest-value.harvest-remaining {
+  color: #facc15;
+}
+
+.growth-curve-harvest-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.growth-curve-chart-wrap {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 4px;
+}
+
+.growth-curve-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.growth-curve-legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 12px;
+  padding: 0 4px;
+}
+
+.growth-curve-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.growth-curve-legend-line {
+  display: inline-block;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.growth-curve-legend-line.ideal {
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+  opacity: 0.7;
+  /* Simulated dashed appearance using repeating-linear-gradient */
+  background: repeating-linear-gradient(
+    90deg,
+    #4ade80 0px,
+    #4ade80 4px,
+    transparent 4px,
+    transparent 7px
+  );
+}
+
+.growth-curve-legend-line.actual {
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .growth-curve-harvest-row {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .growth-curve-harvest-divider {
+    display: none;
+  }
+
+  .growth-curve-harvest-item {
+    min-width: 60px;
+  }
+
+  .growth-curve-harvest-value {
+    font-size: 0.8rem;
+  }
+
+  .growth-curve-section {
+    padding: 16px;
+  }
+}

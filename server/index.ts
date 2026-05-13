@@ -381,13 +381,10 @@ function generateCheckpoints(plantId: string, deadlineDays: number): any[] {
 
 // Seed demo orders to Firestore if empty
 async function seedDemoOrdersToFirestore() {
-  // Clear existing orders to fix mismatched IDs/Names mapping from previous seeds
   const existing = await ordersRef.get();
   if (existing.size > 0) {
-    const batch = db.batch();
-    existing.docs.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
-    console.log(`[Marketplace] Cleared ${existing.size} mismatched orders for re-seeding.`);
+    console.log(`[Marketplace] Skipping demo seed because ${existing.size} orders already exist.`);
+    return;
   }
 
   console.log(`[Marketplace] Seeding demo orders to Firestore...`);
