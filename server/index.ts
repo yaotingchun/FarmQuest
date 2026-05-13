@@ -30,6 +30,11 @@ function getPlantsData() {
   return JSON.parse(fs.readFileSync(dataPath, "utf8"));
 }
 import { generatePlantingPlans, generateSetupExplanation, generateQuestTasks, type AIPlan } from "./ai.js";
+// Import Genkit flows and tools — side-effect imports ensure registration with Dev UI
+import "./genkit.js";
+import "./calendarTools.js";
+import { diagnoseFlow } from "./diagnose.js";
+import { generatePlantingPlansFlow, generateSetupExplanationFlow, generateQuestTasksFlow } from "./ai.js";
 import { calculateCost } from "./cost.js";
 import { ragManager } from "./rag.js";
 
@@ -243,6 +248,24 @@ app.post("/api/generate-ai-tasks", async (req, res) => {
   }
 });
 
+// POST /api/diagnose — Genkit-powered plant health diagnosis (multimodal vision)
+app.post("/api/diagnose", async (req, res) => {
+  const { base64, mimeType } = req.body;
+
+  if (!base64 || !mimeType) {
+    res.status(400).json({ error: "Missing base64 image data or mimeType" });
+    return;
+  }
+
+  try {
+    console.log(`[Genkit] Running diagnoseFlow...`);
+    const result = await diagnoseFlow({ base64, mimeType });
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error("[Genkit] Diagnosis API error:", err);
+    res.status(500).json({ success: false, error: "Failed to diagnose plant" });
+  }
+});
 
 // ══════════════════════════════════════════════
 // ── MARKETPLACE API ──

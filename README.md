@@ -111,11 +111,36 @@ GOOGLE_VERTEX_SEARCH_SERVING_CONFIG=default_search
 GOOGLE_VERTEX_SEARCH_LOCATION=global
 ```
 
-### 3. Local Development
+### 3. Genkit Orchestration & Agentic Workflow
+FarmQuest uses **Firebase Genkit** for its agentic backend to satisfy the project's agentic workflow criteria. This provides observability into AI sub-steps and tool execution.
 
-Start the development server using Google Cloud Workstations or your local environment:
+**To run the Genkit-instrumented backend:**
+1. Navigate to the server directory:
+   ```bash
+   cd server
+   ```
+2. Install dependencies (including `genkit-cli`):
+   ```bash
+   npm install
+   ```
+3. Start the server with Genkit tracing enabled:
+   ```bash
+   npm run genkit:dev
+   ```
+4. Open the **Genkit Developer UI** at `http://localhost:4001` to inspect flows, tools, and traces.
 
+### 4. Local Development
+To run the full application locally, you need two terminals running simultaneously:
+
+**Terminal 1: Backend Server**
 ```bash
+cd server
+npm run dev
+```
+
+**Terminal 2: Frontend Interface**
+```bash
+# In the root directory
 npm run dev
 ```
 

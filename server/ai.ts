@@ -1,4 +1,6 @@
 import { ragManager } from "./rag.js";
+import { z } from 'genkit';
+import { ai } from './genkit.js';
 
 // ── Types ──
 interface SoilComponent {
@@ -408,7 +410,8 @@ Keywords only.`;
 }
 
 // ── AI Plan Generation (Total Data-Lock Restoration) ──
-export async function generatePlantingPlans(
+// Original function preserved for internal use
+async function _generatePlantingPlans(
   plantData: PlantSetup
 ): Promise<{ plans: AIPlan[]; isFallback: boolean }> {
   try {
@@ -461,6 +464,79 @@ export async function generatePlantingPlans(
   }
 }
 
+// ── Genkit Flow: generatePlantingPlans ──
+export const generatePlantingPlansFlow = ai.defineFlow(
+  {
+    name: 'generatePlantingPlans',
+    inputSchema: z.any(),
+    outputSchema: z.any(),
+  },
+  async (plantData: PlantSetup) => {
+    // Step 1: Build budget plan from database
+    const budgetPlan = await ai.run('build-budget-plan', async () => {
+      return buildBudgetPlanFromDatabase(plantData);
+    });
+
+    // Step 2: Retrieve RAG context for grounding
+    const ragContext = await ai.run('retrieve-rag-context', async () => {
+      let rag: RagContext = {
+        targetPlant: JSON.stringify(plantData, null, 2),
+        similarPlants: "No similar plant data available.",
+        prices: "No price context available.",
+      };
+      try {
+        await ragManager.initialize();
+        rag = {
+          targetPlant: ragManager.getTargetPlantContext(plantData.plant_id),
+          similarPlants: await ragManager.getSimilarPlantsContext(plantData.plant_id, 2),
+          prices: ragManager.getPriceContext(),
+        };
+      } catch (ragErr) {
+        console.warn("[RAG] Grounding unavailable:", ragErr);
+      }
+      return rag;
+    });
+
+    // Step 3: Generate AI-optimized balanced plan
+    const balancedPlan = await ai.run('generate-balanced-plan', async () => {
+      const fallbackStages = plantData.nutrition?.stages || [];
+      const [pot, soil, nutri, seed] = await Promise.all([
+        genPot("Balanced", plantData.name, ragContext),
+        genSoil("Balanced", plantData.name, ragContext),
+        genNutrition("Balanced", plantData.name, fallbackStages, ragContext),
+        genSeed("Balanced", plantData.name, ragContext),
+      ]);
+      return normalizePlan({ pot, soil, nutrition: nutri, seed }, plantData, "Balanced");
+    });
+
+    // Step 4: Generate AI-optimized premium plan
+    const premiumPlan = await ai.run('generate-premium-plan', async () => {
+      const fallbackStages = plantData.nutrition?.stages || [];
+      const [pot, soil, nutri, seed] = await Promise.all([
+        genPot("Premium", plantData.name, ragContext),
+        genSoil("Premium", plantData.name, ragContext),
+        genNutrition("Premium", plantData.name, fallbackStages, ragContext),
+        genSeed("Premium", plantData.name, ragContext),
+      ]);
+      return normalizePlan({ pot, soil, nutrition: nutri, seed }, plantData, "Premium");
+    });
+
+    return { plans: [budgetPlan, balancedPlan, premiumPlan], isFallback: false };
+  }
+);
+
+// Backward-compatible wrapper
+export async function generatePlantingPlans(
+  plantData: PlantSetup
+): Promise<{ plans: AIPlan[]; isFallback: boolean }> {
+  try {
+    return await generatePlantingPlansFlow(plantData);
+  } catch (err) {
+    console.error("[Genkit] generatePlantingPlansFlow failed, using fallback:", err);
+    return { plans: buildFallbackPlans(plantData), isFallback: true };
+  }
+}
+
 // ── Fallback: Budget remains strict DB mirror; non-budget tiers are deterministic defaults ──
 function buildFallbackPlans(plantData: PlantSetup): AIPlan[] {
   const budget = buildBudgetPlanFromDatabase(plantData);
@@ -481,22 +557,20 @@ function buildFallbackPlans(plantData: PlantSetup): AIPlan[] {
 
   return [budget, balanced, premium];
 }
-// ── AI Setup Explanation (Meaningful Restored) ──
-export async function generateSetupExplanation(
-  plantData: PlantSetup,
-  plan: AIPlan
-): Promise<string> {
-  try {
-    const ai = getVertexAI();
-    const model = ai.getGenerativeModel({
-      model: DEFAULT_TEXT_MODEL,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 900,
-      },
-    });
-
-    const prompt = `You are a professional urban farming consultant.
+// ── Genkit Flow: generateSetupExplanation ──
+export const generateSetupExplanationFlow = ai.defineFlow(
+  {
+    name: 'generateSetupExplanation',
+    inputSchema: z.object({
+      plantData: z.any(),
+      plan: z.any(),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ plantData, plan }: { plantData: PlantSetup; plan: AIPlan }) => {
+    // Step 1: Build the explanation prompt
+    const prompt = await ai.run('build-explanation-prompt', async () => {
+      return `You are a professional urban farming consultant.
 Write a clear, natural English explanation for this ${plan.plan_type} setup for ${plantData.name}.
 
 Format requirements:
@@ -508,32 +582,62 @@ Format requirements:
 - Mention root health, moisture, establishment, and nutrition progression.
 - Use proper English and full sentences.
 - Output plain text only.`;
+    });
 
-    const result = await model.generateContent(prompt);
-    let text = extractAllText(result);
+    // Step 2: Call LLM for explanation generation
+    const rawText = await ai.run('generate-llm-explanation', async () => {
+      const vertexAI = getVertexAI();
+      const model = vertexAI.getGenerativeModel({
+        model: DEFAULT_TEXT_MODEL,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 900 },
+      });
+      const result = await model.generateContent(prompt);
+      return extractAllText(result);
+    });
 
-    text = text.replace(/^\s*Tis\b/i, "This").trim();
-    text = normalizeSectionLabels(text);
+    // Step 3: Validate and normalize the output
+    const finalText = await ai.run('validate-explanation', async () => {
+      let text = rawText.replace(/^\s*Tis\b/i, "This").trim();
+      text = normalizeSectionLabels(text);
 
-    if (!isCompleteEnglishExplanation(text)) {
-      text = buildDeterministicLongExplanation(plantData, plan);
-    }
+      if (!isCompleteEnglishExplanation(text)) {
+        console.warn('[Genkit] LLM explanation failed validation, using deterministic fallback.');
+        return buildDeterministicLongExplanation(plantData, plan);
+      }
+      return text;
+    });
 
-    return text;
+    return finalText;
+  }
+);
+
+// Backward-compatible wrapper
+export async function generateSetupExplanation(
+  plantData: PlantSetup,
+  plan: AIPlan
+): Promise<string> {
+  try {
+    return await generateSetupExplanationFlow({ plantData, plan });
   } catch (err) {
-    console.error("[AI] Explanation generation failed:", err);
+    console.error("[Genkit] generateSetupExplanationFlow failed:", err);
     return buildDeterministicLongExplanation(plantData, plan);
   }
 }
-// ── AI Quest Task Generation ──
-export async function generateQuestTasks(
-  plantName: string,
-  planType: string,
-  explanation: string
-): Promise<{ main: any[], daily: string[] }> {
-  try {
-    const ai = getVertexAI();
-    const prompt = `Task: Generate quest steps for ${plantName} (${planType} setup).
+// ── Genkit Flow: generateQuestTasks ──
+export const generateQuestTasksFlow = ai.defineFlow(
+  {
+    name: 'generateQuestTasks',
+    inputSchema: z.object({
+      plantName: z.string(),
+      planType: z.string(),
+      explanation: z.string(),
+    }),
+    outputSchema: z.any(),
+  },
+  async ({ plantName, planType, explanation }) => {
+    // Step 1: Build the quest generation prompt
+    const prompt = await ai.run('build-quest-prompt', async () => {
+      return `Task: Generate quest steps for ${plantName} (${planType} setup).
 Schema:
 {
   "main": [{"title": "Step", "description": "1 sentence", "task_label": "done msg", "xp": 50, "requires_photo": true}],
@@ -542,73 +646,88 @@ Schema:
 Details: ${explanation}
 Set requires_photo: true for tasks where visual verification matters (e.g. "check for pests", "inspect leaf colour", "verify watering"). Set false for routine tasks like "add fertiliser" or "set reminder".
 Ground descriptions in the plan specifics. Generate 3-4 main steps and 5-7 daily items.`;
+    });
 
-    let text = "";
-    let lastErr: unknown = null;
+    // Step 2: Call LLM with model fallback chain
+    const rawText = await ai.run('call-llm-for-quests', async () => {
+      const vertexAI = getVertexAI();
+      let text = "";
+      let lastErr: unknown = null;
 
-    for (const modelName of TASK_MODEL_CANDIDATES) {
-      try {
-        console.log(`[AI] Trying task model ${modelName} for ${plantName} (${planType})...`);
-        const model = ai.getGenerativeModel({
-          model: modelName,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-            responseMimeType: "application/json",
-          },
-        });
-        const result = await model.generateContent(prompt);
-        text = extractAllText(result);
-        if (text) {
-          console.log(`[AI] Task model success: ${modelName}`);
-          break;
-        }
-      } catch (err) {
-        lastErr = err;
-        console.warn(`[AI] Task model failed: ${modelName}`, err);
-      }
-    }
-
-    if (!text) {
-      throw lastErr || new Error("No response text from any task model");
-    }
-    
-    // Clean up potential markdown formatting
-    text = text.replace(/```json\s*/g, "").replace(/```/g, "").trim();
-
-    let data: any;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      // Robust extraction: find the first { and the last }
-      const start = text.indexOf("{");
-      const end = text.lastIndexOf("}");
-      if (start >= 0 && end > start) {
-        const potentialJson = text.slice(start, end + 1);
+      for (const modelName of TASK_MODEL_CANDIDATES) {
         try {
-          data = JSON.parse(potentialJson);
-        } catch (parseErr) {
-          console.error("[AI] JSON Slice Parse Failed:", potentialJson);
-          throw new Error("Model returned malformed JSON even after slicing");
+          console.log(`[Genkit] Trying task model ${modelName} for ${plantName} (${planType})...`);
+          const model = vertexAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 2048,
+              responseMimeType: "application/json",
+            },
+          });
+          const result = await model.generateContent(prompt);
+          text = extractAllText(result);
+          if (text) {
+            console.log(`[Genkit] Task model success: ${modelName}`);
+            break;
+          }
+        } catch (err) {
+          lastErr = err;
+          console.warn(`[Genkit] Task model failed: ${modelName}`, err);
         }
-      } else {
-        throw new Error("Model returned non-JSON task payload");
       }
-    }
 
-    if (!Array.isArray(data?.main) || !Array.isArray(data?.daily)) {
-      throw new Error("Task payload missing 'main' or 'daily' arrays");
-    }
+      if (!text) {
+        throw lastErr || new Error("No response text from any task model");
+      }
+      return text;
+    });
 
-    console.log(`[AI] Successfully generated ${data.main.length} main quests and ${data.daily.length} daily tasks.`);
-    
-    return {
-      main: data.main,
-      daily: data.daily
-    };
+    // Step 3: Parse and validate the JSON response
+    const taskData = await ai.run('parse-quest-response', async () => {
+      let text = rawText.replace(/```json\s*/g, "").replace(/```/g, "").trim();
+
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        const start = text.indexOf("{");
+        const end = text.lastIndexOf("}");
+        if (start >= 0 && end > start) {
+          const potentialJson = text.slice(start, end + 1);
+          try {
+            data = JSON.parse(potentialJson);
+          } catch (parseErr) {
+            console.error("[Genkit] JSON Slice Parse Failed:", potentialJson);
+            throw new Error("Model returned malformed JSON even after slicing");
+          }
+        } else {
+          throw new Error("Model returned non-JSON task payload");
+        }
+      }
+
+      if (!Array.isArray(data?.main) || !Array.isArray(data?.daily)) {
+        throw new Error("Task payload missing 'main' or 'daily' arrays");
+      }
+
+      console.log(`[Genkit] Generated ${data.main.length} main quests and ${data.daily.length} daily tasks.`);
+      return { main: data.main, daily: data.daily };
+    });
+
+    return taskData;
+  }
+);
+
+// Backward-compatible wrapper
+export async function generateQuestTasks(
+  plantName: string,
+  planType: string,
+  explanation: string
+): Promise<{ main: any[], daily: string[] }> {
+  try {
+    return await generateQuestTasksFlow({ plantName, planType, explanation });
   } catch (err) {
-    console.error("[AI] Quest generation failed:", err);
-    // Fallback to generic tasks
+    console.error("[Genkit] generateQuestTasksFlow failed:", err);
     return {
       main: [
         { title: "Workspace Prep", description: "Set up your pots and tools.", task_label: "Prepared area", xp: 30, requires_photo: true },

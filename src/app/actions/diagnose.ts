@@ -1,25 +1,11 @@
 'use server'
 
-import { VertexAI } from '@google-cloud/vertexai';
-import path from 'path';
-import fs from 'fs';
-
 import { DiagnosisResponse } from '@/types/diagnosis';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export async function diagnosePlant(formData: FormData): Promise<DiagnosisResponse> {
-  const project = process.env.GOOGLE_VERTEX_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || 'farmquest-493806';
-  const location = process.env.GOOGLE_VERTEX_LOCATION || 'us-central1';
-  
-  console.log(`[Diagnosis] Initializing Vertex AI with Project: ${project}, Location: ${location}`);
-  
-  const keyFilePath = path.join(process.cwd(), 'credentials', 'google.json');
-
-  if (fs.existsSync(keyFilePath)) {
-    console.log(`[Diagnosis] Found local credentials at ${keyFilePath}`);
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = keyFilePath;
-  }
-
-  const vertexAI = new VertexAI({ project, location });
+  console.log(`[Diagnosis] Routing request to Genkit Orchestrator at ${API_URL}`);
 
   try {
     const file = formData.get('image') as File;
@@ -29,66 +15,24 @@ export async function diagnosePlant(formData: FormData): Promise<DiagnosisRespon
 
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString('base64');
+    const mimeType = file.type;
 
-    const generativeModel = vertexAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+    const response = await fetch(`${API_URL}/api/diagnose`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ base64, mimeType }),
     });
 
-    const prompt = `
-      You are an expert botanist and plant pathologist.
-      Analyze the following image of a plant and:
-      1. Identify the plant if possible.
-      2. Detect health issues (pests, nutrient deficiencies, watering issues).
-      3. Provide a clear diagnosis.
-      4. Provide 3-5 actionable solution steps.
-
-      Return the result strictly in JSON format as follows:
-      {
-        "isPlant": boolean,
-        "plantName": string,
-        "diagnosis": string,
-        "solutionSteps": string[],
-        "confidence": number,
-        "detectedIssues": string[],
-        "difficultyLevel": "Easy" | "Medium" | "Hard",
-        "potentialImpact": "Low" | "Moderate" | "High",
-        "vitalityScore": number (0-100),
-        "sunlightScore": number (0-100),
-        "hydrationScore": number (0-100),
-        "nutrientScore": number (0-100)
-      }
-    `;
-
-    const request = {
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { text: prompt },
-            {
-              inlineData: {
-                mimeType: file.type,
-                data: base64,
-              },
-            },
-          ],
-        },
-      ],
-    };
-
-    const result = await generativeModel.generateContent(request);
-    const text = result.response.candidates?.[0].content.parts[0].text;
-
-    if (!text) {
-      throw new Error('No analyst feedback received from Gemini');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Server responded with ${response.status}`);
     }
 
-    const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
-    const data = JSON.parse(cleanedText);
-
-    return { success: true, data };
+    return await response.json();
   } catch (error: any) {
-    console.error('Diagnosis Backend Error:', error);
+    console.error('Diagnosis Action Error:', error);
     return { success: false, error: error.message || 'An unexpected error occurred during biological analysis' };
   }
 }
