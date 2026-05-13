@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch index.ts",
-    "start": "tsx index.ts"
+    "start": "tsx index.ts",
+    "genkit:dev": "set PORT=3002 && npx genkit start -- npx tsx index.ts"
   },
   "dependencies": {
+    "@genkit-ai/vertexai": "^1.34.0",
     "@google-cloud/storage": "^7.19.0",
     "@google-cloud/vertexai": "^1.12.0",
     "@google/genai": "^1.50.1",
@@ -15,6 +17,7 @@
     "express": "^4.21.0",
     "firebase": "^12.12.1",
     "firebase-admin": "^13.8.0",
+    "genkit": "^1.34.0",
     "multer": "^2.1.1",
     "tsx": "^4.19.0",
     "uuid": "^14.0.0"
@@ -25,6 +28,7 @@
     "@types/multer": "^2.1.0",
     "@types/node": "^20",
     "@types/uuid": "^10.0.0",
+    "genkit-cli": "^1.34.0",
     "typescript": "^5"
   }
 }

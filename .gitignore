@@ -39,7 +39,10 @@ credentials/
 
 # typescript
 *.tsbuildinfo
+
 # credentials
 credentials/
 .env*
 
+# Genkit
+.genkit/
