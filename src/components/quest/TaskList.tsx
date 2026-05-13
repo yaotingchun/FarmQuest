@@ -7,6 +7,7 @@ const CATEGORY_CONFIG: Record<TaskCategory, { emoji: string; label: string; colo
   growth: { emoji: '🌱', label: 'Growth', color: '#4ade80' },
   observation: { emoji: '👁️', label: 'Observe', color: '#a78bfa' },
   setup: { emoji: '🛠️', label: 'Setup', color: '#fbbf24' },
+  treatment: { emoji: '🩺', label: 'Treatment', color: '#f97316' },
 }
 
 interface TaskListProps {
@@ -28,7 +29,7 @@ export function TaskList({ tasks, onComplete, grouped = false, readOnly = false 
   }
 
   // Grouped by category
-  const categories: TaskCategory[] = ['care', 'growth', 'observation', 'setup']
+  const categories: TaskCategory[] = ['care', 'growth', 'observation', 'setup', 'treatment']
   return (
     <div className="quest-task-groups">
       {categories.map(cat => {

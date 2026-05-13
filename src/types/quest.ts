@@ -2,7 +2,7 @@
 export type GrowthStage = 0 | 1 | 2 | 3 // 0=Seed, 1=Sprout, 2=Mature, 3=Harvest
 
 // ── Task Categories ──
-export type TaskCategory = 'care' | 'growth' | 'observation' | 'setup'
+export type TaskCategory = 'care' | 'growth' | 'observation' | 'setup' | 'treatment'
 
 // ── Quest Types ──
 export type QuestType = 'main' | 'daily'
@@ -70,7 +70,9 @@ export interface UserPlant {
   ai_tasks?: {
     main: Quest[]
     daily: string[]
+    treatment?: TreatmentQuest[]
   }
+  health_reports?: PlantHealthReportMeta[]
   google_calendar_event_id?: string
   is_accepted?: boolean
 }
@@ -117,6 +119,34 @@ export interface QuestPlantData {
   startMethod: string
 }
 
+// ── Treatment Quest ──
+export interface TreatmentQuest {
+  id: string;
+  step: string;
+  day: number;
+  duration: string;
+  category: string;
+  xp_reward: number;
+  completed: boolean;
+  created_at: string; // ISO date
+}
+
+export interface PlantHealthReportMeta {
+  id: string;
+  healthScore: number;
+  diseaseDetected: boolean;
+  diseaseName: string;
+  severity: string;
+  date: string; // ISO date
+  treatmentQuestIds: string[];
+  expectedBenefits?: {
+    yieldSavedPercent: number;
+    recoveryTimeDays: number;
+    healthImprovement: number;
+    description: string;
+  };
+}
+
 // ── XP Config ──
 export const XP_VALUES = {
   WATER: 10,
@@ -128,6 +158,8 @@ export const XP_VALUES = {
   GROWTH_MILESTONE: 100,
   MAIN_QUEST_STEP: 30,
   RECOVERY_COMPLETE: 40,
+  TREATMENT_STEP: 15,
+  TREATMENT_COMPLETE: 50,
 } as const
 
 // ── LLM Quest Content (output format) ──

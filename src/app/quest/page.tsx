@@ -13,6 +13,8 @@ import { ThemedModal } from '@/components/ui/ThemedModal'
 import { PhotoUploadModal } from '@/components/quest/PhotoUploadModal'
 import { completeQuest } from '@/lib/userProgress'
 import { CompletionModal } from '@/components/quest/CompletionModal'
+import { PlantHealthModal } from '@/components/quest/PlantHealthModal'
+import type { PlantHealthReport } from '@/types/diagnosis'
 
 import { CalendarGrid } from '@/components/quest/CalendarGrid'
 
@@ -20,7 +22,7 @@ function MultiPlantDashboard() {
   const router = useRouter()
   const { user } = useAuth()
   const searchParams = useSearchParams()
-  const { userPlants, availablePlants, addPlant, setActivePlant, completeTask, deletePlant, calendarData, refreshCalendar, loading } = useQuest()
+  const { userPlants, availablePlants, addPlant, setActivePlant, completeTask, deletePlant, calendarData, refreshCalendar, loading, addTreatmentQuests } = useQuest()
   const isAddingRef = useRef(false)
   const processedQueryRef = useRef<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -57,6 +59,11 @@ function MultiPlantDashboard() {
   const [uploadTask, setUploadTask] = useState<{ plantId: string, taskId: string, taskName: string, xpGained: number, plant: any } | null>(null)
   const [completionModalOpen, setCompletionModalOpen] = useState(false)
   const [modalData, setModalData] = useState<any>(null)
+  const [healthReport, setHealthReport] = useState<PlantHealthReport | null>(null)
+  const [healthImagePreview, setHealthImagePreview] = useState<string>('')
+  const [showHealthModal, setShowHealthModal] = useState(false)
+  const [isCreatingTreatment, setIsCreatingTreatment] = useState(false)
+  const [healthPlantCtx, setHealthPlantCtx] = useState<{ plantId: string, plantName: string, plantStaticId: string } | null>(null)
 
   const onQuestSuccess = async (taskId: string, taskName: string, xpGained: number, plant: any) => {
     if (!user) return
@@ -544,15 +551,50 @@ function MultiPlantDashboard() {
         confirmText="Got it"
       />
 
-      {user && (
+      {user && uploadTask && (
         <PhotoUploadModal
           isOpen={!!uploadTask}
           onClose={() => setUploadTask(null)}
           onUploadSuccess={handleUploadSuccess}
           userId={user.uid}
           taskName={uploadTask?.taskName}
+          plantName={uploadTask?.plant?.plant_name}
+          plantEmoji={getQuestPlant(uploadTask?.plant?.plant_id)?.emoji}
+          plantId={uploadTask?.plant?.plant_id}
+          instanceId={uploadTask?.plantId}
+          isCareTask={uploadTask?.taskId?.startsWith('observe') || false}
+          onHealthAnalysisComplete={(report, preview) => {
+            setHealthReport(report)
+            setHealthImagePreview(preview)
+            setHealthPlantCtx({
+              plantId: uploadTask.plantId,
+              plantName: uploadTask.plant?.plant_name || '',
+              plantStaticId: uploadTask.plant?.plant_id || '',
+            })
+            setShowHealthModal(true)
+          }}
         />
       )}
+
+      <PlantHealthModal
+        isOpen={showHealthModal}
+        onClose={() => setShowHealthModal(false)}
+        report={healthReport}
+        plantName={healthPlantCtx?.plantName || ''}
+        plantEmoji={healthPlantCtx ? (getQuestPlant(healthPlantCtx.plantStaticId)?.emoji || '🌱') : '🌱'}
+        imagePreview={healthImagePreview}
+        onCreateTreatmentQuests={async () => {
+          if (!healthPlantCtx || !healthReport?.diseaseDetected) return
+          setIsCreatingTreatment(true)
+          try {
+            await addTreatmentQuests(healthPlantCtx.plantId, healthReport.treatmentSteps, healthReport)
+            setShowHealthModal(false)
+          } finally {
+            setIsCreatingTreatment(false)
+          }
+        }}
+        isCreatingQuests={isCreatingTreatment}
+      />
 
       {modalData && (
         <CompletionModal
