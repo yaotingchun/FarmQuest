@@ -23,6 +23,7 @@ import express from "express";
 import cors from "cors";
 import admin from "firebase-admin";
 import { getFirestore } from "firebase-admin/firestore";
+
 // ── Dynamic Data Loading ──
 function getPlantsData() {
   const dataPath = path.resolve(__dirname, "./data/plants.json");
@@ -240,6 +241,7 @@ app.post("/api/generate-ai-tasks", async (req, res) => {
     res.status(500).json({ error: "Failed to generate AI tasks" });
   }
 });
+
 
 // ══════════════════════════════════════════════
 // ── MARKETPLACE API ──

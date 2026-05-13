@@ -215,6 +215,7 @@ export function getTasksDueOnDate(plant: UserPlant, plantData: QuestPlantData, t
     completed: isObserveDone,
     category: 'observation',
     xp_reward: XP_VALUES.OBSERVE,
+    requires_photo: true,
   })
 
   return tasks

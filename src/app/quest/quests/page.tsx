@@ -14,6 +14,8 @@ import { ArrowLeft, Sparkles } from 'lucide-react'
 
 import { Suspense } from 'react'
 import { ThemedModal } from '@/components/ui/ThemedModal'
+import { PhotoUploadModal } from '@/components/quest/PhotoUploadModal'
+import { useAuth } from '@/context/AuthContext'
 
 function QuestsContent() {
   const router = useRouter()
@@ -27,6 +29,24 @@ function QuestsContent() {
   const selectedSource = searchParams.get('source') as 'chosen_plant' | 'posted_order' | 'accepted_order' | null
   const selectedOrderId = searchParams.get('order')
   const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
+
+  const { user } = useAuth()
+  const [uploadTask, setUploadTask] = useState<{ id: string, name: string } | null>(null)
+
+  const handleTaskComplete = (taskId: string, requiresPhoto: boolean | undefined, taskName: string) => {
+    if (requiresPhoto) {
+      setUploadTask({ id: taskId, name: taskName })
+    } else {
+      if (activePlant) completeTask(activePlant.id, taskId)
+    }
+  }
+
+  const handleUploadSuccess = (photoUrl: string) => {
+    if (activePlant && uploadTask) {
+      completeTask(activePlant.id, uploadTask.id, photoUrl)
+    }
+    setUploadTask(null)
+  }
 
 
   // Handle auto-activation from search params (e.g. after adding a plant)
@@ -281,13 +301,27 @@ function QuestsContent() {
               {activeTab === 'main' ? (
                  <div className="quest-main-quests">
                     {mainQuests.map((q, idx) => (
-                     <QuestCard key={q.id} quest={q} index={idx} isLast={idx === mainQuests.length - 1} readOnly={!canEditActivePlant} onComplete={(quest) => canEditActivePlant && completeTask(activePlant.id, quest.id)} />
+                     <QuestCard 
+                       key={q.id} 
+                       quest={q} 
+                       index={idx} 
+                       isLast={idx === mainQuests.length - 1} 
+                       readOnly={!canEditActivePlant} 
+                       onComplete={(quest) => canEditActivePlant && handleTaskComplete(quest.id, quest.tasks[0]?.requires_photo, quest.title)} 
+                     />
                    ))}
                  </div>
               ) : (
                  <div className="quest-daily-view">
                    {isDailyUnlocked ? (
-                     <TaskList tasks={dailyTasks} readOnly={!canEditActivePlant} onComplete={(taskId) => canEditActivePlant && completeTask(activePlant.id, taskId)} />
+                     <TaskList 
+                       tasks={dailyTasks} 
+                       readOnly={!canEditActivePlant} 
+                       onComplete={(taskId) => {
+                         const t = dailyTasks.find(dt => dt.id === taskId)
+                         canEditActivePlant && handleTaskComplete(taskId, t?.requires_photo, t?.label || 'Task')
+                       }} 
+                     />
                    ) : (
                      <div className="quest-daily-locked-card">
                        <div className="quest-daily-locked-icon">🔒</div>
@@ -329,6 +363,16 @@ function QuestsContent() {
         confirmText="View Daily Quests"
         type="success"
       />
+
+      {user && (
+        <PhotoUploadModal
+          isOpen={!!uploadTask}
+          onClose={() => setUploadTask(null)}
+          onUploadSuccess={handleUploadSuccess}
+          userId={user.uid}
+          taskName={uploadTask?.name}
+        />
+      )}
     </div>
   )
 }

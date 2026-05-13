@@ -26,7 +26,7 @@ interface QuestContextValue {
     options?: { sharedProgressKey?: string }
   ) => Promise<string | undefined>
   deletePlant: (instanceId: string) => Promise<void>
-  completeTask: (instanceId: string, taskType: string) => Promise<void>
+  completeTask: (instanceId: string, taskType: string, photoUrl?: string) => Promise<void>
   
   // Calendar (Placeholder for now)
   calendarData: any[]
@@ -554,7 +554,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     }
   }, [user, activePlantId, isGoogleUser, accessToken])
 
-  const completeTask = useCallback(async (instanceId: string, taskId: string) => {
+  const completeTask = useCallback(async (instanceId: string, taskId: string, photoUrl?: string) => {
     if (!user) return
     const plant = userPlants.find(p => p.id === instanceId)
     if (!plant || plant.status === 'dead') return
@@ -644,10 +644,12 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     }
 
     // Persist completion log for calendar history.
-    const completionLog = { ...(newTaskState.completion_log || {}) } as Record<string, Array<{ id: string; label?: string }>>
+    const completionLog = { ...(newTaskState.completion_log || {}) } as Record<string, Array<{ id: string; label?: string; photo_url?: string }>>
     const dayLog = [...(completionLog[dateKey] || [])]
     if (!dayLog.some((item) => item.id === taskId)) {
-      dayLog.push({ id: taskId, label: resolveTaskLabel(plant, taskId) })
+      const logEntry: any = { id: taskId, label: resolveTaskLabel(plant, taskId) }
+      if (photoUrl) logEntry.photo_url = photoUrl
+      dayLog.push(logEntry)
     }
     completionLog[dateKey] = dayLog
     newTaskState.completion_log = completionLog

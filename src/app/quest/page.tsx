@@ -7,13 +7,16 @@ import { getQuestPlant } from '@/data/quest-plants'
 import { PlantStatusCard } from '@/components/quest/PlantStatusCard'
 import { getAllTasksDueToday } from '@/lib/ruleEngine'
 import { Trash2, AlertCircle, CheckCircle2, X, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 
 import { ThemedModal } from '@/components/ui/ThemedModal'
+import { PhotoUploadModal } from '@/components/quest/PhotoUploadModal'
 
 import { CalendarGrid } from '@/components/quest/CalendarGrid'
 
 function MultiPlantDashboard() {
   const router = useRouter()
+  const { user } = useAuth()
   const searchParams = useSearchParams()
   const { userPlants, availablePlants, addPlant, setActivePlant, completeTask, deletePlant, calendarData, refreshCalendar, loading } = useQuest()
   const isAddingRef = useRef(false)
@@ -23,6 +26,22 @@ function MultiPlantDashboard() {
   const [sourceFilter, setSourceFilter] = useState<'all' | 'chosen_plant' | 'posted_order' | 'accepted_order'>('all')
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [uploadTask, setUploadTask] = useState<{ plantId: string, taskId: string, taskName: string } | null>(null)
+
+  const handleTaskComplete = (plantId: string, taskId: string, requiresPhoto: boolean | undefined, taskName: string) => {
+    if (requiresPhoto) {
+      setUploadTask({ plantId, taskId, taskName })
+    } else {
+      completeTask(plantId, taskId)
+    }
+  }
+
+  const handleUploadSuccess = (photoUrl: string) => {
+    if (uploadTask) {
+      completeTask(uploadTask.plantId, uploadTask.taskId, photoUrl)
+    }
+    setUploadTask(null)
+  }
 
   // Calendar State
   const now = new Date()
@@ -378,7 +397,7 @@ function MultiPlantDashboard() {
                           <div 
                               key={task.id} 
                               className={`quest-task-item ${task.completed ? 'completed' : ''}`}
-                              onClick={() => !task.completed && isEditable && completeTask(plant.id, task.id)}
+                              onClick={() => !task.completed && isEditable && handleTaskComplete(plant.id, task.id, task.requires_photo, task.label)}
                               style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', cursor: task.completed || !isEditable ? 'default' : 'pointer', opacity: !isEditable && !task.completed ? 0.78 : 1 }}
                           >
                             <div className={`quest-task-check ${task.completed ? 'checked' : ''}`}>
@@ -453,6 +472,16 @@ function MultiPlantDashboard() {
         message={successMessage}
         confirmText="Got it"
       />
+
+      {user && (
+        <PhotoUploadModal
+          isOpen={!!uploadTask}
+          onClose={() => setUploadTask(null)}
+          onUploadSuccess={handleUploadSuccess}
+          userId={user.uid}
+          taskName={uploadTask?.taskName}
+        />
+      )}
     </div>
   )
 }

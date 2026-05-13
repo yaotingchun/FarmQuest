@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { AlertCircle, CheckCircle2, X } from 'lucide-react'
 
 export interface ThemedModalProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: () => void
+  onConfirm?: () => void
   title: string
   message: string
   confirmText?: string
   cancelText?: string
   type?: 'danger' | 'success' | 'info'
+  hideButtons?: boolean
+  children?: ReactNode
 }
 
 export function ThemedModal({
@@ -20,7 +22,9 @@ export function ThemedModal({
   message,
   confirmText = 'Confirm',
   cancelText,
-  type = 'info'
+  type = 'info',
+  hideButtons = false,
+  children
 }: ThemedModalProps) {
   const [isRendered, setIsRendered] = useState(false)
 
@@ -130,44 +134,48 @@ export function ThemedModal({
             {message}
           </p>
 
-          <div style={{ display: 'flex', width: '100%', gap: '12px' }}>
-            {cancelText && (
+          {children}
+
+          {!hideButtons && (
+            <div style={{ display: 'flex', width: '100%', gap: '12px' }}>
+              {cancelText && (
+                <button
+                  onClick={onClose}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--glass-border)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {cancelText}
+                </button>
+              )}
               <button
-                onClick={onClose}
+                onClick={() => {
+                  onConfirm?.()
+                  onClose()
+                }}
                 style={{
                   flex: 1,
                   padding: '12px',
                   borderRadius: '12px',
-                  border: '1px solid var(--glass-border)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: 'var(--text-secondary)',
-                  fontWeight: 600,
+                  border: '1px solid transparent',
+                  fontWeight: 700,
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  ...config.confirmBtnStyle
                 }}
               >
-                {cancelText}
+                {confirmText}
               </button>
-            )}
-            <button
-              onClick={() => {
-                onConfirm()
-                onClose()
-              }}
-              style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '12px',
-                border: '1px solid transparent',
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                ...config.confirmBtnStyle
-              }}
-            >
-              {confirmText}
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
