@@ -1,5 +1,6 @@
-# 🌱 FarmQuest
-### 🏆 Project 2030: MyAI Future Hackathon
+# 🌱 FarmQuest - AI-Powering Every Harvest
+
+**Plan. Plant. Prosper.**
 
 *   **Track:** Track 1: Padi & Plates (Agrotech & Food Security)
 *   **Goal:** Advancing the Nation by Building Solutions with Google AI
@@ -24,16 +25,29 @@ We are a team of four passionate developers building FarmQuest — an AI-powered
 | **Teoh Xin Yee** | AI Data Specialist | RAG grounding strategies, Vertex AI Search optimization, and botanical data management. |
 
 ---
-## 📖 Overview
+## 🔎 Project Overview
 
-**FarmQuest** is a hybrid, decentralized agrotech platform designed to solve Malaysia’s multi-billion ringgit food import dependency and the 30-40% yield losses faced by local smallholders. By expanding food production beyond large-scale farms, FarmQuest enables **anyone**—regardless of their agricultural background—to grow their own food right at home. 
+### 🚩 The Challenge: The National Food Security Gap
+Malaysia currently faces a multi-billion ringgit food security crisis, making the nation vulnerable to global supply chain disruptions and currency fluctuations.
 
-Moving from passive technology consumption to active creation, FarmQuest introduces "Technological Sovereignty" into the local agricultural ecosystem, directly aligning with the **Malaysia Madani framework**, **MyDIGITAL**, and the **New Industrial Master Plan (NIMP) 2030**.
+*   **Import Dependency:** Malaysia imported **RM75.6 Billion** worth of food (2022), creating a heavy reliance on foreign sources.
+*   **The Yield Loss Crisis:** Up to **30-40% of crops** are lost to undetected pathologies and pests due to a lack of precision guidance.
+*   **Resource Inefficiency:** Traditional methods suffer from data gaps, leading to wasted water, fertilizer, and capital.
+*   **Technological Gap:** Modern agrotech is often too expensive or complex for local smallholders and urban citizens to adopt.
 
-### 🚜 The Core Modes
-- **Self-Farming Mode**: Plant crops for personal use or hobbies using customized, step-by-step AI-guided farming plans.
-- **Marketplace Mode**: A decentralized peer-to-peer ecosystem where users can post crop requests (demand) and accept planning tasks (supply), generating income.
-- **Gamified Farming Experience**: Transforms complex agricultural practices into "Quests" with digital rewards, increasing motivation and long-term participation.
+### 🌍 SDG Alignment
+*   **SDG 2: Zero Hunger** — Increasing agricultural productivity and ensuring sustainable food production systems.
+*   **SDG 9: Industry, Innovation, & Infrastructure** — Integrating AI, RAG, and Drone technology into traditional farming.
+*   **SDG 12: Responsible Consumption & Production** — Precision farming that minimizes resource waste.
+
+### 💡 The Solution: AI-Driven Decentralized Agriculture
+FarmQuest is a **hybrid decentralized agrotech platform** that democratizes smart farming by putting expert agricultural intelligence into the hands of every home grower and smallholder:
+
+*   **Demand-First Farming:** A marketplace where users plant because demand exists, matching local supply with real-time community needs.
+*   **RAG-Grounded Guidance:** Personalized, step-by-step planting plans powered by Gemini 2.5 Flash and Vertex AI Search, tailored to local weather and user budget.
+*   **AI Plant Doctor:** Instant image-based diagnosis of crop diseases with step-by-step recovery timelines.
+*   **Technological Sovereignty:** Empowering citizens to contribute to national output and buffer against global supply shocks.
+
 
 ---
 
@@ -43,11 +57,11 @@ Moving from passive technology consumption to active creation, FarmQuest introdu
 
 FarmQuest is built on a modern, AI-first stack powered by **Google Cloud Platform** and **Firebase**. The architecture is organized into five specialized layers:
 
-*   **Unified Frontend**: A high-performance **Next.js 16.2.4** and **React 19** interface providing a seamless experience across web and mobile.
-*   **AI Orchestration Layer**: Powered by **Firebase Genkit**, this layer manages agentic workflows (Genkit Flows) for complex tasks like RAG-grounded planting plans and multi-modal disease diagnosis.
-*   **Intelligent Data & Services**: Leverages **Vertex AI** for industry-leading LLM capabilities (Gemini 2.5 Flash), vector embeddings, and discovery engines.
+*   **Unified Frontend**: A high-performance **Next.js 15** and **React 19** interface with **Tailwind CSS 4** for a seamless experience.
+*   **AI Orchestration Layer**: Powered by **Firebase Genkit**, managing workflows for RAG-grounded planting plans and multi-modal disease diagnosis.
+*   **Intelligent Data & Services**: Leverages **Vertex AI** (Gemini 2.5 Flash) and **Vertex AI Embeddings (text-embedding-004)** for localized, economically viable recommendations.
 *   **Scalable Infrastructure**: A robust serverless backend using **Cloud Run** and **Firebase Services** (Firestore, Auth, Storage) for real-time data and high availability.
-*   **External Integrations**: Direct connections to **Open-Meteo** (weather), **Perenual** (botanical data), and **Google Calendar** (automated task scheduling) to bridge the digital-physical gap.
+*   **External Integrations**: Connections to **Open-Meteo** (weather), **Perenual** (botanical data), and **Google Calendar** (automated task scheduling).
 
 ---
 
@@ -62,16 +76,56 @@ FarmQuest leverages the **Google AI Ecosystem Stack** to power its logic and aut
 
 ---
 
+## 📈 System Scalability & Feasibility
+
+### 🚀 System Scalability
+FarmQuest is designed to grow from a local community tool to a national agrotech infrastructure:
+- **Serverless Scaling**: By leveraging **Google Cloud Run** and **Firebase Functions**, the backend scales horizontally in seconds, handling surges in marketplace traffic or seasonal planting spikes without manual intervention.
+- **High-Throughput AI**: The use of **Gemini 2.5 Flash** ensures that multi-modal plant diagnosis and RAG-driven market analysis remain low-latency even with thousands of concurrent users.
+- **Distributed Marketplace**: Firestore’s real-time, globally distributed database architecture supports a high volume of peer-to-peer transactions across various geographical regions.
+- **Extensible Agentic Workflows**: The **Genkit** orchestration layer allows for the seamless addition of new tools (e.g., IoT soil sensors, drone fleet management) as the platform evolves.
+
+### 💡 System Feasibility
+The platform is technically and economically viable for immediate deployment:
+- **Cost-Optimized AI**: Utilizing Gemini Flash and tiered planting plans ensures that even the most "Budget" conscious home growers can access high-quality agricultural intelligence without expensive hardware.
+- **Low Operational Overhead**: The cloud-native, serverless approach minimizes maintenance costs, allowing the platform to remain sustainable under the freemium and C2C commission models.
+- **Low Barrier to Entry**: By gamifying complex agricultural routines into "Quests," FarmQuest makes smart farming feasible for users with zero prior experience or technical literacy.
+- **Alignment with National Policy**: Directly supports Malaysia's **MyDIGITAL** and **NIMP 2030** goals, making it a high-priority candidate for government and industry partnerships.
+
+---
+
 ## 🏢 Business Model
 
 FarmQuest targets the market gap of **demand-first farming** and **decentralized participation** through a comprehensive four-pillar business model:
 
 1. **C2C (Consumer-to-Consumer)**: A small 3–5% transaction fee on the Peer-to-Peer Marketplace where users trade seeds, plants, and produce.
 2. **B2C (Business-to-Consumer)**: A freemium subscription model. Basic features are free, while premium users get advanced insights, predictive analytics, and enhanced AI guidance.
-3. **B2B (Business-to-Business)**: Partnerships with seed suppliers, fertilizer companies, and food businesses. Revenue is generated via product sales commissions and service fees.
+3. **B2B (Business-to-Business)**: Partnerships with seed suppliers, fertilizer companies, and agri-tech providers. Revenue via product sales commissions and service fees.
 4. **B2G (Business-to-Government)**: Providing national crop data, demand trends, and food supply analytics to support policy-making and national food security planning.
 
+### 🎯 Market Segments
+FarmQuest is engineered to serve a diverse agricultural ecosystem:
+- **SME Urban Farms**: (Restaurants & Food Tech Companies). FarmQuest’s harvest estimator gives small business owners a real-time **Days-to-Harvest countdown** with high confidence, preventing unnecessary adjustments that waste time, nutrients, and money.
+- **Government**: (Agencies & Research Labs). Directly supports **MyDIGITAL** and **DAN 2.0** by providing a "Ready-to-Deploy" framework for precision agriculture. Tracking of yield trends and resource usage helps to keep operational costs low and national food security high.
+- **Academic**: (Universities & Campus Greenhouses). Uses explainable AI and transparent growth tracking, allowing researchers to study environmental trends. **Health score analytics** provide a quantifiable metric for how variables (soil quality, water, climate) impact growth rates, perfect for academic study.
+
 ---
+
+## 🌍 Social Impact & Sustainability
+
+### 🤝 Social Impact
+FarmQuest aims to foster a resilient and self-sustaining community:
+- **Hyper-Local Food Security**: Empowers communities to grow fresh produce directly in urban centers, reducing dependence on long supply chains and global price shocks.
+- **Education & Digital Literacy**: Creates opportunities for "urban agritech" roles and serves as an educational tool for schools and universities to explore AI-driven agriculture.
+- **Community Health**: Increases access to nutrient-rich, locally-grown food and encourages active, healthy habits through its gamified quest system.
+- **Inclusive Participation**: Our decentralized model ensures that anyone—from balcony hobbyists to small-scale growers—can contribute to national food sovereignty.
+
+### 🍃 Sustainability
+Our platform integrates environmental stewardship into every "Quest":
+- **Water & Resource Conservation**: Precision AI-guided plans ensure that water and fertilizer are used only when necessary, minimizing resource waste and runoff.
+- **Reduced Food Miles**: By promoting food production at the point of consumption, FarmQuest drastically cuts down transportation emissions and packaging waste.
+- **Bio-Waste Reduction**: Real-time AI disease detection prevents total crop losses, ensuring that the energy and resources invested in every plant result in a successful harvest.
+- **Energy-Efficient Guidance**: Optimized planting schedules maximize natural sunlight and environmental conditions, reducing the need for intensive artificial interventions.
 
 ## 🛠️ Setup Instructions
 
