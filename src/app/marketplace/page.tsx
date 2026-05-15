@@ -186,14 +186,18 @@ export default function MarketplacePage() {
               // Order locations
               ...filtered
                 .filter(o => o.latitude && o.longitude)
-                .map(o => ({
-                  lat: o.latitude!,
-                  lng: o.longitude!,
-                  label: o.plant_name,
-                  emoji: o.plant_emoji,
-                  color: (o.status === 'open' ? 'green' : o.status === 'completed' ? 'gold' : 'blue') as MapMarker['color'],
-                  popup: `RM${o.reward_rm} · ${o.quantity_kg}kg · ${o.location}`,
-                })),
+                .map(o => {
+                  const isRequester = user && o.requester_uid === user.uid;
+                  const price = isRequester ? o.reward_rm : (o.reward_rm * 0.95);
+                  return {
+                    lat: o.latitude!,
+                    lng: o.longitude!,
+                    label: o.plant_name,
+                    emoji: o.plant_emoji,
+                    color: (o.status === 'open' ? 'green' : o.status === 'completed' ? 'gold' : 'blue') as MapMarker['color'],
+                    popup: `RM${price.toFixed(2)} · ${o.quantity_kg}kg · ${o.location}`,
+                  };
+                }),
               // Nearby farmers
               ...nearbyFarmers.map(f => ({
                 lat: f.latitude,
@@ -247,8 +251,12 @@ export default function MarketplacePage() {
                   </div>
                 </div>
                 <div className="mp-card-reward">
-                  <span className="mp-card-reward-val">RM{(order.reward_rm * 0.95).toFixed(2)}</span>
-                  <span className="mp-card-reward-label">Payout</span>
+                  <span className="mp-card-reward-val">
+                    RM{user?.uid === order.requester_uid ? order.reward_rm : (order.reward_rm * 0.95).toFixed(2)}
+                  </span>
+                  <span className="mp-card-reward-label">
+                    {user?.uid === order.requester_uid ? 'Reward' : 'Payout'}
+                  </span>
                 </div>
               </div>
               <div className="mp-card-details">

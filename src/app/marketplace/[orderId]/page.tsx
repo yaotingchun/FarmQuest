@@ -227,8 +227,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
           <div className="mp-header-side-info">
             <div className="mp-price-container">
-              <span className="mp-price-value">RM{isFarmer ? (order.reward_rm * 0.95).toFixed(2) : order.reward_rm}</span>
-              <span className="mp-price-sub">{isFarmer ? 'Net Payout' : 'Reward'}</span>
+              <span className="mp-price-value">RM{!isRequester ? (order.reward_rm * 0.95).toFixed(2) : order.reward_rm}</span>
+              <span className="mp-price-sub">{!isRequester ? 'Net Payout' : 'Reward'}</span>
             </div>
           </div>
         </div>
@@ -361,7 +361,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                         label: order.plant_name,
                         emoji: order.plant_emoji,
                         color: 'green',
-                        popup: `${order.location} · RM${order.reward_rm}`,
+                        popup: `${order.location} · RM${!isRequester ? (order.reward_rm * 0.95).toFixed(2) : order.reward_rm}`,
                       },
                     ]}
                   />
@@ -394,7 +394,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                 label: order.plant_name,
                 emoji: order.plant_emoji,
                 color: 'green',
-                popup: `${order.location} · RM${order.reward_rm}`,
+                popup: `${order.location} · RM${!isRequester ? (order.reward_rm * 0.95).toFixed(2) : order.reward_rm}`,
               },
             ]}
           />
