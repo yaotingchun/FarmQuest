@@ -97,12 +97,12 @@ The platform is technically and economically viable for immediate deployment:
 ## 🔍 Competitor Analysis
 FarmQuest fills a critical gap in the agrotech and AI farming sector that overlaps with its target market by providing a unified, decentralized experience.
 
-| Criteria | Plantix | Agroz (MY) | Cropin | Agrio | **FarmQuest** |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| AI disease detection (image-based) | ✅ | ✅ | ⚠️ Partial | ✅ | ✅ |
-| RAG-grounded planting plans | ❌ | ❌ | ❌ | ❌ | ✅ |
-| P2P produce / seed marketplace | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Personalised budget-tiered recommendations | ❌ | ❌ | ⚠️ Partial | ❌ | ✅ |
+| Criteria | Plantix | Agroz (MY) | Cropin  | **FarmQuest** |
+| :--- | :---: | :---: | :---: | :---: |
+| AI disease detection (image-based) | ✅ | ✅ | ⚠️ Partial  | ✅ |
+| RAG-grounded planting plans | ❌ | ❌ | ❌  | ✅ |
+| P2P produce / seed marketplace | ❌ | ❌ | ❌ | ✅ |
+| Personalised budget-tiered recommendations | ❌ | ❌ | ⚠️ Partial | ✅ |
 
 ---
 
