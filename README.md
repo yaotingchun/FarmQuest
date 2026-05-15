@@ -37,16 +37,15 @@ Malaysia currently faces a multi-billion ringgit food security crisis, making th
 
 ### 🌍 SDG Alignment
 *   **SDG 2: Zero Hunger** — Increasing agricultural productivity and ensuring sustainable food production systems.
-*   **SDG 9: Industry, Innovation, & Infrastructure** — Integrating AI, RAG, and Drone technology into traditional farming.
+*   **SDG 9: Industry, Innovation, & Infrastructure** — Integrating AI, RAG, and Vertex AI into traditional farming.
 *   **SDG 12: Responsible Consumption & Production** — Precision farming that minimizes resource waste.
 
 ### 💡 The Solution: AI-Driven Decentralized Agriculture
 FarmQuest is a **hybrid decentralized agrotech platform** that democratizes smart farming by putting expert agricultural intelligence into the hands of every home grower and smallholder:
 
-*   **Demand-First Farming:** A marketplace where users plant because demand exists, matching local supply with real-time community needs.
-*   **RAG-Grounded Guidance:** Personalized, step-by-step planting plans powered by Gemini 2.5 Flash and Vertex AI Search, tailored to local weather and user budget.
-*   **AI Plant Doctor:** Instant image-based diagnosis of crop diseases with step-by-step recovery timelines.
-*   **Technological Sovereignty:** Empowering citizens to contribute to national output and buffer against global supply shocks.
+*   **Self-Farming Mode**: Provides customized, step-by-step AI-guided farming plans for individuals to grow crops at home for personal use or hobbies.
+*   **Marketplace Mode**: A peer-to-peer (P2P) hub where users can post crop requests (demand) and accept farming/planning tasks (supply) to generate income.
+*   **Gamified Farming Experience**: Transforms complex agricultural routines into interactive "Quests" with digital rewards to maintain long-term user engagement.
 
 
 ---
@@ -117,9 +116,10 @@ FarmQuest targets the market gap of **demand-first farming** and **decentralized
 
 ### 🎯 Market Segments
 FarmQuest is engineered to serve a diverse agricultural ecosystem:
-- **SME Urban Farms**: (Restaurants & Food Tech Companies). FarmQuest’s harvest estimator gives small business owners a real-time **Days-to-Harvest countdown** with high confidence, preventing unnecessary adjustments that waste time, nutrients, and money.
-- **Government**: (Agencies & Research Labs). Directly supports **MyDIGITAL** and **DAN 2.0** by providing a "Ready-to-Deploy" framework for precision agriculture. Tracking of yield trends and resource usage helps to keep operational costs low and national food security high.
-- **Academic**: (Universities & Campus Greenhouses). Uses explainable AI and transparent growth tracking, allowing researchers to study environmental trends. **Health score analytics** provide a quantifiable metric for how variables (soil quality, water, climate) impact growth rates, perfect for academic study.
+- **Individual Home Growers & Smallholders**: The heart of the P2P ecosystem. They drive the **C2C Marketplace** and **B2C Freemium** model by transforming balconies and backyards into productive food sources.
+- **SME Urban Farms & Food Tech**: (Restaurants & Boutique Growers). Our harvest estimator provides a real-time **Days-to-Harvest countdown**, helping businesses optimize supply chains and reduce wasted nutrients or capital.
+- **Agri-Suppliers & Retailers**: Seed and fertilizer providers who partner via the **B2B model** to reach a targeted audience through AI-integrated product recommendations and sales commissions.
+- **Government & Policy Makers**: (Agencies like MADA/MARDI). Supports **MyDIGITAL** and **DAN 2.0** by providing **B2G data analytics** on yield trends and resource usage to strengthen national food security.
 
 ---
 
